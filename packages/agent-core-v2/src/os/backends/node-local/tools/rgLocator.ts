@@ -5,7 +5,6 @@ import { homedir, tmpdir } from 'node:os';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 
-import { nighthawkRegionProfile, resolveNighthawkRegion } from '@nighthawk/nighthawk-oauth';
 import { extract as extractTar } from 'tar';
 import { type Entry, fromBuffer as yauzlFromBuffer } from 'yauzl';
 import { basename, join } from 'pathe';
@@ -65,8 +64,10 @@ export function getShareBinRgPath(): string {
   return join(getShareDir(), 'bin', rgBinaryName());
 }
 
+// Ripgrep archives come straight from the official upstream releases; the
+// pinned SHA-256 table above guarantees integrity regardless of host.
 function rgBaseUrl(): string {
-  return `${nighthawkRegionProfile(resolveNighthawkRegion()).cdnBase}/rg`;
+  return `https://github.com/BurntSushi/ripgrep/releases/download/${RG_VERSION}`;
 }
 
 function throwIfAborted(signal: AbortSignal | undefined): void {

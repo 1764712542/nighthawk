@@ -121,7 +121,7 @@ base_url = "https://target.example/v1"
     const r = await migrateConfigStep({ sourceHome: src, targetHome: tgt });
     expect(r.wroteSiblingDueToConflict).toBe(true);
     expect(
-      await readFile(join(tgt, 'config.migrated-from-kimi-cli.toml'), 'utf-8'),
+      await readFile(join(tgt, 'config.migrated-from-legacy-cli.toml'), 'utf-8'),
     ).toContain('merge_all_available_skills');
     // the unparseable target is left untouched
     expect(await readFile(join(tgt, 'config.toml'), 'utf-8')).toContain('not valid toml');
@@ -136,7 +136,7 @@ base_url = "https://target.example/v1"
     expect(r.wroteSiblingDueToConflict).toBe(false);
     expect(r.wroteTuiSibling).toBe(true);
     expect(
-      await readFile(join(tgt, 'tui.migrated-from-kimi-cli.toml'), 'utf-8'),
+      await readFile(join(tgt, 'tui.migrated-from-legacy-cli.toml'), 'utf-8'),
     ).toContain('theme');
     // original kept
     expect(await readFile(join(tgt, 'tui.toml'), 'utf-8')).toContain('# user added');
@@ -396,7 +396,7 @@ base_url = "https://target.example/v1"
 
   it('reports migratedHooks=0 and populates siblingContents when sibling mode kicks in', async () => {
     // The live `config.toml` is unparseable → migration falls back to writing
-    // `config.migrated-from-kimi-cli.toml`. Hooks land in the sibling, NOT in
+    // `config.migrated-from-legacy-cli.toml`. Hooks land in the sibling, NOT in
     // the live config, so `migratedHooks` must be 0 (the runtime never sees
     // them) and the sibling contents must be enumerated so the result-screen
     // warning can tell the user what is in the sibling.

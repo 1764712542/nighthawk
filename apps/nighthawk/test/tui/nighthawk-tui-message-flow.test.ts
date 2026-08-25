@@ -2140,7 +2140,6 @@ command = "vim"
     expect(harness.auth.submitFeedback).not.toHaveBeenCalled();
     const transcript = stripSgr(renderTranscript(driver));
     expect(transcript).toContain("You're not signed in");
-    expect(transcript).toContain('https://www.kimi.com/code');
     expect(transcript).toContain('https://github.com/1764712542/nighthawk/issues');
   });
 
@@ -6853,14 +6852,14 @@ command = "vim"
         enabledMcpServerCount: 1,
         hasErrors: false,
         source: 'zip-url',
-        originalSource: 'https://code.kimi.com/nighthawk/plugins/official/nighthawk-datasource.zip',
+        originalSource: 'https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/plugins/cdn/official/nighthawk-datasource.zip',
       })),
     });
     const { driver } = await makeDriver(session);
 
     // Official sources skip the trust prompt, so the install runs immediately.
     driver.handleUserInput(
-      '/plugins install https://code.kimi.com/nighthawk/plugins/official/nighthawk-datasource.zip',
+      '/plugins install https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/plugins/cdn/official/nighthawk-datasource.zip',
     );
 
     await vi.waitFor(() => {
@@ -6941,7 +6940,7 @@ command = "vim"
             tier: 'official',
             displayName: 'NightHawk Datasource',
             description: 'Datasource plugin',
-            source: 'https://code.kimi.com/nighthawk/plugins/official/nighthawk-datasource.zip',
+            source: 'https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/plugins/cdn/official/nighthawk-datasource.zip',
           },
         ],
       }),
@@ -6968,7 +6967,7 @@ command = "vim"
 
     await vi.waitFor(() => {
       expect(session.installPlugin).toHaveBeenCalledWith(
-        'https://code.kimi.com/nighthawk/plugins/official/nighthawk-datasource.zip',
+        'https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/plugins/cdn/official/nighthawk-datasource.zip',
       );
     });
     await vi.waitFor(() => {
@@ -6994,7 +6993,7 @@ command = "vim"
             id: 'nighthawk-datasource',
             tier: 'official',
             displayName: 'NightHawk Datasource',
-            source: 'https://code.kimi.com/nighthawk/plugins/official/nighthawk-datasource.zip',
+            source: 'https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/plugins/cdn/official/nighthawk-datasource.zip',
           },
         ],
       }),
@@ -7178,7 +7177,7 @@ command = "vim"
 
       await vi.waitFor(() => {
         expect(session.installPlugin).toHaveBeenCalledWith(
-          'https://code.kimi.com/nighthawk/plugins/official/nighthawk-datasource.zip',
+          'https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/plugins/cdn/official/nighthawk-datasource.zip',
         );
       });
       expect(globalThis.fetch).toHaveBeenCalledWith(nighthawkPluginMarketplaceUrl());

@@ -69,7 +69,14 @@ const pluginCommandEntrySchema = z.object({
   name: z.string(),
 });
 
-const pluginManifestKindSchema = z.enum(['nighthawk-plugin-root', 'nighthawk-plugin-dir']);
+const pluginManifestKindSchema = z.enum([
+  'nighthawk-plugin-root',
+  'nighthawk-plugin-dir',
+  'legacy-plugin-root',
+  'legacy-plugin-dir',
+  'generic-plugin-root',
+  'generic-plugin-dir',
+]);
 
 const pluginSourceSchema = z.enum(['local-path', 'zip-url', 'github']);
 

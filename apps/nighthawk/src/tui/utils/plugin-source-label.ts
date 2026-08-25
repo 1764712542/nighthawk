@@ -11,25 +11,27 @@ export const THIRD_PARTY_BADGE = 'third-party';
 
 export type PluginTrustLabel = 'official' | 'curated' | 'third-party';
 
-// Trusted plugin hosts are derived from the region profiles' `cdnBase` — the
-// per-region marketplace CDN — instead of a hardcoded host list: each region
-// contributes its default host plus the `NIGHTHAWK_CDN_BASE` override when
-// set. Both regions' hosts stay trusted regardless of the current region — a
-// zip served by either deployment is still an official build. The content-CDN
-// host is the marketplace host with its leading `code.` label swapped for
-// `cdn.`; an override host without that label serves both roles.
-const CODE_CDN_HOSTS = new Set<string>();
-const CONTENT_CDN_HOSTS = new Set<string>();
+// Trusted plugin URLs are derived from the region profiles' `cdnBase` — the
+// per-region distribution root — instead of a hardcoded host list: each region
+// contributes its default base plus the `NIGHTHAWK_CDN_BASE` override when
+// set. Both regions' bases stay trusted regardless of the current region — an
+// artifact served by either deployment is still an official build. The
+// content-CDN payloads (Computer-Use zips) hang off the same root, so one
+// prefix family covers both.
+const OFFICIAL_PLUGIN_PREFIXES = new Set<string>();
+const CURATED_PLUGIN_PREFIXES = new Set<string>();
+const CONTENT_CDN_PREFIXES = new Set<string>();
 for (const region of Object.keys(NIGHTHAWK_REGION_PROFILES) as NighthawkRegion[]) {
   const cdnBases = new Set([
     NIGHTHAWK_REGION_PROFILES[region].cdnBase,
     nighthawkRegionProfile(region).cdnBase,
   ]);
-  for (const cdnBase of cdnBases) {
-    const host = hostFromUrl(cdnBase);
-    if (host === undefined) continue;
-    CODE_CDN_HOSTS.add(host);
-    CONTENT_CDN_HOSTS.add(host.replace(/^code\./, 'cdn.'));
+  for (const rawBase of cdnBases) {
+    const base = rawBase.replace(/\/+$/, '');
+    OFFICIAL_PLUGIN_PREFIXES.add(`${base}/plugins/cdn/official/`);
+    CURATED_PLUGIN_PREFIXES.add(`${base}/plugins/cdn/curated/`);
+    CONTENT_CDN_PREFIXES.add(`${base}/nighthawk-computer-use/`);
+    CONTENT_CDN_PREFIXES.add(`${base}/nighthawk-computer-use-windows/`);
   }
 }
 
@@ -65,11 +67,7 @@ export function pluginTrustLabel(plugin: PluginSummary): PluginTrustLabel {
     if (isOfficialPluginUrl(url)) {
       return 'official';
     }
-    if (
-      url.protocol === 'https:' &&
-      CODE_CDN_HOSTS.has(url.hostname) &&
-      url.pathname.startsWith('/nighthawk/plugins/curated/')
-    ) {
+    if (startsWithAnyPrefix(url, CURATED_PLUGIN_PREFIXES)) {
       return 'curated';
     }
     return 'third-party';
@@ -111,12 +109,17 @@ export function isOfficialPluginInstall(plugin: PluginSummary): boolean {
 function isOfficialPluginUrl(url: URL): boolean {
   if (url.protocol !== 'https:') return false;
   return (
-    (CODE_CDN_HOSTS.has(url.hostname) &&
-      url.pathname.startsWith('/nighthawk/plugins/official/')) ||
-    (CONTENT_CDN_HOSTS.has(url.hostname) &&
-      (url.pathname.startsWith('/nighthawk-computer-use/') ||
-        url.pathname.startsWith('/nighthawk-computer-use-windows/')))
+    startsWithAnyPrefix(url, OFFICIAL_PLUGIN_PREFIXES) ||
+    startsWithAnyPrefix(url, CONTENT_CDN_PREFIXES)
   );
+}
+
+function startsWithAnyPrefix(url: URL, prefixes: Iterable<string>): boolean {
+  const candidate = `${url.origin}${url.pathname}`;
+  for (const prefix of prefixes) {
+    if (candidate.startsWith(prefix)) return true;
+  }
+  return false;
 }
 
 function hostFromUrl(raw: string): string | undefined {

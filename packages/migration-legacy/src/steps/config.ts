@@ -245,10 +245,20 @@ export async function migrateConfigStep(input: ConfigStepInput): Promise<ConfigS
   );
 
   // 1) Providers — keep only those nighthawk's schema accepts.
+  // Legacy configs spell the managed provider type `kimi`; nighthawk's schema
+  // renamed it to `nighthawk` (agent-core runs the same rewrite in place at
+  // startup via migrateProviderTypeKimiToNighthawk). Remap before validating
+  // so those providers — and every model bound to them — survive migration
+  // instead of being dropped as unsupported.
   const droppedProviders: string[] = [];
   const keptProviders: Record<string, Record<string, unknown>> = {};
   if (isRecord(parsed['providers'])) {
     for (const [name, prov] of Object.entries(parsed['providers'])) {
+      if (isRecord(prov)) {
+        if (prov['type'] === 'kimi') {
+          prov['type'] = 'nighthawk';
+        }
+      }
       if (isRecord(prov) && providerIsSupported(prov)) {
         keptProviders[name] = prov;
       } else {

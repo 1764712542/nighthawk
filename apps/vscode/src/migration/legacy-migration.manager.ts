@@ -80,7 +80,7 @@ export interface LegacyMigrationManagerOptions {
   readonly targetHome: string;
   /** Defaults to the legacy legacy-cli home (`~/.kimi`). Injectable for isolated tests. */
   readonly defaultSourceHome?: string;
-  /** First workspace root. Used only to resolve a relative legacy NIGHTHAWK_SHARE_DIR. */
+  /** First workspace root. Used only to resolve a relative legacy KIMI_SHARE_DIR. */
   readonly workspaceRoot?: string | null;
   /** The removed `nighthawk.environmentVariables` VS Code setting, read once for migration. */
   readonly legacyEnvironmentVariables?: unknown;
@@ -164,7 +164,7 @@ export class LegacyMigrationManager {
       throw new Error("LegacyMigrationManager requires a non-empty targetHome.");
     }
     this.targetHome = resolve(options.targetHome);
-    this.defaultSourceHome = resolve(options.defaultSourceHome ?? join(homedir(), ".nighthawk"));
+    this.defaultSourceHome = resolve(options.defaultSourceHome ?? join(homedir(), ".kimi"));
     this.workspaceRoot =
       options.workspaceRoot === undefined || options.workspaceRoot === null
         ? null
@@ -387,14 +387,14 @@ export class LegacyMigrationManager {
         warnings.push({
           code: "invalid-share-dir",
           message:
-            "The legacy NIGHTHAWK_SHARE_DIR is relative, but no workspace is open; this migration source was ignored.",
+            "The legacy KIMI_SHARE_DIR is relative, but no workspace is open; this migration source was ignored.",
         });
       } else {
         sourceHome = resolve(this.workspaceRoot, shareDir.value);
         warnings.push({
           code: "relative-share-dir",
           sourceHome,
-          message: `The legacy relative NIGHTHAWK_SHARE_DIR was resolved against the workspace: ${sourceHome}`,
+          message: `The legacy relative KIMI_SHARE_DIR was resolved against the workspace: ${sourceHome}`,
         });
       }
 
@@ -402,7 +402,7 @@ export class LegacyMigrationManager {
         warnings.push({
           code: "source-equals-target",
           sourceHome,
-          message: "The legacy NIGHTHAWK_SHARE_DIR resolves to the NightHawk home and was ignored.",
+          message: "The legacy KIMI_SHARE_DIR resolves to the NightHawk home and was ignored.",
         });
       } else if (
         sourceHome !== undefined &&
@@ -434,12 +434,12 @@ function readLegacyShareDir(
     };
   }
 
-  const value = (environmentVariables as Record<string, unknown>)["NIGHTHAWK_SHARE_DIR"];
+  const value = (environmentVariables as Record<string, unknown>)["KIMI_SHARE_DIR"];
   if (value === undefined) return { kind: "missing" };
   if (typeof value !== "string" || value.trim().length === 0) {
     return {
       kind: "invalid",
-      message: "The legacy NIGHTHAWK_SHARE_DIR must be a non-empty string and was ignored.",
+      message: "The legacy KIMI_SHARE_DIR must be a non-empty string and was ignored.",
     };
   }
   return { kind: "value", value };

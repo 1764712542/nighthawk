@@ -8,7 +8,7 @@
 |------|-----------|-----|
 | 定位 | 通用编码助手 | 安全编码超集 |
 | 内置安全工具 | 无（依赖 MCP） | 200+ 规则 + 11 核心工具 |
-| Provider | Kimi 优先 | OpenAI/Anthropic/Kimi/Google/本地 |
+| Provider | Moonshot 托管优先 | OpenAI/Anthropic/Moonshot/Google/本地 |
 | Logo | ████ 块字符 | ╔═╗╔═╗ EVA 风格 |
 | 中文支持 | 有 | 原生中文 |
 | AGENTS.md | ✅ | ✅ |

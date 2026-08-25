@@ -179,7 +179,7 @@ describe('updateActivityPane terminal progress', () => {
       expect(setProgress).toHaveBeenLastCalledWith(true);
       expect(state.activitySpinner).not.toBeNull();
       expect(state.activityContainer.children).toHaveLength(0);
-      expect(strip(progress.render(80).join('\n'))).toContain('🌑 Working...');
+      expect(strip(progress.render(80).join('\n'))).toContain('◐ Working...');
 
       state.activitySpinner?.instance.stop();
       driver.sessionEventHandler.clearAgentSwarmProgress();
@@ -210,7 +210,7 @@ describe('updateActivityPane terminal progress', () => {
       expect(state.activityContainer.children).toHaveLength(1);
       const output = strip(progress.render(80).join('\n'));
       expect(output).toContain('  Working...');
-      expect(output).not.toContain('🌑 Working...');
+      expect(output).not.toContain('◐ Working...');
 
       state.activitySpinner?.instance.stop();
       driver.sessionEventHandler.clearAgentSwarmProgress();

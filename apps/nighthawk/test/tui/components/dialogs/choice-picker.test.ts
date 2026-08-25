@@ -36,13 +36,36 @@ describe('ChoicePickerComponent', () => {
     expect(lines[titleIdx]).not.toContain('type to filter');
     // Hint sits directly under the title and uses lowercase key vocabulary.
     const hint = lines[titleIdx + 1];
-    expect(hint).toContain('↑↓ navigate');
+    expect(hint).toContain('↑↓/Tab navigate');
     expect(hint).toContain('Enter select');
     expect(hint).toContain('Esc cancel');
     expect(hint).not.toContain('enter select');
     expect(hint).not.toContain('esc cancel');
     // Blank line separates the hint from the body, like the model dialog.
     expect(lines[titleIdx + 2]).toBe('');
+  });
+
+  it('moves the selection with Tab and Shift+Tab', () => {
+    const onSelect = vi.fn();
+    const picker = new ChoicePickerComponent({
+      title: 'Pick one',
+      options: [
+        { value: 'a', label: 'Alpha' },
+        { value: 'b', label: 'Beta' },
+      ],
+      onSelect,
+      onCancel: vi.fn(),
+    });
+
+    // Tab moves down like ↓; Enter confirms the moved selection.
+    picker.handleInput('\t');
+    picker.handleInput('\r');
+    expect(onSelect).toHaveBeenLastCalledWith('b');
+
+    // Shift+Tab moves back up.
+    picker.handleInput('\x1b[Z');
+    picker.handleInput('\r');
+    expect(onSelect).toHaveBeenLastCalledWith('a');
   });
 
   it('renders optional descriptions below choice labels', () => {

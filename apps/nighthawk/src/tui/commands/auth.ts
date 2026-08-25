@@ -26,6 +26,7 @@ import {
   promptLogoutProviderSelection,
   promptModelSelectionForOpenPlatform,
   promptPlatformSelection,
+  promptProviderName,
 } from './prompts';
 import type { SlashCommandHost } from './dispatch';
 
@@ -66,7 +67,14 @@ export async function handleLoginCommand(host: SlashCommandHost): Promise<void> 
 }
 
 async function handleCustomEndpointLogin(host: SlashCommandHost): Promise<void> {
-  const baseUrl = await promptBaseUrl(host, 'Custom provider');
+  const name = await promptProviderName(host);
+  if (name === undefined) return;
+  const trimmedName = name.trim();
+  if (trimmedName.length === 0) {
+    host.showError('Name cannot be empty.');
+    return;
+  }
+  const baseUrl = await promptBaseUrl(host, trimmedName);
   if (baseUrl === undefined) return;
   const trimmed = baseUrl.trim().replace(/\/+$/, '');
   if (trimmed.length === 0) {
@@ -74,11 +82,37 @@ async function handleCustomEndpointLogin(host: SlashCommandHost): Promise<void> 
     return;
   }
   const platform: OpenPlatformDefinition = {
-    id: `custom-${trimmed.replace(/[^a-z0-9]+/gi, '-').toLowerCase().slice(0, 24)}`,
-    name: `Custom (${trimmed})`,
+    id: await customProviderIdFor(host, trimmedName, trimmed),
+    name: trimmedName,
     baseUrl: trimmed,
   };
   await handleOpenPlatformLogin(host, platform);
+}
+
+/**
+ * Derives the config provider id from the user-chosen name: lowercase,
+ * non-alphanumerics collapsed to '-', capped at 24 characters. A colliding id
+ * whose baseUrl differs gets a numeric suffix, so re-entering the same
+ * endpoint reuses the original entry instead of duplicating it.
+ */
+async function customProviderIdFor(
+  host: SlashCommandHost,
+  name: string,
+  baseUrl: string,
+): Promise<string> {
+  const slug =
+    name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 24) ||
+    'custom';
+  const providers = (await host.harness.getConfig()).providers;
+  const existing = providers[slug];
+  if (existing === undefined || existing.baseUrl === baseUrl) return slug;
+  for (let i = 2; i < 100; i++) {
+    const suffix = `-${i}`;
+    const candidate = `${slug.slice(0, 24 - suffix.length)}${suffix}`;
+    const clash = providers[candidate];
+    if (clash === undefined || clash.baseUrl === baseUrl) return candidate;
+  }
+  return `${slug}-${Date.now().toString(36)}`.slice(0, 24);
 }
 
 async function handleNighthawkOAuthLogin(

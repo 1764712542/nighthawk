@@ -13,7 +13,6 @@ coverage/
 .playwright-mcp/
 .claude
 .conductor
-plugins/cdn/
 .worktrees/
 .nighthawk/local.toml
 .nighthawk-sandbox/

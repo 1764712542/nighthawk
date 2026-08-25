@@ -20,6 +20,15 @@
       "source": "./official/nighthawk-webbridge"
     },
     {
+      "id": "nighthawk-pentest",
+      "tier": "official",
+      "displayName": "NightHawk Pentest",
+      "version": "1.0.0",
+      "description": "Authorized penetration-testing workflow and professional report generation. 授权渗透测试全流程与专业报告生成。",
+      "keywords": ["pentest", "security", "渗透测试", "report"],
+      "source": "./official/nighthawk-pentest"
+    },
+    {
       "id": "superpowers",
       "tier": "curated",
       "displayName": "Superpowers",
@@ -54,7 +63,7 @@
       "description": "Build, deploy, and manage Tencent CloudBase apps — databases, cloud functions, storage, auth, and hosting, powered by cloudbase-mcp.",
       "homepage": "https://github.com/TencentCloudBase/CloudBase-AI-Toolkit",
       "keywords": ["cloudbase", "tencent-cloud", "baas", "database", "cloud-function", "mcp"],
-      "source": "https://github.com/TencentCloudBase/CloudBase-AI-Toolkit/releases/latest/download/cloudbase-kimi.zip"
+      "source": "https://github.com/TencentCloudBase/CloudBase-AI-Toolkit"
     }
   ]
 }

@@ -5,8 +5,8 @@ import { computed, ref } from 'vue'
 const { lang } = useData()
 const isZh = computed(() => lang.value.startsWith('zh'))
 
-const installMacCommand = 'curl -fsSL https://code.kimi.com/nighthawk/install.sh | bash'
-const installWinCommand = 'irm https://code.kimi.com/nighthawk/install.ps1 | iex'
+const installMacCommand = 'curl -fsSL https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/install.sh | bash'
+const installWinCommand = 'irm https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/install.ps1 | iex'
 const runCommand = 'nighthawk'
 
 const copy = computed(() => isZh.value

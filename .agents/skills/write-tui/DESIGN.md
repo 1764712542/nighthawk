@@ -119,10 +119,10 @@
  ↑↓ navigate · Space toggle · Enter details · Esc cancel
                                             ← 空行
  Installed plugins (2)                      ← 分区标题（textStrong / 加粗）
-  ❯ Kimi Datasource  enabled                ← 选中行（❯ + primary+bold 名称）+ 状态标签（success）
-    id kimi-datasource · 1 skill · MCP 1/1 · via code.kimi.com · official   ← 次要信息行（textMuted，` · ` 分隔）
+  ❯ Datasource  enabled                     ← 选中行（❯ + primary+bold 名称）+ 状态标签（success）
+    id nighthawk-datasource · 1 skill · MCP 1/1 · via cdn.jsdelivr.net · official   ← 次要信息行（textMuted，` · ` 分隔）
     Superpowers  disabled                   ← 未选中行（text 名称）+ 关态标签（textDim）
-    id superpowers · 14 skills · via code.kimi.com · curated
+    id superpowers · 14 skills · via cdn.jsdelivr.net · curated
 ```
 
 约定：

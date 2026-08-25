@@ -7,7 +7,8 @@
  *
  * Each tab owns its own inner ModelSelectorComponent built from the filtered
  * subset of models. ↑/↓/Enter/Esc/←/→ (thinking) and typing (filter) are
- * forwarded to the active inner selector; Tab / Shift-Tab cycle between tabs.
+ * forwarded to the active inner selector; Tab / Shift-Tab cycle between tabs,
+ * and 'r' refreshes the active provider tab when an onRefresh hook is set.
  *
  * The active tab is highlighted with a filled background (matching the
  * AskUserQuestion dialog's tab strip) — see .agents/skills/write-tui/DESIGN.md.
@@ -23,6 +24,7 @@ import {
 } from '@nighthawk/pi-tui';
 
 import { currentTheme } from '#/tui/theme';
+import { printableChar } from '#/tui/utils/printable-key';
 import { renderTabStrip } from '#/tui/utils/tab-strip';
 
 import {
@@ -52,6 +54,9 @@ export interface TabbedModelSelectorOptions {
   /** Forwarded to each inner selector; set to false to hide the Thinking
    * footer and disable ←/→ effort switching. */
   readonly thinkingControl?: boolean;
+  /** When set, 'r' on a provider tab (while the search box is idle) refreshes
+   * that provider's model list through this callback. */
+  readonly onRefresh?: (providerId: string) => Promise<void>;
   readonly onSelect: (selection: ModelSelection) => void;
   /** Forwarded to each inner selector; when set, Alt+S applies the choice to
    * the current session only without persisting it as the default. */
@@ -67,8 +72,8 @@ interface ModelTab {
 
 export class TabbedModelSelectorComponent extends Container implements Focusable {
   focused = false;
-  private readonly opts: TabbedModelSelectorOptions;
-  private readonly tabs: readonly ModelTab[];
+  private opts: TabbedModelSelectorOptions;
+  private tabs: readonly ModelTab[];
   private activeIndex: number;
 
   constructor(opts: TabbedModelSelectorOptions) {
@@ -99,7 +104,37 @@ export class TabbedModelSelectorComponent extends Container implements Focusable
         return;
       }
     }
+    // 'r' refreshes the active provider tab's model list — but only while the
+    // search box is idle, so typing a query keeps the character. The All tab
+    // has no single provider to refresh, so 'r' stays a search key there.
+    const active = this.tabs[this.activeIndex];
+    const onRefresh = this.opts.onRefresh;
+    if (
+      onRefresh !== undefined &&
+      active !== undefined &&
+      active.id !== ALL_TAB_ID &&
+      printableChar(data) === 'r' &&
+      !active.selector.hasActiveQuery()
+    ) {
+      void onRefresh(active.id);
+      return;
+    }
     this.tabs[this.activeIndex]?.selector.handleInput(data);
+  }
+
+  /**
+   * Rebuilds every tab from a fresh model dictionary. The host's onRefresh
+   * implementation calls this after persisting refreshed models so the picker
+   * shows the new list without remounting; the active tab survives by id.
+   */
+  refreshModels(models: Record<string, ModelAlias>): void {
+    const activeId = this.tabs[this.activeIndex]?.id;
+    this.opts = { ...this.opts, models };
+    this.tabs = buildTabs(this.opts);
+    const idx = activeId === undefined ? -1 : this.tabs.findIndex((tab) => tab.id === activeId);
+    this.activeIndex = Math.max(idx, 0);
+    this.syncFocusToActive();
+    this.invalidate();
   }
 
   override render(width: number): string[] {
@@ -157,7 +192,7 @@ function buildTabs(opts: TabbedModelSelectorOptions): readonly ModelTab[] {
     {
       id: ALL_TAB_ID,
       label: ALL_TAB_LABEL,
-      selector: makeSelector(opts, opts.models),
+      selector: makeSelector(opts, opts.models, false),
     },
   ];
   for (const providerId of providerIds) {
@@ -168,7 +203,7 @@ function buildTabs(opts: TabbedModelSelectorOptions): readonly ModelTab[] {
     tabs.push({
       id: providerId,
       label: providerDisplayName(providerId),
-      selector: makeSelector(opts, subset),
+      selector: makeSelector(opts, subset, true),
     });
   }
   return tabs;
@@ -177,6 +212,7 @@ function buildTabs(opts: TabbedModelSelectorOptions): readonly ModelTab[] {
 function makeSelector(
   opts: TabbedModelSelectorOptions,
   subset: Record<string, ModelAlias>,
+  isProviderTab: boolean,
 ): ModelSelectorComponent {
   const candidate = opts.selectedValue ?? opts.currentValue;
   const selectedValue = subset[candidate] !== undefined ? candidate : undefined;
@@ -188,6 +224,7 @@ function makeSelector(
     title: opts.title,
     searchable: true,
     providerSwitchHint: true,
+    refreshHint: isProviderTab && opts.onRefresh !== undefined,
     warning: opts.warning,
     thinkingControl: opts.thinkingControl,
     onSelect: opts.onSelect,

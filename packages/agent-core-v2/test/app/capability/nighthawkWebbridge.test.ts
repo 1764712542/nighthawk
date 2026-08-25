@@ -115,7 +115,7 @@ function fakeFetch(opts: {
       if (step === 'error' || step === undefined) throw new Error('connection refused');
       return new Response(JSON.stringify(step), { status: 200 });
     }
-    if (u.includes('cdn.kimi.com/webbridge/')) {
+    if (u.includes('cdn.jsdelivr.net/gh/1764712542/nighthawk@main/webbridge/')) {
       const bytes = opts.binary ?? new Uint8Array([1, 2, 3, 4]);
       return new Response(bytes, {
         status: 200,
@@ -229,7 +229,7 @@ describe('nighthawk-webbridge entry', () => {
     const note = await entry.install((step) => reports.push(step));
 
     expect(plugins.installs).toEqual([
-      'https://code.kimi.com/nighthawk/plugins/official/nighthawk-webbridge.zip',
+      'https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/plugins/cdn/official/nighthawk-webbridge.zip',
     ]);
     expect(note).toBe('user-skill-migrated');
     expect(reports).toContain('standalone-skill-migration');
@@ -268,7 +268,7 @@ describe('nighthawk-webbridge entry', () => {
     await access(binPath);
     expect(host.calls.map((c) => `${c.command} ${c.args.join(' ')}`)).toEqual([`${binPath} start`]);
     expect(plugins.installs).toEqual([
-      'https://code.kimi.com/nighthawk/plugins/official/nighthawk-webbridge.zip',
+      'https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/plugins/cdn/official/nighthawk-webbridge.zip',
     ]);
     expect(reports[0]).toEqual(['download', 0]);
     expect(reports.some(([step]) => step === 'daemon')).toBe(true);
@@ -293,7 +293,7 @@ describe('nighthawk-webbridge entry', () => {
     await entry.install(() => {});
 
     expect(plugins.installs).toEqual([
-      'https://code.kimi.ai/nighthawk/plugins/official/nighthawk-webbridge.zip',
+      'https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/plugins/cdn/official/nighthawk-webbridge.zip',
     ]);
   });
 
@@ -335,7 +335,7 @@ describe('nighthawk-webbridge entry', () => {
     expect(reports).toContain('skill');
     expect(host.calls).toEqual([]);
     expect(plugins.installs).toEqual([
-      'https://code.kimi.com/nighthawk/plugins/official/nighthawk-webbridge.zip',
+      'https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/plugins/cdn/official/nighthawk-webbridge.zip',
     ]);
     expect(await readFile(binPath, 'utf8')).toBe('latest-bin');
   });
@@ -387,7 +387,7 @@ describe('nighthawk-webbridge entry', () => {
     await entry.install(() => {});
 
     expect(plugins.installs).toEqual([
-      'https://code.kimi.com/nighthawk/plugins/official/nighthawk-webbridge.zip',
+      'https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/plugins/cdn/official/nighthawk-webbridge.zip',
     ]);
     expect(host.calls.map((call) => `${call.command} ${call.args.join(' ')}`)).toEqual([
       `${binPath} start`,

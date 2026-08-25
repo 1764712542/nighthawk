@@ -142,7 +142,7 @@ nighthawk
 | `NIGHTHAWK_BACKGROUND_MAX_RUNNING_TASKS` | 同时运行的后台任务数上限，优先级高于 `config.toml` 的 `[background] max_running_tasks`（不设置表示无上限） | 正整数；非法值被忽略 |
 | `NIGHTHAWK_IMAGE_MAX_EDGE_PX` | 图片压缩的最长边上限（像素），优先级高于 `config.toml` 的 `[image] max_edge_px`（默认 `2000`） | 正整数；非法值被忽略 |
 | `NIGHTHAWK_IMAGE_READ_BYTE_BUDGET` | 模型自行读图（`ReadMediaFile` 默认读取）的单图字节预算，优先级高于 `config.toml` 的 `[image] read_byte_budget`（默认 `262144`，即 256 KB） | 正整数；非法值被忽略 |
-| `NIGHTHAWK_PLUGIN_MARKETPLACE_URL` | 覆盖 `/plugins` 加载的 plugin marketplace JSON，适合 dev loopback server、测试 CDN 文件或替换 marketplace 目录 | `https://code.kimi.com/nighthawk/plugins/marketplace.json`；也接受 `http://`、`file://` URL 和本地路径 |
+| `NIGHTHAWK_PLUGIN_MARKETPLACE_URL` | 覆盖 `/plugins` 加载的 plugin marketplace JSON，适合 dev loopback server、测试 CDN 文件或替换 marketplace 目录 | `https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/plugins/cdn/marketplace.json`；也接受 `http://`、`file://` URL 和本地路径 |
 | `NIGHTHAWK_AGENT_SWARM_MAX_CONCURRENCY` | 限制 AgentSwarm 初始提升并发阶段可同时运行的 subagent 数量；不设置表示不限制 | 正整数；非法值会立即失败 |
 | `NIGHTHAWK_SUBAGENT_TIMEOUT_MS` | 单个 `Agent` subagent 可运行的最长时间（毫秒）；优先级高于 `config.toml` 的 `[subagent] timeout_ms`（默认 `7200000`，即 2 小时） | 正整数；非法值回退到配置或默认值 |
 | `NIGHTHAWK_SWARM_TIMEOUT_MS` | 单个 `AgentSwarm` subagent 可运行的最长时间（毫秒）；优先级高于 `config.toml` 的 `[swarm] timeout_ms`（默认 `7200000`，即 2 小时） | 正整数；非法值回退到配置或默认值 |

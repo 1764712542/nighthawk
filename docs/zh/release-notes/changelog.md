@@ -10,7 +10,7 @@ outline: 2
 
 ### 新功能
 
-- 支持 kimi.ai 与 kimi.com 两种 OAuth 登录方式。
+- 支持 Moonshot 账号双区域（kimi.com / kimi.ai）OAuth 登录。
 - 新增 WaitFor 工具：Agent 可以在当前轮次内等待后台任务完成，无需结束轮次后再次被唤起。
 - 官方 NightHawk Datasource 插件新增 13 个数据源：中国政府数据（NDA/NBS）与标准（GB/HB/DB/TT）、八个国际组织数据集（WHO、FAO、UNSD、ECB、Eurostat、UNICEF、OECD、FRED）、新华财经和财新。在 /plugins 的 Official 标签页中更新插件。
 - web: 聊天头部的更多菜单新增置顶操作。

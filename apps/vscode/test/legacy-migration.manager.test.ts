@@ -97,9 +97,9 @@ describe("legacy migration manager (discovery and migration coordination)", () =
     expect(discovery.suppressedSources).toHaveLength(1);
   });
 
-  it("discovers a relative legacy NIGHTHAWK_SHARE_DIR from the workspace and warns about its resolution", async () => {
+  it("discovers a relative legacy KIMI_SHARE_DIR from the workspace and warns about its resolution", async () => {
     const rig = await createRig({
-      legacyEnvironmentVariables: { NIGHTHAWK_SHARE_DIR: "legacy-nighthawk" },
+      legacyEnvironmentVariables: { KIMI_SHARE_DIR: "legacy-nighthawk" },
     });
     const shareHome = join(rig.workspaceRoot, "legacy-nighthawk");
     await writeLegacyConfig(shareHome);
@@ -117,9 +117,9 @@ describe("legacy migration manager (discovery and migration coordination)", () =
     ]);
   });
 
-  it("migrates both the default home and the extra legacy NIGHTHAWK_SHARE_DIR source", async () => {
+  it("migrates both the default home and the extra legacy KIMI_SHARE_DIR source", async () => {
     const rig = await createRig({
-      legacyEnvironmentVariables: { NIGHTHAWK_SHARE_DIR: "legacy-nighthawk" },
+      legacyEnvironmentVariables: { KIMI_SHARE_DIR: "legacy-nighthawk" },
     });
     await writeLegacyConfig(rig.sourceHome);
     const shareHome = join(rig.workspaceRoot, "legacy-nighthawk");
@@ -139,7 +139,7 @@ describe("legacy migration manager (discovery and migration coordination)", () =
     ).resolves.toContain("example-skill");
   });
 
-  it("ignores legacy environment variables other than NIGHTHAWK_SHARE_DIR", async () => {
+  it("ignores legacy environment variables other than KIMI_SHARE_DIR", async () => {
     const rig = await createRig({
       legacyEnvironmentVariables: {
         NIGHTHAWK_HOME: join(tmpdir(), "must-not-be-read"),
@@ -152,9 +152,9 @@ describe("legacy migration manager (discovery and migration coordination)", () =
     expect(discovery).toMatchObject({ prompt: null, warnings: [] });
   });
 
-  it("ignores a non-string legacy NIGHTHAWK_SHARE_DIR with a clear warning", async () => {
+  it("ignores a non-string legacy KIMI_SHARE_DIR with a clear warning", async () => {
     const rig = await createRig({
-      legacyEnvironmentVariables: { NIGHTHAWK_SHARE_DIR: 42, HTTPS_PROXY: "https://example.test" },
+      legacyEnvironmentVariables: { KIMI_SHARE_DIR: 42, HTTPS_PROXY: "https://example.test" },
     });
 
     const discovery = await rig.manager.discover();
@@ -168,10 +168,10 @@ describe("legacy migration manager (discovery and migration coordination)", () =
     ]);
   });
 
-  it("ignores a relative legacy NIGHTHAWK_SHARE_DIR when no workspace can resolve it", async () => {
+  it("ignores a relative legacy KIMI_SHARE_DIR when no workspace can resolve it", async () => {
     const rig = await createRig({
       workspaceRoot: null,
-      legacyEnvironmentVariables: { NIGHTHAWK_SHARE_DIR: "legacy-nighthawk" },
+      legacyEnvironmentVariables: { KIMI_SHARE_DIR: "legacy-nighthawk" },
     });
 
     const discovery = await rig.manager.discover();
@@ -432,7 +432,7 @@ async function createRig(options: RigOptions = {}): Promise<{
 }> {
   const root = await mkdtemp(join(tmpdir(), "vscode-legacy-migration-"));
   temporaryRoots.push(root);
-  const sourceHome = join(root, ".nighthawk");
+  const sourceHome = join(root, ".kimi");
   const targetHome = join(root, ".nighthawk");
   const workspaceRoot = join(root, "workspace");
   await mkdir(options.workspaceRoot === null ? root : workspaceRoot, { recursive: true });
@@ -464,7 +464,7 @@ async function writeCorruptLegacySession(
 ): Promise<void> {
   await mkdir(sourceHome, { recursive: true });
   await writeFile(
-    join(sourceHome, "nighthawk.json"),
+    join(sourceHome, "kimi.json"),
     JSON.stringify({ work_dirs: [{ path: workDir, kaos: "local" }] }),
   );
   const bucket = createHash("md5").update(workDir).digest("hex");

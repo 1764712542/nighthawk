@@ -135,7 +135,7 @@ describe('plugins selector dialogs', () => {
       commandCount: 0,
       hasErrors: false,
       source: 'zip-url',
-      originalSource: 'https://code.kimi.com/nighthawk/plugins/official/nighthawk-datasource.zip',
+      originalSource: 'https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/plugins/cdn/official/nighthawk-datasource.zip',
     })).toBe('official');
     expect(pluginTrustLabel({
       id: 'superpowers',
@@ -149,7 +149,7 @@ describe('plugins selector dialogs', () => {
       commandCount: 0,
       hasErrors: false,
       source: 'zip-url',
-      originalSource: 'https://code.kimi.com/nighthawk/plugins/curated/superpowers.zip',
+      originalSource: 'https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/plugins/cdn/curated/superpowers.zip',
     })).toBe('curated');
     expect(pluginTrustLabel({
       id: 'nighthawk-cu',
@@ -163,7 +163,7 @@ describe('plugins selector dialogs', () => {
       commandCount: 0,
       hasErrors: false,
       source: 'zip-url',
-      originalSource: 'https://cdn.kimi.com/nighthawk-computer-use/latest/nighthawk-cu-plugin.zip',
+      originalSource: 'https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/nighthawk-computer-use/latest/nighthawk-cu-plugin.zip',
     })).toBe('official');
     expect(pluginTrustLabel({
       id: 'demo',
@@ -177,7 +177,7 @@ describe('plugins selector dialogs', () => {
       commandCount: 0,
       hasErrors: false,
       source: 'zip-url',
-      originalSource: 'https://code.kimi.com/demo.zip',
+      originalSource: 'https://cdn.jsdelivr.net/demo.zip',
     })).toBe('third-party');
     expect(pluginTrustLabel({
       id: 'local',
@@ -191,11 +191,11 @@ describe('plugins selector dialogs', () => {
       commandCount: 0,
       hasErrors: false,
       source: 'local-path',
-      originalSource: 'https://code.kimi.com/nighthawk/plugins/official/local',
+      originalSource: 'https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/plugins/cdn/official/local',
     })).toBe('third-party');
   });
 
-  it('trusts the .ai NightHawk plugin hosts with the same path rules', () => {
+  it('trusts paths under the distribution base, not just any file on its host', () => {
     const labelFor = (originalSource: string) =>
       pluginTrustLabel({
         id: 'demo',
@@ -211,15 +211,15 @@ describe('plugins selector dialogs', () => {
         source: 'zip-url',
         originalSource,
       });
-    // code.kimi.ai mirrors the cdnBase rules; cdn.kimi.ai the content-CDN ones.
-    expect(labelFor('https://code.kimi.ai/nighthawk/plugins/official/nighthawk-datasource.zip')).toBe('official');
-    expect(labelFor('https://code.kimi.ai/nighthawk/plugins/curated/superpowers.zip')).toBe('curated');
-    expect(labelFor('https://cdn.kimi.ai/nighthawk-computer-use/latest/nighthawk-cu-plugin.zip')).toBe('official');
-    expect(labelFor('https://cdn.kimi.ai/nighthawk-computer-use-windows/latest/nighthawk-cu-win-plugin.zip')).toBe('official');
-    // Non-plugin paths on the .ai hosts, and lookalike hosts, stay third-party.
-    expect(labelFor('https://code.kimi.ai/demo.zip')).toBe('third-party');
-    expect(labelFor('https://cdn.kimi.ai/unrelated/plugin.zip')).toBe('third-party');
-    expect(labelFor('https://code.kimi.ai.example.test/nighthawk/plugins/official/x.zip')).toBe('third-party');
+    expect(labelFor('https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/plugins/cdn/official/nighthawk-datasource.zip')).toBe('official');
+    expect(labelFor('https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/plugins/cdn/curated/superpowers.zip')).toBe('curated');
+    expect(labelFor('https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/nighthawk-computer-use/latest/nighthawk-cu-plugin.zip')).toBe('official');
+    expect(labelFor('https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/nighthawk-computer-use-windows/latest/nighthawk-cu-win-plugin.zip')).toBe('official');
+    // Files on the same host but outside the trusted path prefixes — and
+    // lookalike hosts that merely embed the real one — stay third-party.
+    expect(labelFor('https://cdn.jsdelivr.net/demo.zip')).toBe('third-party');
+    expect(labelFor('https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/unrelated/plugin.zip')).toBe('third-party');
+    expect(labelFor('https://cdn.jsdelivr.net.example.test/gh/1764712542/nighthawk@main/plugins/cdn/official/x.zip')).toBe('third-party');
   });
 
   it('recognizes installed plugins by official provenance', () => {
@@ -239,19 +239,19 @@ describe('plugins selector dialogs', () => {
     expect(isOfficialPluginInstall({
       ...base,
       source: 'zip-url',
-      originalSource: 'https://code.kimi.com/nighthawk/plugins/official/nighthawk-datasource.zip',
+      originalSource: 'https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/plugins/cdn/official/nighthawk-datasource.zip',
     })).toBe(true);
     expect(isOfficialPluginInstall({
       ...base,
       source: 'zip-url',
-      originalSource: 'https://code.kimi.ai/nighthawk/plugins/official/nighthawk-datasource.zip',
+      originalSource: 'https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/plugins/cdn/official/nighthawk-datasource.zip',
     })).toBe(true);
     expect(isOfficialPluginInstall({
       ...base,
       id: 'nighthawk-cu',
       displayName: 'NightHawk Computer Use',
       source: 'zip-url',
-      originalSource: 'https://cdn.kimi.com/nighthawk-computer-use/latest/nighthawk-cu-plugin.zip',
+      originalSource: 'https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/nighthawk-computer-use/latest/nighthawk-cu-plugin.zip',
     })).toBe(true);
     // Same manifest id from a local path, GitHub, a loopback URL, or a
     // third-party URL is not the official build.
@@ -276,14 +276,14 @@ describe('plugins selector dialogs', () => {
         id: 'nighthawk-cu',
         displayName: 'NightHawk Computer Use',
         source: 'zip-url',
-        originalSource: 'https://cdn.kimi.com/nighthawk-computer-use/latest/nighthawk-cu-plugin.zip',
+        originalSource: 'https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/nighthawk-computer-use/latest/nighthawk-cu-plugin.zip',
       },
       {
         ...superpowers,
         id: 'nighthawk-webbridge',
         displayName: 'NightHawk WebBridge',
         source: 'zip-url',
-        originalSource: 'https://code.kimi.com/nighthawk/plugins/official/nighthawk-webbridge.zip',
+        originalSource: 'https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/plugins/cdn/official/nighthawk-webbridge.zip',
       },
     ];
 
@@ -291,37 +291,27 @@ describe('plugins selector dialogs', () => {
     const out = strip(renderRaw(panel));
 
     expect(out).toContain('id nighthawk-cu');
-    expect(out).toContain('via cdn.kimi.com · official');
+    expect(out).toContain('via cdn.jsdelivr.net · official');
     expect(out).toContain('id nighthawk-webbridge');
-    expect(out).toContain('via code.kimi.com · official');
+    expect(out).toContain('via cdn.jsdelivr.net · official');
   });
 
   it('treats only the official NightHawk CDN path as a trusted install source', () => {
-    expect(isOfficialPluginSource('https://code.kimi.com/nighthawk/plugins/official/nighthawk-datasource.zip')).toBe(true);
-    expect(isOfficialPluginSource('https://cdn.kimi.com/nighthawk-computer-use/latest/nighthawk-cu-plugin.zip')).toBe(true);
+    expect(isOfficialPluginSource('https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/plugins/cdn/official/nighthawk-datasource.zip')).toBe(true);
+    expect(isOfficialPluginSource('https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/nighthawk-computer-use/latest/nighthawk-cu-plugin.zip')).toBe(true);
     expect(
       isOfficialPluginSource(
-        'https://cdn.kimi.com/nighthawk-computer-use-windows/latest/nighthawk-cu-win-plugin.zip',
+        'https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/nighthawk-computer-use-windows/latest/nighthawk-cu-win-plugin.zip',
       ),
     ).toBe(true);
-    // The .ai region family follows the same path rules.
-    expect(isOfficialPluginSource('https://code.kimi.ai/nighthawk/plugins/official/nighthawk-datasource.zip')).toBe(true);
-    expect(isOfficialPluginSource('https://cdn.kimi.ai/nighthawk-computer-use/latest/nighthawk-cu-plugin.zip')).toBe(true);
-    expect(
-      isOfficialPluginSource(
-        'https://cdn.kimi.ai/nighthawk-computer-use-windows/latest/nighthawk-cu-win-plugin.zip',
-      ),
-    ).toBe(true);
-    expect(isOfficialPluginSource('https://code.kimi.ai/nighthawk/plugins/curated/superpowers.zip')).toBe(false);
-    expect(isOfficialPluginSource('https://cdn.kimi.ai/unrelated/plugin.zip')).toBe(false);
     // Curated and other NightHawk CDN paths are not "official" for the install gate.
-    expect(isOfficialPluginSource('https://code.kimi.com/nighthawk/plugins/curated/superpowers.zip')).toBe(false);
-    expect(isOfficialPluginSource('https://code.kimi.com/nighthawk/plugins/foo.zip')).toBe(false);
-    expect(isOfficialPluginSource('https://cdn.kimi.com/unrelated/plugin.zip')).toBe(false);
+    expect(isOfficialPluginSource('https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/plugins/cdn/curated/superpowers.zip')).toBe(false);
+    expect(isOfficialPluginSource('https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/plugins/cdn/foo.zip')).toBe(false);
+    expect(isOfficialPluginSource('https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/unrelated/plugin.zip')).toBe(false);
     // Non-NightHawk hosts (loopback included), non-https schemes, local paths, and
     // GitHub sources are unofficial.
     expect(isOfficialPluginSource('https://example.test/nighthawk/plugins/official/x.zip')).toBe(false);
-    expect(isOfficialPluginSource('http://code.kimi.com/nighthawk/plugins/official/x.zip')).toBe(false);
+    expect(isOfficialPluginSource('http://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/plugins/cdn/official/x.zip')).toBe(false);
     expect(isOfficialPluginSource('http://127.0.0.1:58627/nighthawk/plugins/official/x.zip')).toBe(false);
     expect(isOfficialPluginSource('./plugins/nighthawk-datasource')).toBe(false);
     expect(isOfficialPluginSource('/abs/path/to/plugin')).toBe(false);
@@ -558,7 +548,7 @@ describe('plugins selector dialogs', () => {
     panel.handleInput('\r');
     expect(onSelect).toHaveBeenCalledWith({
       kind: 'open-url',
-      url: 'https://www.kimi.com/features/webbridge#local-agent',
+      url: 'https://github.com/1764712542/nighthawk/tree/main/plugins/official/nighthawk-webbridge',
       label: 'NightHawk WebBridge',
     });
   });

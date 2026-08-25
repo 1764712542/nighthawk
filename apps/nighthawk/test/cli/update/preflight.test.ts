@@ -499,7 +499,7 @@ describe('runUpdatePreflight', () => {
     await expect(runUpdatePreflight('0.4.0', options)).resolves.toBe('continue');
     expect(stdout.join('')).toContain('brew upgrade nighthawk');
     expect(stdout.join('')).toContain('Third-party sources may lag behind the official release.');
-    expect(stdout.join('')).toContain('https://www.kimi.com/code');
+    expect(stdout.join('')).toContain('https://github.com/1764712542/nighthawk');
     expect(promptForInstallChoice).not.toHaveBeenCalled();
     expect(mocks.spawn).not.toHaveBeenCalled();
   });
@@ -551,7 +551,7 @@ describe('runUpdatePreflight', () => {
     }
   });
 
-  it('global region: derives install commands and site links from the .ai profile', async () => {
+  it('global region: install commands and site links follow the region profile', async () => {
     vi.stubEnv('NIGHTHAWK_OAUTH_HOST', 'https://auth.kimi.ai');
     refreshNighthawkRegion();
     mocks.readUpdateCache.mockResolvedValue(cacheWith('0.5.0'));
@@ -562,13 +562,13 @@ describe('runUpdatePreflight', () => {
       // Native updates self-spawn the staged downloader silently, so the
       // region surface there is the manual install command text.
       expect(installCommandFor('native', '0.5.0', 'win32')).toBe(
-        'irm https://code.kimi.ai/nighthawk/install.ps1 | iex',
+        'irm https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/install.ps1 | iex',
       );
 
       mocks.detectInstallSource.mockResolvedValue('homebrew');
       const brew = captureOutput();
       await expect(runUpdatePreflight('0.4.0', brew.options)).resolves.toBe('continue');
-      expect(brew.stdout.join('')).toContain('https://www.kimi.ai/code');
+      expect(brew.stdout.join('')).toContain('https://github.com/1764712542/nighthawk');
       expect(mocks.spawn).not.toHaveBeenCalled();
     } finally {
       Object.defineProperty(process, 'platform', { value: originalPlatform });

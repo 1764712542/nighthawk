@@ -20,7 +20,6 @@ import { basename, join } from 'pathe';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 
-import { nighthawkRegionProfile, resolveNighthawkRegion } from '@nighthawk/nighthawk-oauth';
 import { extract as extractTar } from 'tar';
 import { type Entry, fromBuffer as yauzlFromBuffer } from 'yauzl';
 
@@ -124,11 +123,10 @@ function rgBinaryName(): string {
   return process.platform === 'win32' ? 'rg.exe' : 'rg';
 }
 
-// Resolved per download so the region follows env changes; this tool-layer
-// module has no access to the persisted config, so resolution is
-// env override > install marker > cn default.
+// Ripgrep archives come straight from the official upstream releases; the
+// pinned SHA-256 table above guarantees integrity regardless of host.
 function rgBaseUrl(): string {
-  return `${nighthawkRegionProfile(resolveNighthawkRegion()).cdnBase}/rg`;
+  return `https://github.com/BurntSushi/ripgrep/releases/download/${RG_VERSION}`;
 }
 
 function getShareDir(): string {

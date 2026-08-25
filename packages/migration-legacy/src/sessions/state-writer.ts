@@ -50,7 +50,10 @@ export async function writeSessionState(sessionDir: string, input: StateWriteInp
       },
     },
     custom: {
-      imported_from_legacy_cli: true,
+      // Consumed by the [imported] badge (apps/nighthawk migration/badge.ts),
+      // the vis server session filter, and the resume integration — all read
+      // `imported_from_kimi_cli`, so this key is part of the wire contract.
+      imported_from_kimi_cli: true,
       kimi_cli_source_path: input.sourcePath,
       kimi_cli_session_id: input.oldSessionUuid,
       kimi_cli_wire_protocol: input.wireProtocolFromOld,

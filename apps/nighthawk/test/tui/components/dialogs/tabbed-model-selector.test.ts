@@ -11,8 +11,8 @@ const SGR = new RegExp(`${ESC}\\[[0-9;]*m`, 'g');
 const strip = (s: string): string => s.replaceAll(SGR, '');
 const TAB = '\t';
 const RIGHT = `${ESC}[C`;
-// chalk.bgHex(colors.primary) → background truecolor for #4FA8FF.
-const PRIMARY_BG = '48;2;79;168;255';
+// chalk.bgHex(colors.primary) → background truecolor for #00E5A0.
+const PRIMARY_BG = '48;2;0;229;160';
 
 function model(displayName: string, provider: string): ModelAlias {
   return {
@@ -104,6 +104,74 @@ describe('TabbedModelSelectorComponent', () => {
     const out = strip(component.render(120).join('\n'));
     expect(out).toContain('GPT-5');
     expect(out).not.toContain('K2 Coding');
+  });
+
+  it('refreshes the active provider tab on "r", keeping "r" a search key elsewhere', () => {
+    const onRefresh = vi.fn(async () => undefined);
+    const component = new TabbedModelSelectorComponent({
+      models: {
+        k2: model('K2 Coding', 'managed:nighthawk'),
+        gpt: model('GPT-5', 'openai'),
+      },
+      currentValue: 'k2',
+      currentThinkingEffort: 'off',
+      onRefresh,
+      onSelect: vi.fn(),
+      onCancel: vi.fn(),
+    });
+
+    // All tab: no single provider to refresh, so 'r' stays a search key.
+    component.handleInput('r');
+    expect(onRefresh).not.toHaveBeenCalled();
+    expect(strip(component.render(120).join('\n'))).toContain('Search: r');
+
+    // Provider tab with an idle search box: 'r' refreshes it.
+    component.handleInput(TAB); // All -> NightHawk
+    component.handleInput('r');
+    expect(onRefresh).toHaveBeenCalledWith('managed:nighthawk');
+    expect(onRefresh).toHaveBeenCalledTimes(1);
+
+    // With an active query the character keeps typing instead.
+    component.handleInput('g');
+    component.handleInput('r');
+    expect(onRefresh).toHaveBeenCalledTimes(1);
+    expect(strip(component.render(120).join('\n'))).toContain('Search: gr');
+  });
+
+  it('advertises the "r" refresh key on provider tabs only when onRefresh is set', () => {
+    const component = new TabbedModelSelectorComponent({
+      models: { k2: model('K2 Coding', 'managed:nighthawk') },
+      currentValue: 'k2',
+      currentThinkingEffort: 'off',
+      onRefresh: vi.fn(),
+      onSelect: vi.fn(),
+      onCancel: vi.fn(),
+    });
+
+    // The All tab keeps 'r' as a search key, so no refresh hint there.
+    expect(strip(component.render(120).join('\n'))).not.toContain('r 刷新模型');
+    component.handleInput(TAB); // All -> NightHawk
+    expect(strip(component.render(120).join('\n'))).toContain('r 刷新模型');
+  });
+
+  it('rebuilds the model dictionary in place, keeping the active tab', () => {
+    const { component } = make();
+    component.handleInput(TAB); // All -> NightHawk tab
+    component.refreshModels({
+      k2: model('K2 Coding', 'managed:nighthawk'),
+      gpt: model('GPT-5', 'openai'),
+      gem: model('Gemini 3', 'google'),
+    });
+    const out = strip(component.render(120).join('\n'));
+    // The new provider joins the tab strip…
+    expect(out).toContain('google');
+    // …while the still-active NightHawk tab lists only its own models.
+    expect(out).toContain('K2 Coding');
+    expect(out).not.toContain('GPT-5');
+    // The rebuilt google tab carries the refreshed model.
+    component.handleInput(TAB); // NightHawk -> openai
+    component.handleInput(TAB); // openai -> google
+    expect(strip(component.render(120).join('\n'))).toContain('Gemini 3');
   });
 
   it('forwards thinking toggle (←/→) and selection (Enter) to the active tab', () => {

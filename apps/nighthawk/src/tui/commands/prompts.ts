@@ -153,6 +153,29 @@ export function promptBaseUrl(host: SlashCommandHost, platformName: string): Pro
   });
 }
 
+/**
+ * Asks for a display name for a custom provider — shown in the provider
+ * manager and model pickers instead of a raw URL. Esc cancels the flow.
+ */
+export function promptProviderName(host: SlashCommandHost): Promise<string | undefined> {
+  return new Promise((resolve) => {
+    const dialog = new ApiKeyInputDialogComponent(
+      'Custom provider',
+      ['The name identifies this provider in the provider list and model pickers.'],
+      (result: ApiKeyInputResult) => {
+        host.restoreEditor();
+        resolve(result.kind === 'ok' ? result.value : undefined);
+      },
+      {
+        title: 'Name this provider / 给供应商命名',
+        mask: false,
+        emptyHint: 'Name cannot be empty.',
+      },
+    );
+    host.mountEditorReplacement(dialog);
+  });
+}
+
 export function promptCatalogProviderSelection(host: SlashCommandHost, catalog: Catalog): Promise<string | undefined> {
   return new Promise((resolve) => {
     const options: ChoiceOption[] = Object.entries(catalog)

@@ -44,14 +44,20 @@ export function isOpenPlatformId(id: string): boolean {
   return OPEN_PLATFORMS.some((p) => p.id === id);
 }
 
+// OpenAI-standard /v1/models responses carry no context_length field (only the
+// managed endpoint does), so absent/invalid values fall back to this instead
+// of failing the whole provider connection. Users can refine it in config.toml.
+const DEFAULT_OPEN_PLATFORM_CONTEXT_LENGTH = 131_072;
+
 function toModelInfo(item: unknown): ManagedNighthawkModelInfo | undefined {
   if (!isRecord(item) || typeof item['id'] !== 'string' || item['id'].length === 0) {
     return undefined;
   }
-  const contextLength = Number(item['context_length']);
-  if (!Number.isInteger(contextLength) || contextLength <= 0) {
-    throw new Error(`Model "${item['id']}" must include a positive context_length.`);
-  }
+  const rawContextLength = Number(item['context_length']);
+  const contextLength =
+    Number.isInteger(rawContextLength) && rawContextLength > 0
+      ? rawContextLength
+      : DEFAULT_OPEN_PLATFORM_CONTEXT_LENGTH;
   const displayName = item['display_name'];
   const normalizedDisplayName =
     typeof displayName === 'string' && displayName.length > 0 ? displayName : undefined;

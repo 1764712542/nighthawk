@@ -124,6 +124,29 @@ describe('fetchOpenPlatformModels', () => {
       fetchOpenPlatformModels(platform, 'sk-test', fetchMock as unknown as typeof fetch),
     ).rejects.toThrow(/Unexpected models response/);
   });
+
+  it('falls back to a default context length for OpenAI-standard models', async () => {
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            object: 'list',
+            data: [
+              { id: 'deepseek-v4-flash', object: 'model', owned_by: 'deepseek' },
+              { id: 'deepseek-chat', object: 'model', owned_by: 'deepseek', context_length: 64000 },
+            ],
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        ),
+    );
+    const platform = { id: 'deepseek', name: 'DeepSeek', baseUrl: 'https://api.deepseek.com/v1' };
+
+    const models = await fetchOpenPlatformModels(platform, 'sk-test', fetchMock as unknown as typeof fetch);
+
+    expect(models).toHaveLength(2);
+    expect(models[0]).toMatchObject({ id: 'deepseek-v4-flash', contextLength: 131072 });
+    expect(models[1]).toMatchObject({ id: 'deepseek-chat', contextLength: 64000 });
+  });
 });
 
 describe('filterModelsByPrefix', () => {

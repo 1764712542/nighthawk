@@ -15,13 +15,13 @@ The recommended install path is the official script. It does not require Node.js
 - **macOS / Linux**:
 
 ```sh
-curl -fsSL https://code.kimi.com/nighthawk/install.sh | bash
+curl -fsSL https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/install.sh | bash
 ```
 
 - **Windows (PowerShell)**:
 
 ```powershell
-irm https://code.kimi.com/nighthawk/install.ps1 | iex
+irm https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/install.ps1 | iex
 ```
 
 > On Windows, install [Git for Windows](https://gitforwindows.org/) before first launch because NightHawk CLI uses the bundled Git Bash as its shell environment. If Git Bash is installed in a custom location, set `NIGHTHAWK_SHELL_PATH` to the absolute path of `bash.exe`.

@@ -13,6 +13,7 @@ import {
   resolveCatalogImport,
   SECONDARY_DERIVED_MODEL_ALIAS,
   type Catalog,
+  type ModelAlias,
   type ThinkingEffort,
 } from '@nighthawk/nighthawk-sdk';
 
@@ -31,6 +32,7 @@ import {
 import { TabbedModelSelectorComponent } from '../components/dialogs/tabbed-model-selector';
 import { DEFAULT_OAUTH_PROVIDER_NAME } from '../constant/nighthawk-tui';
 import { formatErrorMessage } from '../utils/event-payload';
+import { refreshProviderModelsForPicker } from '../utils/refresh-providers';
 import { thinkingEffortToConfig } from '../utils/thinking-config';
 import { effectiveModelForHost } from './config';
 import {
@@ -282,29 +284,7 @@ export async function handleCatalogProviderAdd(host: SlashCommandHost): Promise<
   // Build a merged model dictionary that includes existing models plus the
   // newly-persisted provider's models, so the tabbed selector shows every
   // provider's tab (the new provider's tab starts active via initialTabId).
-  // The v1 runtime may carry the synthesized `__secondary__` derived entry —
-  // never selectable in a picker.
-  const stateModels = await host.harness.getConfig().then((c) => c.models ?? {});
-  const mergedModels = { ...stateModels };
-  delete mergedModels[SECONDARY_DERIVED_MODEL_ALIAS];
-
-  const selector = new TabbedModelSelectorComponent({
-    models: mergedModels,
-    currentValue: host.state.appState.model,
-    selectedValue: Object.keys(mergedModels).find((a) => a.startsWith(`${providerId}/`)),
-    currentThinkingEffort: host.state.appState.thinkingEffort,
-    initialTabId: providerId,
-    onSelect: ({ alias, thinking }) => {
-      host.restoreEditor();
-      void setDefaultModel(host, alias, thinking).catch((error: unknown) => {
-        host.showError(`Set default model failed: ${formatErrorMessage(error)}`);
-      });
-    },
-    onCancel: () => {
-      host.restoreEditor();
-    },
-  });
-  host.mountEditorReplacement(selector);
+  await mountPostAddModelSelector(host, providerId);
 }
 
 async function setDefaultModel(
@@ -327,6 +307,54 @@ async function setDefaultModel(
   await host.authFlow.refreshConfigAfterLogin();
   host.track('model_switch', { model: alias });
   host.showStatus(`Default model set to ${alias} with thinking ${effort}.`);
+}
+
+/**
+ * Model dictionary for the post-add picker: every configured alias minus the
+ * v1-synthesized `__secondary__` derived entry, which is never selectable.
+ */
+async function postAddModelDictionary(host: SlashCommandHost): Promise<Record<string, ModelAlias>> {
+  const models = { ...(await host.harness.getConfig({ reload: true }).then((c) => c.models ?? {})) };
+  delete models[SECONDARY_DERIVED_MODEL_ALIAS];
+  return models;
+}
+
+/**
+ * Mounts the post-add model selector: one tab per configured provider, the
+ * freshly-added provider's tab active. Both the catalog and custom-registry
+ * add flows use it; 'r' refreshes the active provider tab's model list in
+ * place.
+ */
+async function mountPostAddModelSelector(
+  host: SlashCommandHost,
+  preferredProvider: string | undefined,
+): Promise<void> {
+  const stateModels = await postAddModelDictionary(host);
+  const selectedValue =
+    preferredProvider === undefined
+      ? undefined
+      : Object.keys(stateModels).find((a) => a.startsWith(`${preferredProvider}/`));
+  const selector = new TabbedModelSelectorComponent({
+    models: stateModels,
+    currentValue: host.state.appState.model,
+    selectedValue,
+    currentThinkingEffort: host.state.appState.thinkingEffort,
+    ...(preferredProvider !== undefined ? { initialTabId: preferredProvider } : {}),
+    onRefresh: (providerId) =>
+      refreshProviderModelsForPicker(host, providerId, () => {
+        void postAddModelDictionary(host).then((models) => selector.refreshModels(models));
+      }),
+    onSelect: ({ alias, thinking }) => {
+      host.restoreEditor();
+      void setDefaultModel(host, alias, thinking).catch((error: unknown) => {
+        host.showError(`Set default model failed: ${formatErrorMessage(error)}`);
+      });
+    },
+    onCancel: () => {
+      host.restoreEditor();
+    },
+  });
+  host.mountEditorReplacement(selector);
 }
 
 async function handleCustomRegistryAddViaDialog(host: SlashCommandHost): Promise<boolean> {
@@ -378,8 +406,7 @@ async function handleCustomRegistryAddViaDialog(host: SlashCommandHost): Promise
   );
 
   // Offer the model selector so the user can pick a default, just like the
-  // catalog (known-provider) flow. Copy without the v1-synthesized
-  // `__secondary__` derived entry — never selectable in a picker.
+  // catalog (known-provider) flow.
   const stateModels = { ...(await host.harness.getConfig().then((c) => c.models ?? {})) };
   delete stateModels[SECONDARY_DERIVED_MODEL_ALIAS];
   const firstNewAlias = Object.keys(stateModels).find((a) =>
@@ -388,23 +415,7 @@ async function handleCustomRegistryAddViaDialog(host: SlashCommandHost): Promise
   const firstNewProvider = firstNewAlias
     ? stateModels[firstNewAlias]?.provider
     : addedProviderIds[0];
-  const selector = new TabbedModelSelectorComponent({
-    models: stateModels,
-    currentValue: host.state.appState.model,
-    selectedValue: firstNewAlias,
-    currentThinkingEffort: host.state.appState.thinkingEffort,
-    initialTabId: firstNewProvider,
-    onSelect: ({ alias, thinking }) => {
-      host.restoreEditor();
-      void setDefaultModel(host, alias, thinking).catch((error: unknown) => {
-        host.showError(`Set default model failed: ${formatErrorMessage(error)}`);
-      });
-    },
-    onCancel: () => {
-      host.restoreEditor();
-    },
-  });
-  host.mountEditorReplacement(selector);
+  await mountPostAddModelSelector(host, firstNewProvider);
   return true;
 }
 

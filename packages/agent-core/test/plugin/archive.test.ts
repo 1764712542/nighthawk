@@ -173,6 +173,22 @@ describe('extractZip', () => {
     expect(manifest).toBe('{"name":"test"}');
   });
 
+  it('detects plugin root with kimi.plugin.json and .kimi-plugin/plugin.json', async () => {
+    const destDir = await mkdtemp(path.join(tmpdir(), 'archive-test-'));
+    const rootLevel = await mkdtemp(path.join(tmpdir(), 'archive-test-'));
+    const rootZip = await createZipBuffer([
+      { name: 'kimi.plugin.json', data: '{"name":"kimi-root"}' },
+      { name: 'readme.md', data: '# Kimi' },
+    ]);
+    const dirZip = await createZipBuffer([
+      { name: 'my-plugin/.kimi-plugin/plugin.json', data: '{"name":"kimi-dir"}' },
+      { name: 'my-plugin/readme.md', data: '# Kimi' },
+    ]);
+
+    expect(await extractZip(rootZip, rootLevel)).toBe(rootLevel);
+    expect(await extractZip(dirZip, destDir)).toBe(path.join(destDir, 'my-plugin'));
+  });
+
   it('detects a single wrapper directory before nested manifests', async () => {
     const destDir = await mkdtemp(path.join(tmpdir(), 'archive-test-'));
     const zipBuffer = await createZipBuffer([

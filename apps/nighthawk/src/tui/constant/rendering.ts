@@ -28,8 +28,8 @@ export const COMMAND_PREVIEW_LINES = 10;
 // the activity pane.
 export const RETRY_DETAIL_MAX_CHARS = 160;
 // Left indent (cells) for the detail line under the waiting spinner, aligning
-// it with the label text: 1 (the spinner Text's own paddingX) + 2 (moon
-// frame) + 1 (space between frame and label).
+// it with the label text: 1 (the spinner Text's own paddingX) + 1 (spinner
+// frame) + 1 (space between frame and label) + 1.
 export const ACTIVITY_DETAIL_INDENT = 4;
 
 // Retention caps for the subagent activity store (background-agent detail
@@ -48,5 +48,5 @@ export const SUBAGENT_ARG_STRING_MAX_CHARS = 16 * 1024;
 export const BRAILLE_SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 export const BRAILLE_SPINNER_INTERVAL_MS = 80;
 
-export const MOON_SPINNER_FRAMES = ['🌑', '🌒', '🌓', '🌔', '🌕', '🌖', '🌗', '🌘'];
-export const MOON_SPINNER_INTERVAL_MS = 120;
+export const MOON_SPINNER_FRAMES = ['◐', '◓', '◑', '◒'];
+export const MOON_SPINNER_INTERVAL_MS = 160;

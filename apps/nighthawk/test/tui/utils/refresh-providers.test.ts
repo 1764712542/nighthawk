@@ -5,7 +5,11 @@ import {
 } from '@nighthawk/nighthawk-oauth';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { refreshAllProviderModels } from '../../../src/tui/utils/refresh-providers';
+import {
+  refreshAllProviderModels,
+  refreshProviderModelsForPicker,
+  type ProviderModelRefreshHost,
+} from '../../../src/tui/utils/refresh-providers';
 import type { NighthawkConfig } from '@nighthawk/nighthawk-sdk';
 
 type FetchMock = (
@@ -1249,5 +1253,213 @@ describe('refreshAllProviderModels', () => {
     expect(result.unchanged).toEqual(['custom']);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(host.setConfig).not.toHaveBeenCalled();
+  });
+});
+
+describe('refreshProviderModelsForPicker', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+  });
+
+  function makePickerHost(initial: NighthawkConfig) {
+    const base = makeRefreshHost(initial);
+    const setAppState = vi.fn();
+    const showStatus = vi.fn();
+    const showError = vi.fn();
+    const host: ProviderModelRefreshHost = {
+      harness: {
+        getConfig: async () => base.current(),
+        removeProvider: base.removeProvider,
+        setConfig: base.setConfig,
+      },
+      setAppState,
+      showStatus,
+      showError,
+    };
+    return { base, host, setAppState, showStatus, showError };
+  }
+
+  function jsonResponse(body: unknown): Response {
+    return new Response(JSON.stringify(body), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  it('refreshes a custom provider, preserving its record and the surviving default', async () => {
+    const provider = {
+      type: 'nighthawk',
+      baseUrl: 'https://api.custom.example.test/v1',
+      apiKey: 'sk-custom-key',
+    };
+    const ctx = makePickerHost({
+      providers: { 'my-provider': provider },
+      models: {
+        'my-provider/m1': {
+          provider: 'my-provider',
+          model: 'm1',
+          maxContextSize: 131072,
+          capabilities: ['tool_use'],
+          displayName: 'Old M1',
+        },
+      },
+      defaultModel: 'my-provider/m1',
+      thinking: { enabled: false },
+      telemetry: true,
+    } as unknown as NighthawkConfig);
+    const onRefreshed = vi.fn();
+    const fetchMock = vi.fn<FetchMock>(async (input, init) => {
+      expect(fetchInputUrl(input)).toBe('https://api.custom.example.test/v1/models');
+      expect(new Headers(init?.headers).get('authorization')).toBe('Bearer sk-custom-key');
+      return jsonResponse({
+        data: [
+          { id: 'm1', context_length: 131072, display_name: 'Fresh M1' },
+          { id: 'm2', context_length: 262144 },
+        ],
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await refreshProviderModelsForPicker(ctx.host, 'my-provider', onRefreshed);
+
+    expect(ctx.showError).not.toHaveBeenCalled();
+    expect(ctx.showStatus).toHaveBeenCalledWith('Models refreshed: +1 new.');
+    expect(onRefreshed).toHaveBeenCalledTimes(1);
+    // setConfig cannot drop keys, so the provider is cleared first, then the
+    // refreshed records are written back.
+    expect(ctx.base.removeProvider).toHaveBeenCalledWith('my-provider');
+    // The provider record survives untouched.
+    expect(ctx.base.current().providers['my-provider']).toEqual(provider);
+    expect(ctx.base.current().models?.['my-provider/m1']?.displayName).toBe('Fresh M1');
+    expect(ctx.base.current().models?.['my-provider/m2']).toBeDefined();
+    // The default survived the refresh and keeps the user's thinking pref.
+    expect(ctx.base.current().defaultModel).toBe('my-provider/m1');
+    expect(ctx.base.current().thinking).toEqual({ enabled: false });
+    expect(ctx.setAppState).toHaveBeenCalledWith({
+      availableModels: ctx.base.current().models,
+      availableProviders: ctx.base.current().providers,
+    });
+  });
+
+  it('routes OAuth providers back to /connect without fetching', async () => {
+    const ctx = makePickerHost({
+      providers: {
+        [NIGHTHAWK_PROVIDER_NAME]: {
+          type: 'nighthawk',
+          oauth: { storage: 'file', key: 'oauth/nighthawk' },
+        },
+      },
+      models: {},
+      telemetry: true,
+    } as unknown as NighthawkConfig);
+    const onRefreshed = vi.fn();
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    await refreshProviderModelsForPicker(ctx.host, NIGHTHAWK_PROVIDER_NAME, onRefreshed);
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(ctx.showStatus).toHaveBeenCalledWith('OAuth provider models refresh via /connect.');
+    expect(ctx.base.setConfig).not.toHaveBeenCalled();
+    expect(onRefreshed).not.toHaveBeenCalled();
+  });
+
+  it('skips the write when the refreshed list is identical', async () => {
+    const ctx = makePickerHost({
+      providers: {
+        p: { type: 'nighthawk', baseUrl: 'https://api.p.example.test/v1', apiKey: 'sk-p' },
+      },
+      models: {
+        'p/m1': {
+          provider: 'p',
+          model: 'm1',
+          maxContextSize: 131072,
+          capabilities: ['tool_use'],
+        },
+      },
+      telemetry: true,
+    } as unknown as NighthawkConfig);
+    const onRefreshed = vi.fn();
+    const fetchMock = vi.fn<FetchMock>(
+      async () => jsonResponse({ data: [{ id: 'm1', context_length: 131072 }] }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    await refreshProviderModelsForPicker(ctx.host, 'p', onRefreshed);
+
+    expect(ctx.showStatus).toHaveBeenCalledWith('Models already up to date.');
+    expect(ctx.base.removeProvider).not.toHaveBeenCalled();
+    expect(ctx.base.setConfig).not.toHaveBeenCalled();
+    expect(ctx.setAppState).not.toHaveBeenCalled();
+    expect(onRefreshed).not.toHaveBeenCalled();
+  });
+
+  it('leaves the default unset when the refreshed list drops it', async () => {
+    const ctx = makePickerHost({
+      providers: {
+        p: { type: 'nighthawk', baseUrl: 'https://api.p.example.test/v1', apiKey: 'sk-p' },
+      },
+      models: {
+        'p/m1': {
+          provider: 'p',
+          model: 'm1',
+          maxContextSize: 131072,
+          capabilities: ['tool_use'],
+        },
+      },
+      defaultModel: 'p/m1',
+      thinking: { enabled: true },
+      telemetry: true,
+    } as unknown as NighthawkConfig);
+    const fetchMock = vi.fn<FetchMock>(
+      async () => jsonResponse({ data: [{ id: 'm2', context_length: 262144 }] }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    await refreshProviderModelsForPicker(ctx.host, 'p');
+
+    expect(ctx.showStatus).toHaveBeenCalledWith('Models refreshed: +1 new, -1 removed.');
+    expect(ctx.base.current().models?.['p/m2']).toBeDefined();
+    expect(ctx.base.current().models?.['p/m1']).toBeUndefined();
+    expect(ctx.base.current().defaultModel).toBeUndefined();
+    expect(ctx.base.current().thinking).toBeUndefined();
+  });
+
+  it('reports fetch failures without touching config', async () => {
+    const ctx = makePickerHost({
+      providers: {
+        p: { type: 'nighthawk', baseUrl: 'https://api.p.example.test/v1', apiKey: 'sk-p' },
+      },
+      models: {
+        'p/m1': {
+          provider: 'p',
+          model: 'm1',
+          maxContextSize: 131072,
+          capabilities: ['tool_use'],
+        },
+      },
+      telemetry: true,
+    } as unknown as NighthawkConfig);
+    const onRefreshed = vi.fn();
+    const fetchMock = vi.fn<FetchMock>(
+      async () =>
+        new Response(JSON.stringify({ error: { message: 'invalid key' } }), {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    await refreshProviderModelsForPicker(ctx.host, 'p', onRefreshed);
+
+    expect(ctx.showError).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to refresh models'),
+    );
+    expect(ctx.base.removeProvider).not.toHaveBeenCalled();
+    expect(ctx.base.setConfig).not.toHaveBeenCalled();
+    expect(ctx.setAppState).not.toHaveBeenCalled();
+    expect(onRefreshed).not.toHaveBeenCalled();
+    expect(ctx.base.current().models?.['p/m1']).toBeDefined();
   });
 });

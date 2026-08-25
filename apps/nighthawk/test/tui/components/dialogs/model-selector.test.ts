@@ -88,6 +88,27 @@ describe('ModelSelectorComponent', () => {
     expect(onSelect).toHaveBeenLastCalledWith({ alias: 'nighthawk', thinking: 'on' });
   });
 
+  it('moves the selection with Tab and Shift+Tab', () => {
+    const onSelect = vi.fn();
+    const picker = new ModelSelectorComponent({
+      models: { k2: model('NightHawk K2'), turbo: model('NightHawk Turbo') },
+      currentValue: 'k2',
+      currentThinkingEffort: 'off',
+      onSelect,
+      onCancel: vi.fn(),
+    });
+
+    // Tab moves down like ↓ (SearchableList drops the non-printable Tab).
+    picker.handleInput('\t');
+    picker.handleInput('\r');
+    expect(onSelect).toHaveBeenLastCalledWith({ alias: 'turbo', thinking: 'on' });
+
+    // Shift+Tab moves back up (the current model keeps its live effort).
+    picker.handleInput('\x1b[Z');
+    picker.handleInput('\r');
+    expect(onSelect).toHaveBeenLastCalledWith({ alias: 'k2', thinking: 'off' });
+  });
+
   it('shows the Left/Right thinking hint only for toggleable models', () => {
     const picker = new ModelSelectorComponent({
       models: { nighthawk: model('NightHawk K2', ['thinking']) },

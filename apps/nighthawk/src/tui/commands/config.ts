@@ -26,6 +26,7 @@ import type { ThemeName } from '#/tui/theme';
 import { currentTheme, isBuiltInTheme, lightColors, loadCustomThemeMerged } from '#/tui/theme';
 import { NO_ACTIVE_SESSION_MESSAGE } from '../constant/nighthawk-tui';
 import { formatErrorMessage } from '../utils/event-payload';
+import { refreshProviderModelsForPicker } from '../utils/refresh-providers';
 import { thinkingEffortToConfig } from '../utils/thinking-config';
 import { showUsage } from './info';
 import { setExperimentalFeatures } from './experimental-flags';
@@ -461,26 +462,29 @@ export function showModelPicker(host: SlashCommandHost, selectedValue: string = 
     );
     return;
   }
-  host.mountEditorReplacement(
-    new TabbedModelSelectorComponent({
-      models,
-      currentValue: host.state.appState.model,
-      selectedValue,
-      currentThinkingEffort: host.state.appState.thinkingEffort,
-      warning: hasConversationHistory(host) ? MODEL_SWITCH_CACHE_WARNING : undefined,
-      onSelect: ({ alias, thinking }) => {
-        host.restoreEditor();
-        void performModelSwitch(host, alias, thinking, true);
-      },
-      onSessionOnlySelect: ({ alias, thinking }) => {
-        host.restoreEditor();
-        void performModelSwitch(host, alias, thinking, false);
-      },
-      onCancel: () => {
-        host.restoreEditor();
-      },
-    }),
-  );
+  const selector = new TabbedModelSelectorComponent({
+    models,
+    currentValue: host.state.appState.model,
+    selectedValue,
+    currentThinkingEffort: host.state.appState.thinkingEffort,
+    warning: hasConversationHistory(host) ? MODEL_SWITCH_CACHE_WARNING : undefined,
+    onRefresh: (providerId) =>
+      refreshProviderModelsForPicker(host, providerId, () =>
+        selector.refreshModels(pickerModelsForHost(host)),
+      ),
+    onSelect: ({ alias, thinking }) => {
+      host.restoreEditor();
+      void performModelSwitch(host, alias, thinking, true);
+    },
+    onSessionOnlySelect: ({ alias, thinking }) => {
+      host.restoreEditor();
+      void performModelSwitch(host, alias, thinking, false);
+    },
+    onCancel: () => {
+      host.restoreEditor();
+    },
+  });
+  host.mountEditorReplacement(selector);
 }
 
 async function performModelSwitch(

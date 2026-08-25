@@ -1,0 +1,10 @@
+{
+  "version": "0.38.0",
+  "publishedAt": "2026-08-25T00:00:00Z",
+  "rollout": [
+    {
+      "percent": 100,
+      "delaySeconds": 0
+    }
+  ]
+}

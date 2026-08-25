@@ -10,7 +10,7 @@ This page documents the changes in each NightHawk CLI release.
 
 ### Features
 
-- Support two OAuth login methods — kimi.ai and kimi.com.
+- Support Moonshot account OAuth login in two regions — kimi.com and kimi.ai.
 - Add the WaitFor tool: the agent can now wait for a background task to finish within the current turn instead of ending the turn and being re-invoked.
 - Add 13 data sources to the official NightHawk Datasource plugin — Chinese government data (NDA/NBS) and standards (GB/HB/DB/TT), eight international organization datasets (WHO, FAO, UNSD, ECB, Eurostat, UNICEF, OECD, FRED), Xinhua Finance, and Caixin. Update the plugin from the Official tab in /plugins.
 - web: Add a Pin action to the chat header more-menu.

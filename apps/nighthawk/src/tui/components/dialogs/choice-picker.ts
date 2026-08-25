@@ -124,6 +124,16 @@ export class ChoicePickerComponent extends Container implements Focusable {
       if (chosen !== undefined) this.opts.onSelect(chosen.value);
       return;
     }
+    // Tab navigates like ↓ (Shift+Tab like ↑); SearchableList treats Tab as
+    // a non-printable, so without this it would simply be dropped.
+    if (matchesKey(data, Key.tab)) {
+      this.list.moveDown();
+      return;
+    }
+    if (matchesKey(data, Key.shift('tab'))) {
+      this.list.moveUp();
+      return;
+    }
     this.list.handleKey(data);
   }
 
@@ -135,7 +145,7 @@ export class ChoicePickerComponent extends Container implements Focusable {
     // Header mirrors the model dialog (see model-selector.ts): border, title
     // with a "(type to search)" suffix until you type, the hint, a blank, then
     // the search line. Key vocabulary is lowercase to match every list dialog.
-    const navParts = ['↑↓ navigate'];
+    const navParts = ['↑↓/Tab navigate'];
     if (view.page.pageCount > 1) navParts.push('←→ page');
     navParts.push('Enter select', 'Esc cancel');
     const hint = this.opts.hint ?? navParts.join(' · ');

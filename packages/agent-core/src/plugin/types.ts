@@ -106,7 +106,21 @@ export interface PluginCommandEntry {
   readonly name: string;
 }
 
-export type PluginManifestKind = 'nighthawk-plugin-root' | 'nighthawk-plugin-dir';
+/**
+ * Which manifest file a plugin was loaded from. NightHawk accepts manifests
+ * from several plugin specs: its own (`nighthawk.plugin.json` root /
+ * `.nighthawk-plugin/plugin.json`), the legacy Kimi plugin format
+ * (`kimi.plugin.json` root / `.kimi-plugin/plugin.json`), and the generic
+ * root-level `plugin.json`. `generic-plugin-dir` is reserved for a generic
+ * directory-level manifest; no path maps to it yet.
+ */
+export type PluginManifestKind =
+  | 'nighthawk-plugin-root'
+  | 'nighthawk-plugin-dir'
+  | 'legacy-plugin-root'
+  | 'legacy-plugin-dir'
+  | 'generic-plugin-root'
+  | 'generic-plugin-dir';
 export type PluginSource = 'local-path' | 'zip-url' | 'github';
 export type PluginState = 'ok' | 'error';
 

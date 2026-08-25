@@ -210,7 +210,7 @@ async function classifyExistingTarget(targetDir: string): Promise<ExistingTarget
   if (
     typeof custom === 'object' &&
     custom !== null &&
-    (custom as { imported_from_legacy_cli?: unknown }).imported_from_legacy_cli === true
+    (custom as { imported_from_kimi_cli?: unknown }).imported_from_kimi_cli === true
   ) {
     return 'imported';
   }

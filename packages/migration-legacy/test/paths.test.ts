@@ -21,7 +21,7 @@ describe('paths', () => {
   });
 
   it('skipMarker is under target', () => {
-    expect(paths.skipMarker('/y/.nighthawk')).toBe(join('/y/.nighthawk', '.skip-migration-from-kimi-cli'));
+    expect(paths.skipMarker('/y/.nighthawk')).toBe(join('/y/.nighthawk', '.skip-migration-from-legacy-cli'));
   });
 
   it('migrationReportFile is under target', () => {

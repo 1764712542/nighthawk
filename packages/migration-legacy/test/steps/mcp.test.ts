@@ -84,7 +84,7 @@ describe('migrateMcpStep', () => {
     expect(await readFile(join(tgt, 'mcp.json'), 'utf-8')).toBe('this is not json {{{');
     // Migrated servers land in the sibling instead.
     const sibling = JSON.parse(
-      await readFile(join(tgt, 'mcp.migrated-from-kimi-cli.json'), 'utf-8'),
+      await readFile(join(tgt, 'mcp.migrated-from-legacy-cli.json'), 'utf-8'),
     );
     expect(sibling.mcpServers.foo.command).toBe('foo');
   });

@@ -19,7 +19,9 @@ import type {
 import type { CapabilityEntryContext } from './context';
 
 const PLUGIN_ID = 'nighthawk-webbridge';
-const PLUGIN_ZIP_PATH = 'plugins/official/nighthawk-webbridge.zip';
+// Matches the artifact layout committed to the repository and published
+// through the distribution CDN (see scripts/build-plugin-marketplace-cdn.mjs).
+const PLUGIN_ZIP_PATH = 'plugins/cdn/official/nighthawk-webbridge.zip';
 const BINARY_CDN_PATH = 'webbridge/latest/releases';
 const DEFAULT_DAEMON_BASE_URL = 'http://127.0.0.1:10086';
 const STATUS_TIMEOUT_MS = 1_500;
@@ -263,7 +265,13 @@ export function createNighthawkWebbridgeEntry(ctx: CapabilityEntryContext): Capa
           report('download', percent);
         },
         ctx.fetchImpl,
-      );
+      ).catch((error: unknown) => {
+        throw new Error(
+          `Failed to download ${url}: ${error instanceof Error ? error.message : String(error)}. ` +
+            'Set NIGHTHAWK_CDN_BASE to a NightHawk distribution mirror that hosts webbridge binaries, ' +
+            'or install the plugin manually from /plugins.',
+        );
+      });
       await mkdir(binDir, { recursive: true });
       await rename(staging, binPath).catch(async (error: NodeJS.ErrnoException) => {
         if (error.code !== 'EXDEV') throw error;

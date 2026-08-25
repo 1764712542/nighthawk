@@ -22,7 +22,6 @@ import { formatPluginSourceLabel, pluginTrustLabel } from '#/tui/utils/plugin-so
 import { printableChar } from '#/tui/utils/printable-key';
 import { renderTabStrip } from '#/tui/utils/tab-strip';
 import { computeUpdateStatus, type PluginMarketplaceEntry } from '#/utils/plugin-marketplace';
-import { currentNighthawkProfile } from '#/utils/region';
 
 import { ChoicePickerComponent } from './choice-picker';
 
@@ -36,11 +35,11 @@ const ELLIPSIS = '…';
 
 // Hardcoded Web Bridge promotion: a built-in fallback shown only while the
 // marketplace catalog is loading, unreachable, or predates the real
-// `nighthawk-webbridge` entry. Selecting it opens the install page in the browser;
-// once the catalog carries the real entry, that row wins and installs
-// normally. The URL follows the resolved region's site root (honoring
-// NIGHTHAWK_SITE_BASE).
-const WEB_BRIDGE_URL = `${currentNighthawkProfile().siteBase}/features/webbridge#local-agent`;
+// `nighthawk-webbridge` entry. Selecting it opens the plugin's documentation
+// in the browser; once the catalog carries the real entry, that row wins and
+// installs normally.
+const WEB_BRIDGE_URL =
+  'https://github.com/1764712542/nighthawk/tree/main/plugins/official/nighthawk-webbridge';
 const WEB_BRIDGE_ENTRY: PluginMarketplaceEntry = {
   id: 'nighthawk-webbridge',
   displayName: 'NightHawk WebBridge',

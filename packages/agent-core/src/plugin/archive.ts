@@ -1,8 +1,10 @@
 import { createWriteStream } from 'node:fs';
-import { chmod, mkdir, readdir, stat } from 'node:fs/promises';
+import { chmod, mkdir, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import { type Entry, fromBuffer as yauzlFromBuffer } from 'yauzl';
+
+import { findManifestPath } from './manifest';
 
 export async function downloadZip(url: string, signal?: AbortSignal): Promise<Buffer> {
   const controller = new AbortController();
@@ -133,15 +135,5 @@ async function detectPluginRoot(dir: string): Promise<string> {
 }
 
 async function hasManifest(dir: string): Promise<boolean> {
-  const rootManifest = path.join(dir, 'nighthawk.plugin.json');
-  const dirManifest = path.join(dir, '.nighthawk-plugin', 'plugin.json');
-  return (await isFile(rootManifest)) || (await isFile(dirManifest));
-}
-
-async function isFile(p: string): Promise<boolean> {
-  try {
-    return (await stat(p)).isFile();
-  } catch {
-    return false;
-  }
+  return (await findManifestPath(dir)) !== undefined;
 }

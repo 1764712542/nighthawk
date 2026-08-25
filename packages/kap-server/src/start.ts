@@ -473,7 +473,7 @@ export async function startServer(opts: ServerStartOptions): Promise<RunningServ
       const configured = opts.pluginMarketplaceUrl ?? process.env['NIGHTHAWK_PLUGIN_MARKETPLACE_URL'];
       if (configured !== undefined) return () => configured;
       return () =>
-        `${nighthawkRegionProfile(core.accessor.get(IOAuthService).getRegion()).cdnBase}/plugins/marketplace.json`;
+        `${nighthawkRegionProfile(core.accessor.get(IOAuthService).getRegion()).cdnBase}/plugins/cdn/marketplace.json`;
     })(),
     pluginMarketplaceIsDefault:
       opts.pluginMarketplaceUrl === undefined &&

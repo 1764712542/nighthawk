@@ -179,7 +179,7 @@ describe('marker', () => {
   it('suppresses migration when the target contains the skip marker', async () => {
     const targetHome = join(dir, 'target');
     await mkdir(targetHome, { recursive: true });
-    await writeFile(join(targetHome, '.skip-migration-from-kimi-cli'), '', 'utf-8');
+    await writeFile(join(targetHome, '.skip-migration-from-legacy-cli'), '', 'utf-8');
 
     expect(shouldSuppressMigration({ sourceHome: dir, targetHome })).toBe(true);
   });

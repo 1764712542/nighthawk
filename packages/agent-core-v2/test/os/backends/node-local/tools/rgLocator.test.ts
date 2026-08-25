@@ -316,7 +316,7 @@ describe('ensureRgPath download branch', () => {
     expect(new URL(url).protocol).toBe('https:');
   });
 
-  it('downloads from the global CDN when the env pins the global region', async () => {
+  it('downloads from the official BurntSushi releases when the env pins the global region', async () => {
     const savedHost = process.env['NIGHTHAWK_OAUTH_HOST'];
     process.env['NIGHTHAWK_OAUTH_HOST'] = 'https://auth.kimi.ai';
     try {
@@ -334,14 +334,16 @@ describe('ensureRgPath download branch', () => {
       ).rejects.toThrow();
 
       const [url] = fetchMock.mock.calls[0] as [string];
-      expect(url).toMatch(/^https:\/\/code\.kimi\.ai\/nighthawk\/rg\/ripgrep-/);
+      expect(url).toMatch(
+        /^https:\/\/github\.com\/BurntSushi\/ripgrep\/releases\/download\/15\.0\.0\/ripgrep-15\.0\.0-/,
+      );
     } finally {
       if (savedHost === undefined) delete process.env['NIGHTHAWK_OAUTH_HOST'];
       else process.env['NIGHTHAWK_OAUTH_HOST'] = savedHost;
     }
   });
 
-  it('downloads from the cn CDN by default (no env override, no install marker)', async () => {
+  it('downloads from the official BurntSushi releases by default (no env override, no install marker)', async () => {
     const savedHost = process.env['NIGHTHAWK_OAUTH_HOST'];
     const savedLegacyHost = process.env['NIGHTHAWK_OAUTH_HOST'];
     const savedHome = process.env['NIGHTHAWK_HOME'];
@@ -363,7 +365,9 @@ describe('ensureRgPath download branch', () => {
       ).rejects.toThrow();
 
       const [url] = fetchMock.mock.calls[0] as [string];
-      expect(url).toMatch(/^https:\/\/code\.kimi\.com\/nighthawk\/rg\/ripgrep-/);
+      expect(url).toMatch(
+        /^https:\/\/github\.com\/BurntSushi\/ripgrep\/releases\/download\/15\.0\.0\/ripgrep-15\.0\.0-/,
+      );
     } finally {
       if (savedHost === undefined) delete process.env['NIGHTHAWK_OAUTH_HOST'];
       else process.env['NIGHTHAWK_OAUTH_HOST'] = savedHost;

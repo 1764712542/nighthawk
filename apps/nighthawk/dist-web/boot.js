@@ -1,6 +1,6 @@
 (function () {
   try {
-    var v = localStorage.getItem('kimi-web.color-scheme');
+    var v = localStorage.getItem('nighthawk-web.color-scheme');
     if (v === 'light' || v === 'dark' || v === 'system') {
       document.documentElement.dataset.colorScheme = v;
     }
@@ -8,10 +8,10 @@
     // the retired 'xxlarge' lands on 'xlarge', and a legacy px key maps onto
     // the nearest step — seeded pre-paint so a non-Medium user never flashes
     // the Medium scale before the bundle runs.
-    var fs = localStorage.getItem('kimi-web.font-scale');
+    var fs = localStorage.getItem('nighthawk-web.font-scale');
     if (fs === 'xxlarge') fs = 'xlarge';
     if (fs !== 'small' && fs !== 'medium' && fs !== 'large' && fs !== 'xlarge') {
-      var legacy = localStorage.getItem('kimi-web.ui-font-size');
+      var legacy = localStorage.getItem('nighthawk-web.ui-font-size');
       var px = Number(legacy);
       fs =
         legacy !== null && isFinite(px)

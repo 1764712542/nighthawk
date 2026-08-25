@@ -364,7 +364,7 @@ describe('loadPluginMarketplace', () => {
     });
 
     it('does not derive a version from a non-GitHub URL', async () => {
-      const entry = await loadEntry('https://code.kimi.com/nighthawk/plugins/curated/superpowers.zip');
+      const entry = await loadEntry('https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/plugins/cdn/curated/superpowers.zip');
       expect(entry.version).toBeUndefined();
     });
 

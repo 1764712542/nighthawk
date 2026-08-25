@@ -74,10 +74,10 @@ export const DEFAULT_OAUTH_PROVIDER_NAME = 'managed:nighthawk';
 export const OAUTH_LOGIN_REQUIRED_CODE = ErrorCodes.AUTH_LOGIN_REQUIRED;
 
 export const FEEDBACK_ISSUE_URL = 'https://github.com/1764712542/nighthawk/issues';
-// Sign-up / sign-in page offered to signed-out users so they can create an
-// account and submit feedback through the authenticated channel next time.
+// Project home offered to signed-out users — the GitHub repository hosts the
+// README, security policy, and issue tracker.
 export function nighthawkSignupUrl(): string {
-  return `${currentNighthawkProfile().siteBase}/code`;
+  return currentNighthawkProfile().siteBase;
 }
 
 // Sent in the feedback `version` field so the backend can distinguish this
@@ -114,9 +114,10 @@ export function nighthawkCdnBinariesBase(): string {
 // evaluated on every CLI invocation, so it must not pull in the engine root.
 export { NIGHTHAWK_PLUGIN_MARKETPLACE_URL_ENV } from '@nighthawk/agent-core-v2/app/plugin/marketplace';
 // The CLI-side default catalog derives from the current region profile; the
-// env override above takes priority at the call site.
+// env override above takes priority at the call site. It points at the
+// generated catalog committed to the repository (zipped sources).
 export function nighthawkPluginMarketplaceUrl(): string {
-  return `${nighthawkCdnBase()}/plugins/marketplace.json`;
+  return `${nighthawkCdnBase()}/plugins/cdn/marketplace.json`;
 }
 // Official plugins whose usage bills against the user's plan quota. Installing
 // one of these shows a quota note after the install result.
@@ -130,7 +131,7 @@ export function nighthawkInstallPs1Url(): string {
 // Official download page, referenced by prompt copy that steers users away
 // from third-party install sources.
 export function nighthawkOfficialInstallUrl(): string {
-  return `${currentNighthawkProfile().siteBase}/code`;
+  return currentNighthawkProfile().siteBase;
 }
 
 // Native install commands, split by platform. Use these for prompt copy and spawn calls only; do not assemble the strings elsewhere.

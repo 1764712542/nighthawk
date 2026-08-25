@@ -76,6 +76,9 @@ export interface ModelSelectorOptions {
   /** When true, the hint line mentions the Tab provider switch — set by
    * TabbedModelSelectorComponent so the inner list advertises the tab keys. */
   readonly providerSwitchHint?: boolean;
+  /** When true, the hint line advertises the 'r' refresh key — set by
+   * TabbedModelSelectorComponent for provider tabs with an onRefresh hook. */
+  readonly refreshHint?: boolean;
   /** When set, rendered as warning-colored lines directly below the key-hint
    * line; wraps instead of truncating when it exceeds the width (e.g. the
    * mid-conversation switch cost notice). */
@@ -222,6 +225,17 @@ export class ModelSelectorComponent extends Container implements Focusable {
       return;
     }
 
+    // Tab navigates like ↓ (Shift+Tab like ↑); the tabbed wrapper intercepts
+    // Tab for provider switching before it ever reaches a standalone picker.
+    if (matchesKey(data, Key.tab)) {
+      this.list.moveDown();
+      return;
+    }
+    if (matchesKey(data, Key.shift('tab'))) {
+      this.list.moveUp();
+      return;
+    }
+
     // ↑/↓, PgUp/PgDn, and — when searchable — typing + Backspace.
     if (this.list.handleKey(data)) {
       return;
@@ -290,6 +304,7 @@ export class ModelSelectorComponent extends Container implements Focusable {
     const hintParts: string[] = [];
     if (this.opts.providerSwitchHint) hintParts.push('Tab toggle provider');
     hintParts.push('↑↓ navigate');
+    if (this.opts.refreshHint) hintParts.push('r 刷新模型');
     if (searchable && view.query.length > 0) hintParts.push('Backspace clear');
     hintParts.push('Enter select');
     if (this.opts.onSessionOnlySelect !== undefined) hintParts.push('Alt+S session-only');
@@ -367,6 +382,12 @@ export class ModelSelectorComponent extends Container implements Focusable {
     }
     lines.push(currentTheme.fg('primary', '─'.repeat(width)));
     return lines.map((line) => truncateToWidth(line, width));
+  }
+
+  /** True while a search query is active — the tabbed wrapper keeps its 'r'
+   * refresh key out of the query box. */
+  hasActiveQuery(): boolean {
+    return this.list.view().query.length > 0;
   }
 
   private selectedChoice(): ModelChoice | undefined {

@@ -47,18 +47,30 @@ export interface NighthawkRegionProfile {
   readonly siteBase: string;
 }
 
+/**
+ * Default distribution root: the NightHawk GitHub repository, mirrored by
+ * jsDelivr (reachable from mainland China). Every artifact under this base —
+ * plugin marketplace, plugin zips, update manifests — is a file committed to
+ * the repo, so a plain `git push` publishes a release.
+ */
+export const NIGHTHAWK_DEFAULT_CDN_BASE =
+  'https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main';
+
+/** Default official site root: the GitHub repository home page. */
+export const NIGHTHAWK_DEFAULT_SITE_BASE = 'https://github.com/1764712542/nighthawk';
+
 export const NIGHTHAWK_REGION_PROFILES: Record<NighthawkRegion, NighthawkRegionProfile> = {
   'mainland-cn': {
     oauthHost: DEFAULT_NIGHTHAWK_OAUTH_HOST,
     baseUrl: DEFAULT_NIGHTHAWK_BASE_URL,
-    cdnBase: 'https://code.kimi.com/nighthawk',
-    siteBase: 'https://www.kimi.com',
+    cdnBase: NIGHTHAWK_DEFAULT_CDN_BASE,
+    siteBase: NIGHTHAWK_DEFAULT_SITE_BASE,
   },
   global: {
     oauthHost: 'https://auth.kimi.ai',
     baseUrl: 'https://api.kimi.ai/coding/v1',
-    cdnBase: 'https://code.kimi.ai/nighthawk',
-    siteBase: 'https://www.kimi.ai',
+    cdnBase: NIGHTHAWK_DEFAULT_CDN_BASE,
+    siteBase: NIGHTHAWK_DEFAULT_SITE_BASE,
   },
 };
 
@@ -102,12 +114,17 @@ function envOverrideOr(env: NodeJS.ProcessEnv, key: string, fallback: string): s
 
 /**
  * Content-CDN URL builder (tips banner, WebBridge / Computer-Use binaries).
- * International mirror coverage of cdn.kimi.ai for these payloads is still
- * being confirmed, so both regions currently share the .com host — funnel
- * every content URL through here so flipping later touches one function.
+ * Honors `NIGHTHAWK_CDN_BASE` so a self-hosted mirror takes effect everywhere
+ * (region `cdnBase` and this builder share the same override), and defaults to
+ * the GitHub-repository distribution root. Funnel every content URL through
+ * here so flipping the base later touches one function.
  */
-export function nighthawkCdnContentUrl(path: string): string {
-  return `https://cdn.kimi.com/${path.replace(/^\/+/, '')}`;
+export function nighthawkCdnContentUrl(
+  path: string,
+  env: NodeJS.ProcessEnv = process.env,
+): string {
+  const base = envOverrideOr(env, 'NIGHTHAWK_CDN_BASE', NIGHTHAWK_DEFAULT_CDN_BASE);
+  return `${base.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
 }
 
 /**

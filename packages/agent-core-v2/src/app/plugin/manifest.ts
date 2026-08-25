@@ -14,7 +14,41 @@ import {
 } from './types';
 
 const NIGHTHAWK_PLUGIN_ROOT_PATH = 'nighthawk.plugin.json';
+const LEGACY_PLUGIN_ROOT_PATH = 'kimi.plugin.json';
+const GENERIC_PLUGIN_ROOT_PATH = 'plugin.json';
 const NIGHTHAWK_PLUGIN_DIR_PATH = '.nighthawk-plugin/plugin.json';
+const LEGACY_PLUGIN_DIR_PATH = '.kimi-plugin/plugin.json';
+
+interface ManifestCandidate {
+  readonly relPath: string;
+  readonly kind: PluginManifestKind;
+  readonly spec: 'nighthawk' | 'legacy' | 'generic';
+}
+
+/** The native manifest spec id; non-native specs log an info diagnostic. */
+const NATIVE_MANIFEST_SPEC = 'nighthawk' as const;
+
+const MANIFEST_CANDIDATES: readonly ManifestCandidate[] = [
+  { relPath: NIGHTHAWK_PLUGIN_ROOT_PATH, kind: 'nighthawk-plugin-root', spec: 'nighthawk' },
+  { relPath: LEGACY_PLUGIN_ROOT_PATH, kind: 'legacy-plugin-root', spec: 'legacy' },
+  { relPath: GENERIC_PLUGIN_ROOT_PATH, kind: 'generic-plugin-root', spec: 'generic' },
+  { relPath: NIGHTHAWK_PLUGIN_DIR_PATH, kind: 'nighthawk-plugin-dir', spec: 'nighthawk' },
+  { relPath: LEGACY_PLUGIN_DIR_PATH, kind: 'legacy-plugin-dir', spec: 'legacy' },
+];
+
+/**
+ * Highest-priority manifest file that exists under `pluginRoot`, or undefined
+ * when none of the recognized specs is present. Shared with the archive
+ * extractor so zip root detection and manifest parsing agree on what counts
+ * as a plugin manifest.
+ */
+export async function findManifestPath(pluginRoot: string): Promise<string | undefined> {
+  for (const candidate of MANIFEST_CANDIDATES) {
+    const candidatePath = path.join(pluginRoot, candidate.relPath);
+    if (await isFile(candidatePath)) return candidatePath;
+  }
+  return undefined;
+}
 
 export const PLUGIN_SYSTEM_PROMPT_MAX_BYTES = 32 * 1024;
 
@@ -36,25 +70,29 @@ export interface ParsedManifestResult {
 }
 
 export async function parseManifest(pluginRoot: string): Promise<ParsedManifestResult> {
-  const rootJsonPath = path.join(pluginRoot, NIGHTHAWK_PLUGIN_ROOT_PATH);
-  const dirJsonPath = path.join(pluginRoot, NIGHTHAWK_PLUGIN_DIR_PATH);
-  const rootJsonExists = await isFile(rootJsonPath);
-  const dirJsonExists = await isFile(dirJsonPath);
+  const existing: ManifestCandidate[] = [];
+  for (const candidate of MANIFEST_CANDIDATES) {
+    if (await isFile(path.join(pluginRoot, candidate.relPath))) existing.push(candidate);
+  }
 
-  if (!rootJsonExists && !dirJsonExists) {
+  const selected = existing[0];
+  if (selected === undefined) {
+    const expected = MANIFEST_CANDIDATES.map((candidate) => candidate.relPath).join(', ');
     return {
       diagnostics: [
         {
           severity: 'error',
-          message: `No manifest at ${NIGHTHAWK_PLUGIN_ROOT_PATH} or ${NIGHTHAWK_PLUGIN_DIR_PATH}`,
+          message: `No manifest at ${expected}`,
         },
       ],
     };
   }
 
-  const manifestPath = rootJsonExists ? rootJsonPath : dirJsonPath;
-  const manifestKind: PluginManifestKind = rootJsonExists ? 'nighthawk-plugin-root' : 'nighthawk-plugin-dir';
-  const shadowedManifestPath = rootJsonExists && dirJsonExists ? dirJsonPath : undefined;
+  const manifestPath = path.join(pluginRoot, selected.relPath);
+  const manifestKind: PluginManifestKind = selected.kind;
+  const shadowedCandidate = existing[1];
+  const shadowedManifestPath =
+    shadowedCandidate === undefined ? undefined : path.join(pluginRoot, shadowedCandidate.relPath);
 
   let raw: unknown;
   try {
@@ -83,6 +121,12 @@ export async function parseManifest(pluginRoot: string): Promise<ParsedManifestR
   }
 
   const diagnostics: PluginDiagnostic[] = [];
+  if (selected.spec !== NATIVE_MANIFEST_SPEC) {
+    diagnostics.push({
+      severity: 'info',
+      message: `Using ${selected.spec} manifest "${selected.relPath}"`,
+    });
+  }
 
   const name = typeof raw['name'] === 'string' ? raw['name'].trim() : '';
   if (name.length === 0) {

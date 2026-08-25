@@ -80,57 +80,57 @@ export interface ColorPalette {
 }
 
 export const darkColors: ColorPalette = {
-  primary: '#4FA8FF',
-  accent: '#5BC0BE',
+  primary: '#00E5A0',
+  accent: '#00D4E5',
 
-  text: '#E0E0E0',
-  textStrong: '#F5F5F5',
-  textDim: '#888888',
-  textMuted: '#6B6B6B',
+  text: '#D7E2E8',
+  textStrong: '#F2F7FA',
+  textDim: '#7F95A0',
+  textMuted: '#5E7183',
 
-  border: '#5A5A5A',
-  borderFocus: '#E8A838',
+  border: '#3A4E5C',
+  borderFocus: '#FFB86C',
 
-  success: '#4EC87E',
-  warning: '#E8A838',
-  error: '#E85454',
+  success: '#2EE59D',
+  warning: '#FFB86C',
+  error: '#FF5C57',
 
-  diffAdded: '#4EC87E',
-  diffRemoved: '#E85454',
-  diffAddedStrong: '#7AD99B',
-  diffRemovedStrong: '#F08585',
-  diffGutter: '#6B6B6B',
-  diffMeta: '#888888',
+  diffAdded: '#2EE59D',
+  diffRemoved: '#FF5C57',
+  diffAddedStrong: '#6CFFC2',
+  diffRemovedStrong: '#FF8C87',
+  diffGutter: '#5E7183',
+  diffMeta: '#7F95A0',
 
-  roleUser: '#FFCB6B',
+  roleUser: '#FFD166',
   shellMode: '#BD93F9',
 };
 
 export const lightColors: ColorPalette = {
-  primary: '#1565C0',
-  accent: '#00838F',
+  primary: '#00785A',
+  accent: '#00707E',
 
-  text: '#1A1A1A',
-  textStrong: '#1A1A1A',
-  textDim: '#454545',
-  textMuted: '#5F5F5F',
+  text: '#16211E',
+  textStrong: '#16211E',
+  textDim: '#41504C',
+  textMuted: '#5A6A66',
 
-  border: '#737373',
-  borderFocus: '#92660A',
+  border: '#6E7F7A',
+  borderFocus: '#8A5A00',
 
-  success: '#0E7A38',
-  warning: '#92660A',
-  error: '#B91C1C',
+  success: '#0A6B4C',
+  warning: '#8A5A00',
+  error: '#A82723',
 
-  diffAdded: '#0E7A38',
-  diffRemoved: '#B91C1C',
-  diffAddedStrong: '#0E7A38',
-  diffRemovedStrong: '#B91C1C',
-  diffGutter: '#737373',
-  diffMeta: '#5F5F5F',
+  diffAdded: '#0A6B4C',
+  diffRemoved: '#A82723',
+  diffAddedStrong: '#0A6B4C',
+  diffRemovedStrong: '#A82723',
+  diffGutter: '#6E7F7A',
+  diffMeta: '#5A6A66',
 
-  roleUser: '#9A4A00',
-  shellMode: '#7C3AED',
+  roleUser: '#8A4A00',
+  shellMode: '#6C3ABE',
 };
 
 export type ResolvedTheme = 'dark' | 'light';
