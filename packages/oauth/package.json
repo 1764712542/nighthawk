@@ -1,0 +1,52 @@
+{
+  "name": "@nighthawk/nighthawk-oauth",
+  "version": "0.4.0",
+  "private": true,
+  "description": "OAuth toolkit for managed NightHawk authentication",
+  "license": "MIT",
+  "author": "NightHawk Contributors",
+  "homepage": "https://github.com/1764712542/nighthawk/tree/main/packages/oauth#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/1764712542/nighthawk.git",
+    "directory": "packages/oauth"
+  },
+  "bugs": {
+    "url": "https://github.com/1764712542/nighthawk/issues"
+  },
+  "keywords": [
+    "oauth",
+    "authentication",
+    "auth",
+    "cli"
+  ],
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "imports": {
+    "#/*": "./src/*.ts"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./device": {
+      "types": "./src/device.ts",
+      "default": "./src/device.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "proper-lockfile": "^4.1.2",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/proper-lockfile": "^4.1.4"
+  }
+}

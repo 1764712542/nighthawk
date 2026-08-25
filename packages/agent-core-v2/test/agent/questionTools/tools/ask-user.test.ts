@@ -1,0 +1,611 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { DisposableStore } from '#/_base/di/lifecycle';
+import { createServices } from '#/_base/di/test';
+import { CoreErrors } from '#/_base/errors/codes';
+import { Error2 } from '#/_base/errors/errors';
+import {
+  AskUserQuestionInputSchema,
+  IAskUserQuestionTool,
+  type AskUserQuestionInput,
+} from '#/agent/tools/ask-user-question/ask-user-question';
+import { AskUserQuestionTool } from '#/agent/tools/ask-user-question/askUserQuestionTool';
+import { ITelemetryService } from '#/app/telemetry/telemetry';
+import { IAgentTaskService } from '#/agent/task/task';
+import { IAgentScopeContext } from '#/agent/scopeContext/scopeContext';
+import { IAgentToolPolicyService } from '#/agent/toolPolicy/toolPolicy';
+import {
+  ISessionQuestionService,
+  type QuestionRequest,
+  type QuestionResult,
+} from '#/session/question/question';
+import type {
+  QuestionBackgroundTask,
+  QuestionTaskInfo,
+} from '#/agent/tools/ask-user-question/question-background-task';
+import { executeTool } from '../../../tools/fixtures/execute-tool';
+
+const signal = new AbortController().signal;
+const TASK_TOOLS = new Set(['TaskList', 'TaskOutput', 'TaskStop']);
+
+let disposables: DisposableStore;
+
+function input(
+  overrides: Partial<AskUserQuestionInput['questions'][number]> = {},
+): AskUserQuestionInput {
+  return {
+    questions: [
+      {
+        question: 'Which database?',
+        header: 'Storage',
+        options: [
+          { label: 'Postgres', description: 'Relational storage' },
+          { label: 'SQLite', description: 'Embedded storage' },
+        ],
+        multi_select: false,
+        ...overrides,
+      },
+    ],
+  };
+}
+
+function makeTool(
+  options: {
+    readonly activeTaskTools?: ReadonlySet<string>;
+    readonly request?: (
+      req: QuestionRequest,
+      requestOptions?: { readonly signal?: AbortSignal },
+    ) => Promise<QuestionResult>;
+  } = {},
+): {
+  readonly tool: IAskUserQuestionTool;
+  readonly request: ReturnType<typeof vi.fn>;
+  readonly telemetryTrack: ReturnType<typeof vi.fn>;
+  readonly registerTask: ReturnType<typeof vi.fn>;
+  readonly getTask: ReturnType<typeof vi.fn>;
+  readonly lastRegisteredTask: () => QuestionBackgroundTask | undefined;
+} {
+  const request = vi.fn(options.request ?? (async () => ({ Postgres: true }) as QuestionResult));
+  const telemetryTrack = vi.fn();
+  let lastTask: QuestionBackgroundTask | undefined;
+  const registerTask = vi.fn((task: QuestionBackgroundTask) => {
+    lastTask = task;
+    return 'q_test_task_id';
+  });
+  const getTask = vi.fn(
+    (id: string): QuestionTaskInfo | undefined =>
+      id === 'q_test_task_id'
+        ? {
+            taskId: id,
+            description: 'Which database?',
+            status: 'running',
+            detached: true,
+            startedAt: 0,
+            endedAt: null,
+            kind: 'question',
+            questionCount: 1,
+            toolCallId: 'call_bg',
+          }
+        : undefined,
+  );
+  const activeTaskTools = options.activeTaskTools ?? TASK_TOOLS;
+  const ix = createServices(disposables, {
+    additionalServices: (reg) => {
+      reg.definePartialInstance(ISessionQuestionService, { request });
+      reg.definePartialInstance(ITelemetryService, { track2: telemetryTrack });
+      reg.definePartialInstance(IAgentTaskService, { registerTask, getTask });
+      reg.definePartialInstance(IAgentScopeContext, { agentId: 'main' });
+      reg.definePartialInstance(IAgentToolPolicyService, {
+        isToolActive: (name: string) => activeTaskTools.has(name),
+      });
+      reg.define(IAskUserQuestionTool, AskUserQuestionTool);
+    },
+    strict: true,
+  });
+  const tool = ix.get(IAskUserQuestionTool);
+  return { tool, request, telemetryTrack, registerTask, getTask, lastRegisteredTask: () => lastTask };
+}
+
+describe('AskUserQuestionTool', () => {
+  beforeEach(() => {
+    disposables = new DisposableStore();
+  });
+
+  afterEach(() => {
+    disposables.dispose();
+  });
+
+  it('exposes current metadata and schema', () => {
+    const { tool } = makeTool();
+
+    expect(tool.name).toBe('AskUserQuestion');
+    expect(tool.parameters).toMatchObject({
+      type: 'object',
+      properties: { questions: { type: 'array' } },
+    });
+    expect(AskUserQuestionInputSchema.safeParse(input()).success).toBe(true);
+    expect(AskUserQuestionInputSchema.safeParse({ questions: [] }).success).toBe(false);
+    expect(
+      AskUserQuestionInputSchema.safeParse(
+        input({
+          options: [{ label: 'Only one', description: 'Not enough choices' }],
+        }),
+      ).success,
+    ).toBe(false);
+  });
+
+  it('rejects empty question text and empty option labels at the schema layer', () => {
+    expect(
+      AskUserQuestionInputSchema.safeParse(input({ question: '' })).success,
+    ).toBe(false);
+    expect(
+      AskUserQuestionInputSchema.safeParse(
+        input({
+          options: [
+            { label: '', description: 'Empty label' },
+            { label: 'B', description: '' },
+          ],
+        }),
+      ).success,
+    ).toBe(false);
+  });
+
+  it('rejects duplicate question texts across questions (schema + execution)', async () => {
+    const duplicated: AskUserQuestionInput = {
+      questions: [input().questions[0]!, input().questions[0]!],
+    };
+    expect(AskUserQuestionInputSchema.safeParse(duplicated).success).toBe(false);
+
+    const { tool, request } = makeTool();
+    const result = await executeTool(tool, {
+      turnId: 0,
+      toolCallId: 'call_dup_question',
+      args: duplicated,
+      signal,
+    });
+    expect(result.isError).toBe(true);
+    expect(result.output).toContain('unique');
+    expect(request).not.toHaveBeenCalled();
+  });
+
+  it('rejects duplicate option labels within one question (schema + execution)', async () => {
+    const duplicated = input({
+      options: [
+        { label: 'Postgres', description: 'Relational storage' },
+        { label: 'Postgres', description: 'Same label again' },
+      ],
+    });
+    expect(AskUserQuestionInputSchema.safeParse(duplicated).success).toBe(false);
+
+    const { tool, request } = makeTool();
+    const result = await executeTool(tool, {
+      turnId: 0,
+      toolCallId: 'call_dup_label',
+      args: duplicated,
+      signal,
+    });
+    expect(result.isError).toBe(true);
+    expect(result.output).toContain('unique');
+    expect(request).not.toHaveBeenCalled();
+  });
+
+  it('allows the same option label to appear in different questions', async () => {
+    const args: AskUserQuestionInput = {
+      questions: [
+        input().questions[0]!,
+        input({ question: 'Which cache?' }).questions[0]!,
+      ],
+    };
+    expect(AskUserQuestionInputSchema.safeParse(args).success).toBe(true);
+
+    const { tool, request } = makeTool();
+    const result = await executeTool(tool, {
+      turnId: 0,
+      toolCallId: 'call_cross_label',
+      args,
+      signal,
+    });
+    expect(result.isError).toBe(false);
+    expect(request).toHaveBeenCalledOnce();
+  });
+
+  it('exposes background mode when all task controls are active', () => {
+    const { tool } = makeTool();
+    const params = tool.parameters as {
+      properties: { background?: { type?: string; default?: boolean } };
+    };
+
+    expect(params.properties.background?.type).toBe('boolean');
+    expect(params.properties.background?.default).toBe(false);
+    expect(tool.description).toContain('background=true');
+    expect(tool.description).toContain('task_id');
+  });
+
+  it('hides and rejects background mode after a task control becomes inactive', async () => {
+    const activeTaskTools = new Set(TASK_TOOLS);
+    const { tool, request, registerTask } = makeTool({
+      activeTaskTools,
+    });
+
+    expect(tool.parameters).toHaveProperty('properties.background');
+    activeTaskTools.delete('TaskStop');
+
+    const params = tool.parameters as { properties: Record<string, unknown> };
+
+    expect(params.properties).not.toHaveProperty('background');
+    expect(tool.description.toLowerCase()).not.toContain('background');
+    expect(tool.description).not.toContain('task_id');
+    expect(tool.description).not.toContain('TaskOutput');
+
+    const result = await executeTool(tool, {
+      turnId: 0,
+      toolCallId: 'call_bg_disabled',
+      args: { ...input(), background: true },
+      signal,
+    });
+
+    expect(result).toEqual({
+      isError: true,
+      output:
+        'Background questions are not available for this agent because TaskList, TaskOutput, and TaskStop are not enabled.',
+    });
+    expect(registerTask).not.toHaveBeenCalled();
+    expect(request).not.toHaveBeenCalled();
+  });
+
+  it('preserves foreground answers when background mode is unavailable', async () => {
+    const { tool, request } = makeTool({ activeTaskTools: new Set() });
+
+    const result = await executeTool(tool, {
+      turnId: 0,
+      toolCallId: 'call_fg_disabled',
+      args: input(),
+      signal,
+    });
+
+    expect(result).toEqual({
+      isError: false,
+      output: JSON.stringify({ answers: { Postgres: true } }),
+    });
+    expect(request).toHaveBeenCalledOnce();
+  });
+
+  it('preserves foreground dismissal when background mode is unavailable', async () => {
+    const { tool } = makeTool({
+      activeTaskTools: new Set(),
+      request: async () => null,
+    });
+
+    const result = await executeTool(tool, {
+      turnId: 0,
+      toolCallId: 'call_fg_dismissed',
+      args: input(),
+      signal,
+    });
+
+    expect(result).toEqual({
+      isError: false,
+      output: JSON.stringify({
+        answers: {},
+        note: 'User dismissed the question without answering.',
+      }),
+    });
+  });
+
+  it('preserves foreground errors when background mode is unavailable', async () => {
+    const { tool } = makeTool({
+      activeTaskTools: new Set(),
+      request: async () => {
+        throw new Error2(
+          CoreErrors.codes.NOT_IMPLEMENTED,
+          'Client does not support questions',
+        );
+      },
+    });
+
+    const result = await executeTool(tool, {
+      turnId: 0,
+      toolCallId: 'call_fg_unsupported',
+      args: input(),
+      signal,
+    });
+
+    expect(result).toEqual({
+      isError: true,
+      output:
+        'The connected client does not support interactive questions. Do NOT call this tool again. Ask the user directly in your text response instead.',
+    });
+  });
+
+  it('dispatches questions through the session question service', async () => {
+    const { tool, request, telemetryTrack } = makeTool();
+
+    const result = await executeTool(tool, {
+      turnId: 0,
+      toolCallId: 'call_question',
+      args: input({ multi_select: true }),
+      signal,
+    });
+
+    expect(result.isError).toBe(false);
+    expect(result.output).toBe(JSON.stringify({ answers: { Postgres: true } }));
+    expect(request).toHaveBeenCalledWith(
+      {
+        turnId: 0,
+        toolCallId: 'call_question',
+        questions: [
+          {
+            question: 'Which database?',
+            header: 'Storage',
+            options: [
+              { label: 'Postgres', description: 'Relational storage' },
+              { label: 'SQLite', description: 'Embedded storage' },
+            ],
+            multiSelect: true,
+          },
+        ],
+      },
+      { signal, agentId: 'main' },
+    );
+    expect(telemetryTrack).toHaveBeenCalledWith('question_answered', {
+      answered: 1,
+      trace_id: undefined,
+    });
+  });
+
+  it('passes empty headers and option descriptions through verbatim (v1 wire parity)', async () => {
+    const { tool, request } = makeTool();
+
+    await executeTool(tool, {
+      turnId: 0,
+      toolCallId: 'call_empty_fields',
+      args: input({
+        header: '',
+        options: [
+          { label: 'Postgres', description: '' },
+          { label: 'SQLite', description: '' },
+        ],
+      }),
+      signal,
+    });
+
+    expect(request).toHaveBeenCalledWith(
+      expect.objectContaining({
+        questions: [
+          expect.objectContaining({
+            header: '',
+            options: [
+              { label: 'Postgres', description: '' },
+              { label: 'SQLite', description: '' },
+            ],
+          }),
+        ],
+      }),
+      { signal, agentId: 'main' },
+    );
+  });
+
+  it('tracks the structured question answer method without leaking it into output', async () => {
+    const { tool, telemetryTrack } = makeTool({
+      request: async () => ({
+        answers: { 'Which database?': 'SQLite' },
+        method: 'number_key',
+      }),
+    });
+
+    const result = await executeTool(tool, {
+      turnId: 0,
+      toolCallId: 'call_question',
+      args: input(),
+      signal,
+    });
+
+    expect(result).toMatchObject({ isError: false });
+    expect(result.output).toBe(JSON.stringify({ answers: { 'Which database?': 'SQLite' } }));
+    expect(telemetryTrack).toHaveBeenCalledWith('question_answered', {
+      answered: 1,
+      method: 'number_key',
+      trace_id: undefined,
+    });
+  });
+
+  it('merges the request trace id into question telemetry', async () => {
+    const { tool, telemetryTrack } = makeTool();
+
+    const result = await executeTool(tool, {
+      turnId: 0,
+      toolCallId: 'call_question',
+      args: input(),
+      signal,
+      trace: { traceId: 'trace-q-1' },
+    });
+
+    expect(result).toMatchObject({ isError: false });
+    expect(telemetryTrack).toHaveBeenCalledWith('question_answered', {
+      answered: 1,
+      trace_id: 'trace-q-1',
+    });
+  });
+
+  it('returns a dismissed message when every question is dismissed', async () => {
+    const { tool, telemetryTrack } = makeTool({ request: async () => null });
+
+    const result = await executeTool(tool, {
+      turnId: 0,
+      toolCallId: 'call_question',
+      args: {
+        questions: [input().questions[0]!, input({ question: 'Which cache?' }).questions[0]!],
+      },
+      signal,
+    });
+
+    expect(result).toMatchObject({ isError: false });
+    expect(result.output).toContain('dismissed');
+    expect(result.output).toContain('answers');
+    expect(telemetryTrack).toHaveBeenCalledWith('question_dismissed', { trace_id: undefined });
+  });
+
+  it('resolves question service error responses as dismissed answers', async () => {
+    const { tool } = makeTool({
+      request: async () => {
+        throw new Error2(CoreErrors.codes.INTERNAL, 'question broker error');
+      },
+    });
+
+    const result = await executeTool(tool, {
+      turnId: 0,
+      toolCallId: 'call_question',
+      args: input(),
+      signal,
+    });
+
+    expect(result).toMatchObject({ isError: false });
+    expect(result.output).toContain('dismissed');
+    expect(typeof result.output).toBe('string');
+    const output = typeof result.output === 'string' ? result.output : '';
+    expect(JSON.parse(output)).toEqual({
+      answers: {},
+      note: 'User dismissed the question without answering.',
+    });
+    expect(result.output).not.toContain('Do NOT call this tool again');
+  });
+
+  it('propagates aborts while waiting for the question service', async () => {
+    const controller = new AbortController();
+    const { tool } = makeTool({
+      request: async (_req, requestOptions) =>
+        new Promise<QuestionResult>((_resolve, reject) => {
+          requestOptions?.signal?.addEventListener(
+            'abort',
+            () => {
+              const error = new Error('Aborted');
+              error.name = 'AbortError';
+              reject(error);
+            },
+            { once: true },
+          );
+        }),
+    });
+
+    const result = executeTool(tool, {
+      turnId: 0,
+      toolCallId: 'call_question',
+      args: input(),
+      signal: controller.signal,
+    });
+    controller.abort();
+
+    await expect(result).rejects.toHaveProperty('name', 'AbortError');
+  });
+
+  it('returns a distinct hard error when the host signals unsupported', async () => {
+    const { tool } = makeTool({
+      request: async () => {
+        throw new Error2(
+          CoreErrors.codes.NOT_IMPLEMENTED,
+          'Client does not support questions',
+        );
+      },
+    });
+
+    const result = await executeTool(tool, {
+      turnId: 0,
+      toolCallId: 'tc-ask-unsupported',
+      args: input(),
+      signal,
+    });
+
+    expect(result).toMatchObject({ isError: true });
+    expect(result.output).toContain('connected client');
+    expect(result.output).toContain('does not support interactive questions');
+    expect(result.output).toContain('Do NOT call this tool again');
+    expect(result.output).toContain('Ask the user directly in your text response instead');
+  });
+
+  describe('background mode', () => {
+    function makeSink(abortSignal?: AbortSignal) {
+      const outputs: string[] = [];
+      const settlements: Array<{ status: string; stopReason?: string }> = [];
+      const sink = {
+        signal: abortSignal ?? new AbortController().signal,
+        appendOutput: (chunk: string) => {
+          outputs.push(chunk);
+        },
+        settle: async (settlement: { status: string; stopReason?: string }) => {
+          settlements.push(settlement);
+          return true;
+        },
+      };
+      return { sink, outputs, settlements };
+    }
+
+    it('returns a task_id immediately without awaiting the answer', async () => {
+      const { tool, request, registerTask, getTask } = makeTool();
+      const result = await executeTool(tool, {
+        turnId: 0,
+        toolCallId: 'call_bg',
+        args: { ...input(), background: true },
+        signal,
+      });
+
+      expect(result.isError).toBe(false);
+      expect(result.output).toContain('task_id: q_test_task_id');
+      expect(result.output).toContain('automatic_notification: true');
+      expect(result.output).toContain('/tasks');
+      expect(registerTask).toHaveBeenCalledOnce();
+      expect(registerTask.mock.calls[0]![1]).toMatchObject({ detached: true });
+      expect(getTask).toHaveBeenCalledWith('q_test_task_id');
+      expect(request).not.toHaveBeenCalled();
+    });
+
+    it('runs the question in the background task and settles completed with the answer', async () => {
+      const { tool, lastRegisteredTask } = makeTool();
+      await executeTool(tool, {
+        turnId: 0,
+        toolCallId: 'call_bg_run',
+        args: { ...input(), background: true },
+        signal,
+      });
+
+      const task = lastRegisteredTask();
+      expect(task).toBeDefined();
+      const { sink, outputs, settlements } = makeSink();
+      await task!.start(sink);
+
+      expect(outputs).toEqual([JSON.stringify({ answers: { Postgres: true } })]);
+      expect(settlements).toEqual([{ status: 'completed' }]);
+    });
+
+    it('settles killed when the background task is aborted', async () => {
+      const controller = new AbortController();
+      const { tool, lastRegisteredTask } = makeTool({
+        request: async (_req, requestOptions) =>
+          new Promise<QuestionResult>((_resolve, reject) => {
+            requestOptions?.signal?.addEventListener(
+              'abort',
+              () => {
+                const error = new Error('Aborted');
+                error.name = 'AbortError';
+                reject(error);
+              },
+              { once: true },
+            );
+          }),
+      });
+      await executeTool(tool, {
+        turnId: 0,
+        toolCallId: 'call_bg_abort',
+        args: { ...input(), background: true },
+        signal,
+      });
+
+      const task = lastRegisteredTask();
+      const { sink, settlements } = makeSink(controller.signal);
+      const run = task!.start(sink);
+      controller.abort();
+      await run;
+
+      expect(settlements).toEqual([{ status: 'killed' }]);
+    });
+  });
+});

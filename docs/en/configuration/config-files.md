@@ -1,0 +1,579 @@
+# Configuration files
+
+NightHawk CLI writes all long-term preferences — which model to use, which API key to fill in, how many steps an Agent can run per turn — into TOML (a plain-text configuration format with a clear structure) files. Change them once and they take effect on every startup. Agent and runtime settings live in `config.toml`; terminal-UI and client preferences (theme, editor, notifications, auto-update) live in a companion `tui.toml`.
+
+Default location: `~/.nighthawk/config.toml`, created automatically on first run.
+
+## Config file location
+
+The CLI reads configuration from `~/.nighthawk/config.toml`. To relocate the data directory, override it with the `NIGHTHAWK_HOME` environment variable:
+
+```sh
+export NIGHTHAWK_HOME=/path/to/nighthawk-home
+```
+
+The config file path then becomes `$NIGHTHAWK_HOME/config.toml`. Regardless of where the directory lives, the file name is always `config.toml`.
+
+::: tip
+TOML field names always use snake_case, for example `default_model` and `max_context_size`. If a key contains `.`, you must quote it — for example `[models."gpt-4.1"]` — otherwise TOML treats `.` as a nested table separator.
+:::
+
+## Complete example
+
+The following example covers the most commonly used configuration fields. You can copy it and adjust as needed:
+
+```toml
+default_model = "nighthawk/k3"
+default_permission_mode = "manual"
+default_plan_mode = false
+merge_all_available_skills = true
+telemetry = true
+
+[providers."managed:nighthawk"]
+type = "nighthawk"
+base_url = "https://api.kimi.com/coding/v1"
+api_key = ""
+
+[models."nighthawk/k3"]
+provider = "managed:nighthawk"
+model = "k3"
+max_context_size = 1048576
+capabilities = [ "thinking", "always_thinking", "image_in", "video_in", "tool_use" ]
+display_name = "K3"
+support_efforts = [ "low", "high", "max" ]
+default_effort = "max"
+
+[models."nighthawk/nighthawk"]
+provider = "managed:nighthawk"
+model = "nighthawk"
+max_context_size = 262144
+capabilities = [ "thinking", "always_thinking", "image_in", "video_in", "tool_use" ]
+
+[models."nighthawk/nighthawk-highspeed"]
+provider = "managed:nighthawk"
+model = "nighthawk-highspeed"
+max_context_size = 262144
+capabilities = [ "thinking", "always_thinking", "image_in", "video_in", "tool_use" ]
+
+[thinking]
+enabled = true
+effort = "high"
+keep = "all"
+
+[loop_control]
+max_attempts_per_step = 10
+reserved_context_size = 50000
+
+[background]
+max_running_tasks = 4
+keep_alive_on_exit = false
+
+[services.nighthawk_search]
+base_url = "https://api.kimi.com/coding/v1/search"
+api_key = ""
+
+[services.nighthawk_fetch]
+base_url = "https://api.kimi.com/coding/v1/fetch"
+api_key = ""
+
+[[permission.rules]]
+decision = "allow"
+pattern = "Read"
+
+[[permission.rules]]
+decision = "deny"
+pattern = "Bash(rm -rf*)"
+
+[[hooks]]
+event = "PreToolUse"
+matcher = "Bash"
+command = "node ~/.nighthawk/hooks/check-bash.mjs"
+timeout = 5
+```
+
+## Top-level fields
+
+Fields in the config file fall into two categories: **top-level scalars** that directly control default behavior, and **nested tables** (`providers`, `models`, `thinking`, etc.) that each have their own structure, described individually in the sections below.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `default_model` | `string` | — | Default model alias; must be defined in `models` |
+| `default_permission_mode` | `string` | `manual` | Default permission mode for new sessions; one of `manual` (prompt each time), `yolo` (auto-approve tool actions, but the agent may still ask questions), or `auto` (fully autonomous — the agent decides everything without asking) |
+| `default_plan_mode` | `boolean` | `false` | Whether new sessions start in Plan mode (produce a plan before executing) by default |
+| `merge_all_available_skills` | `boolean` | `true` | Whether to merge Agent Skills from all available directories |
+| `extra_skill_dirs` | `array<string>` | — | Extra skill search directories, layered on top of the default directories |
+| `extra_agent_dirs` | `array<string>` | — | Extra custom agent search directories, layered on top of the default directories |
+| `builtin_product_skills` | `boolean` | `true` | Whether the built-in skills that document NightHawk itself are offered to the model: `update-config`, `custom-theme`, `mcp-config`, `check-nighthawk-docs`, and `import-from-cc-codex`. Turning them off trims their names and descriptions from the system prompt, at the cost of the guided flows for those tasks. Read by the default `agent-core-v2` engine; ignored when `NIGHTHAWK_LEGACY_FLAG=1` selects the legacy engine |
+| `telemetry` | `boolean` | `true` | Whether anonymous telemetry is enabled; disabled only when explicitly set to `false` |
+| `providers` | `table` | `{}` | API provider table → [`providers`](#providers) |
+| `models` | `table` | — | Model alias table → [`models`](#models) |
+| `thinking` | `table` | — | Default parameters for Thinking mode → [`thinking`](#thinking) |
+| `loop_control` | `table` | — | Agent loop control parameters → [`loop_control`](#loop-control) |
+| `background` | `table` | — | Background task runtime parameters → [`background`](#background) |
+| `tools` | `table` | — | Global tool switch → [`tools`](#tools) |
+| `image` | `table` | — | Image compression parameters → [`image`](#image) |
+| `services` | `table` | — | Built-in external service configuration → [`services`](#services) |
+| `permission` | `table` | — | Initial permission rules → [`permission`](#permission) |
+| `hooks` | `array<table>` | — | Lifecycle hooks; see [Hooks](../customization/hooks.md) |
+| `identity` | `table` | — | Custom agent identity → [`identity`](#identity) |
+
+The following sections cover each of the nested tables in turn: `providers`, `models`, `thinking`, `loop_control`, `background`, `tools`, `image`, `services`, and `permission`.
+
+## `providers`
+
+Each entry in the `providers` table defines an API provider, keyed by a unique name. The CLI reads credentials only from here — it does **not** fall back to shell environment variables automatically. Running `export NIGHTHAWK_API_KEY` in the terminal does not give any provider its key; you must write it explicitly in the config file (see [Config overrides](./overrides.md#provider-credentials)).
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `type` | `string` | Yes | Provider type: `nighthawk`, `anthropic`, `openai`, `openai_responses`, `google-genai`, `vertexai` |
+| `api_key` | `string` | No | API key, written in plain text in the config file |
+| `base_url` | `string` | No | API base URL |
+| `oauth` | `table` | No | OAuth credential reference (`storage` and `key` fields); injected automatically by the login flow — normally no need to write this by hand |
+| `env` | `table<string, string>` | No | Fallback source for provider credentials; see below |
+| `custom_headers` | `table<string, string>` | No | Custom HTTP headers attached to each request |
+
+**`env` sub-table**: You can write provider-conventional key names (such as `NIGHTHAWK_API_KEY`) inside `[providers.<name>.env]` as a fallback source for `api_key` / `base_url`. This sub-table is **read only from the config file** and does not modify the shell environment:
+
+```toml
+[providers.nighthawk.env]
+NIGHTHAWK_API_KEY = "sk-xxx"
+NIGHTHAWK_BASE_URL = "https://api.moonshot.ai/v1"
+```
+
+Priority: `api_key` field > `env` sub-table key > if both are absent, startup fails with an error.
+
+## `models`
+
+Each entry in the `models` table defines a model alias (the name used in `default_model` or the `-m` flag), keyed by a unique name.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `provider` | `string` | Yes | Name of the provider to use; must be defined in `providers` |
+| `model` | `string` | Yes | Model identifier sent to the server when calling the API |
+| `max_context_size` | `integer` | Yes | Maximum context length in tokens; must be at least 1 |
+| `max_input_size` | `integer` | No | Declared per-request input limit when it sits below the total window (e.g. gpt-5: 400k window, 272k input). Compaction, context-overflow checks, and usage ratios prefer it; completion budgeting keeps the total window. Resolution clamps it to `max_context_size` |
+| `max_output_size` | `integer` | No | Per-request output token cap (maps to `max_tokens`). Currently only the `anthropic` provider honors it. When set for a Claude model, this explicit value overrides the built-in server-side maximum |
+| `capabilities` | `array<string>` | No | Capability tags to add explicitly: `thinking`, `always_thinking`, `image_in`, `video_in`, `audio_in`, `tool_use`. Unioned with the capabilities auto-detected by the provider — entries can only be added, never removed |
+| `support_efforts` | `array<string>` | No | Thinking effort levels the model accepts. For `nighthawk`, selecting another value at runtime fails; when model resolution carries an unsupported configured or previous value, the session falls back to the target model's `default_effort` and reports that effective value to the UI. A Thinking-capable NightHawk model without this field uses boolean `on` / `off`. Other providers pass concrete values unchanged when their protocol has a native effort field; protocols that expose only levels or token budgets perform the required format conversion. Managed and open-platform refreshes may rewrite this field; to pin it manually, set `[models."<alias>".overrides] support_efforts` instead |
+| `default_effort` | `string` | No | Default thinking effort for the model. Managed and open-platform refreshes may rewrite this field; to pin it manually, set `[models."<alias>".overrides] default_effort` instead |
+| `off_effort` | `string` | No | Effort value sent on the wire to disable thinking (e.g. `none` for xai grok). Only meaningful for models that declare such an encoding (catalog imports set it): turning thinking Off then sends this value instead of omitting the effort field — the only way to actually stop reasoning on models that reason by default |
+| `base_url` | `string` | No | Per-model endpoint override (written by catalog imports for gateway models served away from the provider default). Resolution prefers it over the provider's `base_url`; only takes effect together with `protocol` |
+| `display_name` | `string` | No | Name shown in the UI; falls back to `model` when unset |
+| `reasoning_key` | `string` | No | `openai` provider only. Override the field name used for reasoning content when the gateway returns it under a non-standard name; by default `reasoning_content`, `reasoning_details`, and `reasoning` are auto-detected |
+| `adaptive_thinking` | `boolean` | No | `anthropic` provider only. Force adaptive thinking on or off, overriding the version inference based on the model name. Omit to infer automatically (Claude ≥ 4.6 uses adaptive) |
+
+When an alias contains `.`, use a quoted key:
+
+```toml
+[models."gpt-4.1"]
+provider = "openai"
+model = "gpt-4.1"
+max_context_size = 1047576
+```
+
+### Model overrides
+
+Use `[models."<alias>".overrides]` for user overrides that must survive provider-model refreshes. Runtime consumers read the effective value: the override when present, otherwise the top-level field.
+
+```toml
+[models."nighthawk/nighthawk"]
+provider = "managed:nighthawk"
+model = "nighthawk"
+max_context_size = 262144
+
+[models."nighthawk/nighthawk".overrides]
+max_context_size = 131072
+display_name = "NightHawk for Coding (custom)"
+```
+
+`[models."<alias>".overrides]` accepts ordinary model fields such as `max_context_size`, `max_input_size`, `max_output_size`, `capabilities`, `display_name`, `reasoning_key`, `adaptive_thinking`, `support_efforts`, `default_effort`, and `off_effort`. It does not accept identity / routing fields: `provider`, `model`, `protocol`, `beta_api`, and `base_url`.
+
+You can also switch models temporarily without touching the config file — by setting `NIGHTHAWK_MODEL_*` environment variables, the CLI synthesizes a temporary provider in memory that does not persist after restart. See [Define a model from environment variables](./env-vars.md#define-a-model-from-environment-variables-nighthawk-model).
+
+## `secondary_model`
+
+Subagents inherit the model the main agent is running by default. The `[secondary_model]` section makes this configurable: it offers subagents a pool of candidate models plus a default binding — typically a cheaper model for subtasks that do not need the main model's capability.
+
+### Subagent model pool
+
+This feature is experimental and disabled by default. Enable it with `NIGHTHAWK_EXPERIMENTAL_SECONDARY_MODEL=1`, or the master `NIGHTHAWK_EXPERIMENTAL_FLAG=1`; it takes effect in every launch mode, including the interactive TUI. While the experiment is off, the pool keys stay inert: subagents inherit the caller's model and session startup skips the pool validation.
+
+The minimal configuration is one line — a lone `default_model` is a pool with a single entry:
+
+```toml
+[secondary_model]
+default_model = "nighthawk/nighthawk-highspeed"
+```
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `default_model` | `string` | — | The default model for subagents |
+| `models` | `table<string, string>` | — | Subagent model pool. Each key is the alias of a configured [`[models]`](#models) entry; each value is the selection hint shown to the main agent |
+| `force` | `boolean` | `false` | Pin every subagent to `default_model`, taking the choice away from the main agent |
+| `default_effort` | `string` | — | The thinking effort every spawned subagent binds with; outranks the bound model entry's own `default_effort` |
+
+Constraints between the fields:
+
+- `default_model`: required when a `models` table is configured, and must be one of its keys.
+- `models`: values may be Chinese or English; an empty string lists the alias with no hint.
+- `force`: requires `default_model` and cannot be combined with a `models` table — the table exists to offer a choice, and force removes it.
+- `default_effort` is section-wide: every spawn binds it regardless of the chosen pool entry (or the forced model). For per-entry efforts, leave it unset and use model variants (see below).
+- `primary` is a reserved alias (see below) and cannot be a pool key.
+
+In the interactive TUI, the [`/secondary-model`](../reference/slash-commands.md) command (alias `/subagent-model`) opens a model selector: the choice is written to `default_model` (when a models table exists and the picked alias is not in it, an entry with an empty description is added), and newly spawned subagents pick up the new default immediately — no session restart needed.
+
+A configured pool — an explicit `models` table or a lone `default_model` — enables model selection: the `Agent` / `AgentSwarm` tools gain a `model` parameter, and the tool description lists the pool (the default marked `[default]`) so the main agent can choose per spawn. Pool keys can only reference configured [`[models]`](#models) entries — the `nighthawk/*` aliases below are provisioned by `/login`:
+
+```toml
+[secondary_model]
+default_model = "nighthawk/nighthawk-highspeed"
+[secondary_model.models]
+"nighthawk/k3" = "Pick this for hard problems. Strong at complex reasoning, algorithm design, deep debugging, math, and systematic challenges."
+"nighthawk/nighthawk-highspeed" = "Fast but priced higher. Good for latency-sensitive tasks: daily refactoring, code explanation, small edits, and summaries."
+"nighthawk/nighthawk" = "A balanced coding workhorse. Good for most feature development and code-change tasks."
+```
+
+A spawn resolves the subagent's model in this order:
+
+1. An explicit `model` passed in the tool call
+2. `default_model`
+
+Rules for the `model` parameter:
+
+- It accepts any pool alias, or `"primary"` — the model the caller itself is running, always valid even when not in the pool.
+- When neither `default_model` nor `models` is configured, the parameter is not advertised and subagents inherit the caller's model.
+- Binding a pool alias does not inherit the caller's thinking effort. The section's `default_effort` wins when set. Otherwise, `[thinking].enabled = false` keeps Thinking off; when Thinking is enabled, resolution continues with the bound model entry's `default_effort`, the global `[thinking].effort`, then the middle of the bound model's `support_efforts`.
+- `"primary"` inherits both the model and the effort level from the caller.
+- A value that is neither a pool alias nor `"primary"` fails the spawn with an error listing the available choices.
+
+To take the choice away from the main agent and run every subagent on one fixed model, add `force = true`:
+
+```toml
+[secondary_model]
+default_model = "nighthawk/nighthawk-highspeed"
+force = true
+```
+
+With `force` set, the `model` parameter is not advertised (just like when nothing is configured) and every spawn binds `default_model`; an explicit `model` argument, `"primary"` included, is rejected with an error.
+
+### Different thinking efforts per pool entry
+
+Binding a pool alias lands the subagent on the bound model's default effort. You can exploit this by registering a "variant" entry for the same underlying model, so the main agent picks the thinking level together with the alias:
+
+1. Register a second entry for the same underlying model in [`[models]`](#models), overriding only `default_effort` via [`[models."<alias>".overrides]`](#model-overrides).
+2. List both the original alias and the variant alias in the pool.
+
+```toml
+# "nighthawk/k3" is provisioned by /login (default: high); this registers
+# a max-effort variant of the same model
+[models.k3-max]
+provider = "managed:nighthawk"
+model = "k3"
+max_context_size = 1048576
+capabilities = [ "thinking", "always_thinking", "image_in", "video_in", "tool_use" ]
+support_efforts = [ "low", "high", "max" ]
+
+[models.k3-max.overrides]
+default_effort = "max"
+
+[secondary_model]
+default_model = "nighthawk/k3"
+[secondary_model.models]
+"nighthawk/k3" = "Default high effort. Good for most implementation, analysis, and multi-turn interaction tasks."
+k3-max = "The same model at max thinking effort. Good for the hardest subtasks."
+```
+
+Two prerequisites:
+
+- The underlying model must declare `support_efforts` (under `managed:nighthawk` only the k3 family currently declares effort levels).
+- The variant is a standalone entry and does not inherit fields from the entry it points at — copy `capabilities`, `support_efforts`, and the other metadata over in full, otherwise `default_effort` has no effect (it must be a member of `support_efforts`).
+
+Note the asymmetry between the main agent and pool-bound subagents: for the main agent, a configured global `[thinking].effort` overrides the variant's `default_effort`; for subagents the variant's `default_effort` wins over the global value, and only `[secondary_model].default_effort` outranks it. Value and fallback rules follow the [`[models]` entry's `default_effort`](#models).
+
+::: warning Note
+Configuration errors fail loudly instead of falling back silently. Session creation, resume, and fork all fail at startup when:
+
+- `default_model` is missing, is not a pool key, or a pool key does not resolve to a configured [`[models]`](#models) entry;
+- `force` is set without `default_model`, or combined with a `models` table.
+:::
+
+## `thinking`
+
+`thinking` sets the global default behavior for Thinking mode.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `enabled` | `boolean` | `true` | Whether Thinking is enabled by default for new sessions; set to `false` to force Thinking off |
+| `effort` | `string` | — | Thinking effort level (for example `low`, `medium`, `high`, `xhigh`, `max`). Non-NightHawk providers do not remap concrete effort values when the upstream protocol accepts them; if the provider rejects the value, choose one that the model supports. Protocols that expose only levels or token budgets still require format conversion. NightHawk models with `support_efforts` fall back to their model default when this configured value is not listed; NightHawk models without that list treat every enabled value as boolean `on` |
+| `keep` | `string` | `"all"` | Preserved Thinking passthrough. On `nighthawk` it is sent as `thinking.keep`; on `anthropic` (Claude and NightHawk's Anthropic-compatible mode) it is sent as a `context_management` `clear_thinking_20251015` edit (enabling keep routes Anthropic requests to the beta Messages API; an off-value disables keep and returns to the standard endpoint). `"all"` preserves prior turns' reasoning (`reasoning_content` / Anthropic thinking blocks); set to an off-value (`false`/`0`/`no`/`off`/`none`/`null`) to disable. Overridden by `NIGHTHAWK_MODEL_THINKING_KEEP`; only injected while Thinking is on |
+
+### Deprecated fields
+
+| Field | Deprecated in | Description |
+| --- | --- | --- |
+| `default_thinking` | 0.21.0 | Top-level boolean, replaced by `[thinking] enabled`. Migrate `default_thinking = true` to `enabled = true`, and `default_thinking = false` to `enabled = false`. |
+| `thinking.mode` | 0.21.0 | One of `auto` / `on` / `off`, replaced by `[thinking] enabled`. `mode = "off"` becomes `enabled = false`; `mode = "on"` and `mode = "auto"` are equivalent to `enabled = true` (the default) and can be removed. |
+| `loop_control.max_retries_per_step` | 0.32.0 | Replaced by `loop_control.max_attempts_per_step` (the value was always a total-attempt limit, including the first try). The old key is ignored and reports a warning on startup; rename it in `config.toml`. |
+| `loop_control.max_steps_per_run` | 0.32.0 | Replaced by `loop_control.max_steps_per_turn`. The old key is ignored and reports a warning on startup; rename it in `config.toml`. |
+
+## `loop_control`
+
+`loop_control` governs the step count limit, the per-step attempt limit, and the threshold that triggers automatic context compaction in the Agent execution loop.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `max_steps_per_turn` | `integer` | — | Maximum steps per turn; unset or `0` means unlimited |
+| `max_attempts_per_step` | `integer` | `10` | Maximum total attempts for a failing step, including the initial attempt |
+| `reserved_context_size` | `integer` | — | Number of tokens reserved for model output; automatic compaction is triggered when the remaining context window falls below this value |
+
+`max_steps_per_turn` can be overridden by the `NIGHTHAWK_LOOP_MAX_STEPS_PER_TURN` environment variable, and `max_attempts_per_step` by `NIGHTHAWK_LOOP_MAX_ATTEMPTS_PER_STEP`; both take higher priority than the config file. The former `NIGHTHAWK_LOOP_MAX_RETRIES_PER_STEP` variable is deprecated but still honored (with a startup warning) when the new one is unset.
+
+Retries only apply to transient failures — connection errors, timeouts, HTTP 429 rate limits, and 5xx server errors. A 429 caused by an exhausted quota or insufficient account balance is not retried and fails immediately, since it cannot succeed until the account is recharged.
+
+## `token_counting`
+
+`token_counting` selects which context token count is reported externally — the value behind the context-size display. Internal logic (automatic compaction triggers, budgets, and overflow backoff) always uses both provider-reported usage and estimates, regardless of this setting.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `strategy` | `"measured+estimated" \| "measured" \| "estimated"` | `"measured+estimated"` | `measured+estimated` reports the live size — the provider-reported usage of each exchange plus an estimate of the not-yet-measured tail — floored by the last measured total; `measured` reports provider usage alone, so the display only moves when an exchange completes; `estimated` reports a pure estimate with provider usage ignored — the fallback for providers that do not report usage or report it unreliably |
+
+`strategy` can be overridden by the `NIGHTHAWK_TOKEN_COUNTING_STRATEGY` environment variable, which takes higher priority than `config.toml`.
+
+## `background`
+
+`background` controls the concurrency behavior of background tasks (launched via the `Bash` tool or the `Agent` tool's `run_in_background=true` parameter).
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `max_running_tasks` | `integer` | — | Maximum number of background tasks running concurrently |
+| `keep_alive_on_exit` | `boolean` | `false` | Whether to keep still-running background tasks when the session closes. By default, NightHawk requests that all background tasks stop before the process exits; set this to `true` only when you want tasks to outlive the session. In print mode (`nighthawk -p`), this is only a legacy fallback used when `print_background_mode` is unset: `true` is equivalent to `print_background_mode = "drain"` |
+| `kill_grace_period_ms` | `integer` | `5000` | Grace period in milliseconds after session close, a manual stop, or a task timeout requests graceful termination. If a task is still running after this period, NightHawk attempts to force-stop it |
+| `bash_auto_background_on_timeout` | `boolean` | `true` | When a foreground `Bash` command hits its timeout, move it to a background task instead of killing it — the agent is notified when it completes, and the backgrounded command is bounded by the `bash_task_timeout_s` default background timeout. Set to `false` to kill timed-out foreground commands instead |
+| `bash_task_timeout_s` | `integer` | `600` | Default timeout (seconds) for background `Bash` tasks when the call omits `timeout`; also used to re-arm foreground commands moved to the background on timeout. `0` means no timeout — the task runs until it exits or the model stops it. Explicit per-call `timeout` values are unaffected. In print mode (`nighthawk -p`) the default is `0` unless explicitly set |
+| `print_background_mode` | `"exit" \| "drain" \| "steer"` | `"steer"` | Print mode (`nighthawk -p`) only. Governs how pending background tasks are handled once the main agent's turn ends: `"exit"` exits immediately; `"drain"` waits for every background task to reach a terminal state before exiting (results are not fed back to the main agent); `"steer"` stays alive so a completing background task — like a background subagent — injects a synthetic user message that steers the main agent into a new turn, looping until a turn ends with no pending background tasks or a limit is hit. Takes precedence over the `keep_alive_on_exit` print fallback |
+| `print_wait_ceiling_s` | `integer` | `2147483` | In print mode (`nighthawk -p`), the wall-clock ceiling (seconds) for the wait/steer loop when `print_background_mode` is `"drain"` or `"steer"` (the default is ~24.8 days — effectively unbounded). Has no effect outside print mode or when it is `"exit"` |
+| `print_max_turns` | `integer` | `100000` | In print mode (`nighthawk -p`) with `print_background_mode = "steer"`, the maximum number of new turns that may be triggered by background-task completions, to keep the steering loop bounded (the default is effectively unbounded) |
+
+`keep_alive_on_exit` can be overridden by the `NIGHTHAWK_BACKGROUND_KEEP_ALIVE_ON_EXIT` environment variable, and `max_running_tasks` by `NIGHTHAWK_BACKGROUND_MAX_RUNNING_TASKS`; both take higher priority than `config.toml`.
+
+In print mode (`nighthawk -p "<prompt>"`), NightHawk stays alive after the main agent's turn as long as background tasks are still pending: each completion is fed back to the main agent as a synthetic user message, steering it into a new turn (`print_background_mode = "steer"` by default), and the run exits once a turn ends with nothing pending. The loop is bounded by `print_wait_ceiling_s` and `print_max_turns`, both effectively unbounded by default. Background work is never killed by a wall-clock cap in print mode either: background `Bash` tasks default to no timeout (`bash_task_timeout_s = 0`), and subagents run without a timeout (`[subagent] timeout_ms` and `[swarm] timeout_ms` both default to `0` unless explicitly set), so only the model itself stops a task. Set `print_background_mode` to `"drain"` to wait for tasks without feeding results back, or `"exit"` to end the run as soon as the main agent finishes.
+
+## `subagent`
+
+`subagent` controls how subagents spawned by the `Agent` tool run.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `timeout_ms` | `integer` | `7200000` (2 hours) | Maximum wall-clock time (milliseconds) a single `Agent` subagent is allowed to run before it is settled as `timed_out`. `0` means no timeout — the subagent runs until it finishes or the model stops it. This is the background-task manager's per-task timeout for each subagent task, so it applies to both foreground and background subagents. In print mode (`nighthawk -p`) the default is `0` unless explicitly set. Note: any value above `2147483647` (about 24.8 days) is clamped to roughly 24.8 days by the runtime |
+
+`timeout_ms` can be overridden by the `NIGHTHAWK_SUBAGENT_TIMEOUT_MS` environment variable, which takes higher priority than `config.toml`.
+
+## `swarm`
+
+`swarm` controls how subagents launched by the `AgentSwarm` tool run, independently of `[subagent]`.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `timeout_ms` | `integer` | `7200000` (2 hours) | Maximum wall-clock time (milliseconds) a single `AgentSwarm` subagent is allowed to run. On timeout that subagent is aborted and marked as failed in the aggregated report (`Subagent timed out.`); the other subagents are unaffected. `0` means no timeout — the subagent runs until it finishes or the model stops it. In print mode (`nighthawk -p`) the default is `0` unless explicitly set. Note: any value above `2147483647` (about 24.8 days) is clamped to roughly 24.8 days by the runtime |
+
+`timeout_ms` can be overridden by the `NIGHTHAWK_SWARM_TIMEOUT_MS` environment variable, which takes higher priority than `config.toml`.
+
+## `mcp`
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `startup_timeout_ms` | `integer` | `30000` (30 seconds) | Global default connection (startup + tool discovery) timeout in milliseconds for all MCP servers. Accepts `1`–`2147483647`. A per-server `startupTimeoutMs` in `mcp.json` always wins over this section and the environment variable; when neither is set, the default applies |
+| `tool_timeout_ms` | `integer` | `60000` (60 seconds) | Global default single tool-call timeout in milliseconds for all MCP servers. Accepts `1`–`2147483647`. A per-server `toolTimeoutMs` in `mcp.json` always wins over this section and the environment variable; when neither is set, the client built-in default applies |
+
+`startup_timeout_ms` and `tool_timeout_ms` can be overridden by the `NIGHTHAWK_MCP_STARTUP_TIMEOUT_MS` and `NIGHTHAWK_MCP_TOOL_TIMEOUT_MS` environment variables respectively, which take higher priority than `config.toml`. See [MCP](../customization/mcp.md) for the full MCP server configuration.
+
+## `identity`
+
+Customizes how the agent identifies itself. Leave it unset and nothing changes.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `name` | `string` | — | Display name the agent calls itself in the system prompt (fills the `${product_name}` slot, including in your own `SYSTEM.md` and agent files) |
+| `slug` | `string` | derived from `name` | Machine identifier used in protocol fields: the `User-Agent` product token sent to third-party providers, and the client name announced to MCP servers. Derived from `name` when omitted: lowercased, with every run of non-alphanumeric characters folded to `-` |
+
+```toml
+[identity]
+name = "Acme Dev Agent"
+slug = "acme-dev"        # optional
+```
+
+Both fields can be set through the `NIGHTHAWK_IDENTITY_NAME` and `NIGHTHAWK_IDENTITY_SLUG` environment variables, which take higher priority than `config.toml` and are never written back to it — convenient for containers and CI, where writing a config file is awkward.
+
+A name that contains no ASCII letters or digits (for example a purely Chinese name) leaves nothing to derive a slug from and falls back to `agent`; write `slug` explicitly if you need a specific protocol token.
+
+The identity is resolved once at startup and holds for the life of the process — it is announced to MCP servers and providers when connections are made, so it cannot change midway. Edits to this section take effect on the next start, for new sessions: a resumed session keeps the system prompt it was recorded with, since its past turns already speak under that identity. Likewise, an MCP OAuth authorization keeps the client registration it was granted under; reset that server's authentication to register under the new identity.
+
+This section is read by the default `agent-core-v2` engine. It is ignored by the legacy `nighthawk` / `nighthawk -p` path selected with `NIGHTHAWK_LEGACY_FLAG=1`; `nighthawk web` always uses `agent-core-v2`.
+
+## `tools`
+
+`tools` is the global tool switch: it applies to every agent in all sessions and intersects with each agent's own `tools` / `disallowedTools` policy.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `enabled` | `array<string>` | — | Global allowlist: when non-empty, only the listed tools are available; omitting the field or setting an empty array imposes no constraint |
+| `disabled` | `array<string>` | — | Global denylist, applied after `enabled` |
+
+Name matching follows the same rules as the same-named fields in an agent file: built-in tools match by exact name (such as `Read`), and MCP tools match with globs (such as `mcp__github__*`). Three entry shapes never match anything and are reported with a warning: a wildcard outside an `mcp__` pattern (`enabled = ["*"]` disables every tool, `disabled = ["*"]` disables none), an `mcp__` literal missing the tool segment (`mcp__github` — use `mcp__github__*` for a whole server), and a name no registered or built-in tool has (matching is case-sensitive).
+
+```toml
+[tools]
+disabled = ["EnterPlanMode", "ExitPlanMode", "mcp__github__*"]
+```
+
+::: warning Note
+Like the `tools` / `disallowedTools` fields of an agent file, this section shapes the tools shown to the model and is enforced again before execution. [Permission rules](#permission) remain a separate control for operations that require approval.
+:::
+
+## `image`
+
+`image` controls how images are compressed before being sent to the model, across every ingestion point (pasted images, `ReadMediaFile` reads, images in MCP tool results, and so on).
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `max_edge_px` | `integer` | `2000` | Longest-edge ceiling in pixels. Larger images are scaled down proportionally to fit; raising it preserves more detail at the cost of larger request bodies |
+| `read_byte_budget` | `integer` | `262144` (256 KB) | Per-image byte budget for images the model reads for itself (`ReadMediaFile` default reads). It bounds the accumulated request-body size when the model keeps screenshotting and reading images; fine detail stays reachable through the `region` parameter, which reads a crop back at full fidelity (`region` and `full_resolution` are not subject to this budget) |
+
+`max_edge_px` can be overridden by the `NIGHTHAWK_IMAGE_MAX_EDGE_PX` environment variable and `read_byte_budget` by `NIGHTHAWK_IMAGE_READ_BYTE_BUDGET`; both take higher priority than `config.toml`.
+
+<!--
+## `experimental`
+
+`experimental` stores persistent overrides for experimental-feature flags. Currently, `micro_compaction` is the only user-facing entry and defaults to `false`; set it to `true` to enable automatic trimming of older large tool results.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `micro_compaction` | `boolean` | `false` | Trim older large tool results from context while preserving recent conversation |
+-->
+
+## `services`
+
+`services` configures two built-in services: web search (`nighthawk_search`) and web fetch (`nighthawk_fetch`). Only these two fixed keys are recognized; other keys are ignored. Both entries share the same fields:
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `base_url` | `string` | No | Service API URL |
+| `api_key` | `string` | No | API key |
+| `oauth` | `table` | No | OAuth credential reference, same structure as `providers.*.oauth` |
+| `custom_headers` | `table<string, string>` | No | Custom HTTP headers attached to each request |
+
+`base_url` and `api_key` can also come from environment variables, which take priority over the config file: `NIGHTHAWK_WEB_SEARCH_BASE_URL` / `NIGHTHAWK_WEB_SEARCH_API_KEY` for `nighthawk_search`, and `NIGHTHAWK_WEB_FETCH_BASE_URL` / `NIGHTHAWK_WEB_FETCH_API_KEY` for `nighthawk_fetch`. An env base URL defines a separate service endpoint, so the persisted API key, OAuth reference, and custom headers are not forwarded to it; set the matching env API key when that endpoint requires authentication. An env API key without an env base URL keeps the configured endpoint and custom headers but replaces both configured credential forms. Setting the base URL and API key through env without any config section also enables the service.
+
+```toml
+[services.nighthawk_search]
+base_url = "https://api.moonshot.cn/v1/search"
+api_key = "sk-xxx"
+
+[services.nighthawk_fetch]
+base_url = "https://api.moonshot.cn/v1/fetch"
+api_key = "sk-xxx"
+```
+
+## `permission`
+
+`permission` sets permission rules that are automatically loaded when a session starts, controlling whether the Agent needs user confirmation before calling a tool. Rules are written as a `[[permission.rules]]` array of tables, matched in order — the first matching rule takes effect.
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `decision` | `string` | Yes | Action on match: `allow` (permit immediately), `deny` (reject immediately), `ask` (prompt each time) |
+| `scope` | `string` | No | Rule scope: `turn-override`, `session-runtime`, `project`, `user`; defaults to `user` |
+| `pattern` | `string` | Yes | Match pattern in the form `ToolName` or `ToolName(arg-pattern)`, e.g. `Read` or `Bash(rm -rf*)` |
+| `reason` | `string` | No | Rule description for debugging and auditing |
+
+Built-in tool names are listed in [Built-in tools](../reference/tools.md). Most built-in tools that accept rule arguments define their own matching subject, such as `Bash(command-pattern)` or `Read(path-pattern)`. `AgentSwarm`, MCP tools, and custom tools can only be matched by tool name — argument patterns are not supported for them.
+
+```toml
+[[permission.rules]]
+decision = "allow"
+pattern = "Read"
+
+[[permission.rules]]
+decision = "allow"
+pattern = "Grep"
+
+[[permission.rules]]
+decision = "deny"
+pattern = "Bash(rm -rf*)"
+
+[[permission.rules]]
+decision = "ask"
+pattern = "Bash"
+```
+
+::: tip
+MCP server declarations are configured in `~/.nighthawk/mcp.json` or the project-local `.nighthawk/mcp.json`, not in `config.toml`. The interactive configuration entry point is `/mcp-config`; see [Model Context Protocol](../customization/mcp.md).
+:::
+
+## `tui.toml`
+
+Alongside `config.toml`, the CLI keeps terminal-UI and client preferences in a companion `tui.toml` in the same directory (`~/.nighthawk/tui.toml`, or `$NIGHTHAWK_HOME/tui.toml` when overridden). It is created with defaults on first run, and the interactive commands `/config`, `/theme`, and `/editor` write to it for you — so you rarely need to edit it by hand. If the file is malformed, the CLI falls back to defaults and shows a notice instead of failing to start.
+
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `theme` | `string` | `auto` | Color theme: `auto` (follow the terminal), `dark`, `light`, or the name of a [custom theme](../customization/themes.md) |
+| `render_latex` | `boolean` | `true` | Render LaTeX math expressions (`$…$`, `$$…$$`) in Markdown messages as Unicode text; `false` keeps the raw source |
+| `disable_paste_burst` | `boolean` | `false` | Disable the non-bracketed paste-burst fallback that keeps rapid multi-line pastes from submitting line by line |
+| `cache_expiry_hint` | `boolean` | `true` | Show a dialog when resuming a long-idle session or submitting after a long idle stretch, warning that the context cache has likely expired and offering to compact or start a new session (v2 engine only) |
+| `[editor].command` | `string` | `""` | External editor command for composing long input; empty falls back to `$VISUAL` / `$EDITOR` |
+| `[notifications].enabled` | `boolean` | `true` | Whether desktop notifications are sent |
+| `[notifications].notification_condition` | `string` | `unfocused` | When to notify: `unfocused` (only when the terminal is not focused) or `always` |
+| `[upgrade].auto_install` | `boolean` | `true` | Whether new versions are installed automatically |
+| `[status_line].items` | `string[]` | `[]` | Built-in slots to show on the first footer line and their order: `mode`, `goal`, `model`, `tasks`, `cwd`, `git`, `tips`. Unset keeps the default layout; unknown ids are skipped with a warning |
+| `[status_line].command` | `string` | `""` | Custom status line command. Its first stdout line replaces the first footer line, with a JSON snapshot (model, cwd, git branch, permission mode, plan mode, context usage, session id, version) passed on stdin. Runs are capped at 300ms and throttled to once per second; failures fall back to the built-in layout |
+
+```toml
+# ~/.nighthawk/tui.toml
+theme = "auto" # "auto" | "dark" | "light" | custom theme name
+render_latex = true # false keeps LaTeX math in messages as raw source
+disable_paste_burst = false # true disables non-bracketed paste-burst fallback
+cache_expiry_hint = true # false disables the "cache expired" dialog on resume / idle submit
+
+[editor]
+command = "" # empty uses $VISUAL / $EDITOR
+
+[notifications]
+enabled = true
+notification_condition = "unfocused" # "unfocused" | "always"
+
+[upgrade]
+auto_install = true
+
+# [status_line]
+# items = ["mode", "goal", "model", "tasks", "cwd", "git", "tips"]
+# command = "~/.nighthawk/statusline.sh"
+```
+
+Changes apply on the next start, or immediately with `/reload-tui` (which reloads only `tui.toml`); `/reload` reloads both `config.toml` and `tui.toml`.
+
+## Project-local configuration
+
+In addition to the user-level files under `~/.nighthawk`, NightHawk reads a project-local configuration file at `<project-root>/.nighthawk/local.toml`. It holds settings that are specific to one project checkout and typically should not be shared with teammates.
+
+The file is created automatically when you add an extra workspace directory with [`/add-dir`](../reference/slash-commands.md) and choose to remember it for the project. You rarely need to edit it by hand.
+
+### `[workspace]`
+
+The `[workspace]` table groups project-level workspace settings:
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `additional_dir` | `array<string>` | No | Additional workspace directories, stored as absolute paths. Written automatically when you confirm "remember this directory" in `/add-dir`; read back on startup so the directories are available in every session of this project |
+
+```toml
+[workspace]
+additional_dir = ["/absolute/path/to/shared"]
+```
+
+Because directories are stored as absolute paths, which are specific to your machine, we recommend adding `.nighthawk/local.toml` to your project's `.gitignore` so it is not committed.
+
+## Next steps
+
+- [Providers and models](./providers.md) — connection examples for each provider type (NightHawk, Claude, OpenAI, Gemini)
+- [Config overrides](./overrides.md) — priority rules for CLI options, config file, and environment variables
+- [Environment variables](./env-vars.md) — complete list of runtime variables like `NIGHTHAWK_HOME`

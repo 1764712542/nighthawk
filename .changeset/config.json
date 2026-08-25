@@ -1,0 +1,19 @@
+{
+  "changelog": ["@changesets/changelog-github", { "repo": "1764712542/nighthawk" }],
+  "commit": false,
+  "fixed": [],
+  "linked": [],
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": [
+    "@nighthawk/vis",
+    "@nighthawk/vis-server",
+    "@nighthawk/vis-web",
+    "@nighthawk/nighthawk-inspect"
+  ],
+  "snapshot": {
+    "useCalculatedVersion": true,
+    "prereleaseTemplate": "{tag}-{commit}"
+  }
+}

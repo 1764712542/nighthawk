@@ -1,0 +1,70 @@
+{
+  "name": "@nighthawk/nighthawk-sdk",
+  "version": "0.19.1",
+  "private": true,
+  "description": "TypeScript SDK for the NightHawk Agent",
+  "license": "MIT",
+  "author": "NightHawk Contributors",
+  "homepage": "https://github.com/1764712542/nighthawk/tree/main/packages/node-sdk#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/1764712542/nighthawk.git",
+    "directory": "packages/node-sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/1764712542/nighthawk/issues"
+  },
+  "keywords": [
+    "sdk",
+    "typescript",
+    "agent",
+    "api"
+  ],
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "type": "module",
+  "imports": {
+    "#/*": "./src/*.ts"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.mts",
+        "import": "./dist/index.mjs",
+        "default": "./dist/index.mjs"
+      }
+    },
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsdown && pnpm run build:dts",
+    "build:dts": "node scripts/build-dts.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf dist .tmp-api-extractor"
+  },
+  "dependencies": {
+    "@antfu/utils": "^9.3.0",
+    "smol-toml": "^1.6.1",
+    "yazl": "^3.3.1",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@nighthawk/agent-core": "workspace:^",
+    "@nighthawk/agent-core-v2": "workspace:^",
+    "@nighthawk/kaos": "workspace:^",
+    "@nighthawk/nighthawk-oauth": "workspace:^",
+    "@nighthawk/klient": "workspace:^",
+    "@nighthawk/kosong": "workspace:^",
+    "@types/yazl": "^2.4.6",
+    "jimp": "^1.6.1"
+  }
+}

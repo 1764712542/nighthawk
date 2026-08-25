@@ -1,0 +1,53 @@
+name: agent
+description: Default NightHawk agent
+
+systemPromptPath: ./system.md
+promptVars:
+  roleAdditional: ''
+
+tools:
+  - Read
+  - Write
+  - Edit
+  - Grep
+  - Glob
+  - Bash
+  - TaskList
+  - TaskOutput
+  - TaskStop
+  - CronCreate
+  - CronList
+  - CronDelete
+  - ReadMediaFile
+  - TodoList
+  - Skill
+  - WebSearch
+  - Agent
+  - AgentSwarm
+  - FetchURL
+  - AskUserQuestion
+  - EnterPlanMode
+  - ExitPlanMode
+  - CreateGoal
+  - GetGoal
+  - SetGoalBudget
+  - UpdateGoal
+  - SecurityScan
+  - SecretScan
+  - TaintTrace
+  - DepAudit
+  - mcp__*
+
+subagents:
+  coder:
+    description: General software engineering agent — the only subagent type with file-editing tools; use it for any delegated task that must modify code. 通用工程子代理 · 唯一可编辑文件的子代理.
+  explore:
+    description: Fast codebase exploration with prompt-enforced read-only behavior. 快速代码检索 · 只读探索.
+  plan:
+    description: Read-only implementation planning and architecture design. 只读实现规划与架构设计.
+  security-audit:
+    description: Deep security audit — vulnerability findings confirmed by reading code, with CWE/OWASP mapping and severity-ordered remediation. 深度安全审计 · 漏洞挖掘与修复建议.
+  pentest:
+    description: Authorized penetration testing — attack-surface mapping, exploitability verification, reproducible findings. 授权渗透测试 · 攻击面分析与可复现验证.
+  review:
+    description: Read-only code review with a final approve / approve-with-comments / request-changes verdict. 只读代码审查 · 输出明确评审结论.

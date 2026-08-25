@@ -1,0 +1,48 @@
+{
+  "name": "@nighthawk/acp-adapter",
+  "version": "0.3.10",
+  "private": true,
+  "description": "Agent Client Protocol adapter for nighthawk",
+  "license": "MIT",
+  "author": "NightHawk Contributors",
+  "type": "module",
+  "imports": {
+    "#/*": "./src/*.ts"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.mts",
+        "import": "./dist/index.mjs",
+        "default": "./dist/index.mjs"
+      }
+    },
+    "provenance": true
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsdown",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@agentclientprotocol/sdk": "^0.23.0",
+    "@nighthawk/agent-core": "workspace:^",
+    "@nighthawk/kaos": "workspace:^",
+    "@nighthawk/nighthawk-sdk": "workspace:^"
+  },
+  "devDependencies": {
+    "jimp": "^1.6.1"
+  }
+}
