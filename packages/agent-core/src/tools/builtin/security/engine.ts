@@ -1,5 +1,5 @@
 import type { Kaos } from '@nighthawk/kaos';
-import { basename, join } from 'pathe';
+import { basename, dirname, join } from 'pathe';
 
 import type { SecurityRule, Severity } from './rules';
 import { detectLanguage, SECURITY_RULES } from './rules';
@@ -90,7 +90,22 @@ export interface ScanOptions {
   minSeverity?: Severity;
   categories?: readonly string[];
   maxFiles?: number;
+  /** Callback invoked with scan progress. */
+  onProgress?: ScanProgressCallback;
+  /** Persist cache to disk after every N files (0 = only at end). Default 100. */
+  persistBatchSize?: number;
 }
+
+export interface ScanProgress {
+  processed: number;
+  total: number;
+  currentFile: string;
+}
+
+export type ScanProgressCallback = (progress: ScanProgress) => void;
+
+const CONCURRENCY = 16;
+const DEFAULT_PERSIST_BATCH_SIZE = 100;
 
 function globMatch(name: string, pattern: string): boolean {
   const re = new RegExp(
@@ -170,6 +185,23 @@ export function scanContent(content: string, file: string, rules: readonly Secur
   return out;
 }
 
+function toNormalizedFindings(scanResults: ScanResult[]): NormalizedFinding[] {
+  return scanResults.map(r => ({
+    file: r.file,
+    startLine: r.line,
+    message: `[${r.rule.id}] ${r.rule.name}`,
+    severity: r.rule.severity,
+    evidence: [
+      {
+        kind: 'rule' as const,
+        ruleId: r.rule.id,
+        source: 'regex',
+        confidence: 'medium',
+      },
+    ],
+  }));
+}
+
 export async function runScan(
   kaos: Kaos,
   opts: ScanOptions,
@@ -194,78 +226,82 @@ export async function runScan(
   const files = await collectFiles(kaos, opts.root, opts.include, opts.maxFiles);
   const results: ScanResult[] = [];
   const allFindings: NormalizedFinding[] = [];
-  const CONCURRENCY = 16;
+  const persistBatchSize = opts.persistBatchSize ?? DEFAULT_PERSIST_BATCH_SIZE;
   let filesSkipped = 0;
   let filesParseFailed = 0;
   let cacheHits = 0;
-  for (let i = 0; i < files.length; i += CONCURRENCY) {
-    const batch = files.slice(i, i + CONCURRENCY);
-    const settled = await Promise.all(
-      batch.map(async f => {
-        try {
-          const stat = await kaos.stat(f);
-          if (stat.stSize > MAX_FILE_BYTES) {
-            filesSkipped++;
-            return { scanResults: [], normalizedFindings: [] };
-          }
-          const content = await kaos.readText(f, { errors: 'replace' });
-          if (activeCache !== undefined) {
-            const key = createScanCacheKey('1', f, content);
-            const hit = activeCache.get(key);
-            if (hit !== undefined) {
-              cacheHits++;
-              return { scanResults: hit.scanResults, normalizedFindings: hit.normalizedFindings };
-            }
-            const scanResults = scanContent(content, f, rules);
-            const normalizedFindings: NormalizedFinding[] = scanResults.map(r => ({
-              file: r.file,
-              startLine: r.line,
-              message: `[${r.rule.id}] ${r.rule.name}`,
-              severity: r.rule.severity,
-              evidence: [
-                {
-                  kind: 'rule' as const,
-                  ruleId: r.rule.id,
-                  source: 'regex',
-                  confidence: 'medium',
-                },
-              ],
-            }));
-            activeCache.set(key, {
-              key,
-              generatedAt: Date.now(),
-              scanResults,
-              normalizedFindings,
-            });
-            return { scanResults, normalizedFindings };
-          }
-          const scanResults = scanContent(content, f, rules);
-          const normalizedFindings: NormalizedFinding[] = scanResults.map(r => ({
-            file: r.file,
-            startLine: r.line,
-            message: `[${r.rule.id}] ${r.rule.name}`,
-            severity: r.rule.severity,
-            evidence: [
-              {
-                kind: 'rule' as const,
-                ruleId: r.rule.id,
-                source: 'regex',
-                confidence: 'medium',
-              },
-            ],
-          }));
-          return { scanResults, normalizedFindings };
-        } catch {
-          filesParseFailed++;
-          return { scanResults: [], normalizedFindings: [] };
+
+  // A persistent cache is persisted to disk at intervals. Streaming persistence
+  // must be serialized with concurrent workers, so writes funnel through a single
+  // promise chain rather than racing each other.
+  let persistChain: Promise<void> = Promise.resolve();
+  const streamPersist = (): void => {
+    if (activeCache === undefined) return;
+    persistChain = persistChain.then(async () => {
+      if (typeof (activeCache as any).persist === 'function') {
+        await (activeCache as any).persist();
+      }
+    });
+  };
+
+  const scanFile = async (f: string): Promise<{ scanResults: ScanResult[]; normalizedFindings: NormalizedFinding[] }> => {
+    try {
+      const stat = await kaos.stat(f);
+      if (stat.stSize > MAX_FILE_BYTES) {
+        filesSkipped++;
+        return { scanResults: [], normalizedFindings: [] };
+      }
+      const content = await kaos.readText(f, { errors: 'replace' });
+      if (activeCache !== undefined) {
+        const key = createScanCacheKey('1', f, content);
+        const hit = activeCache.get(key);
+        if (hit !== undefined) {
+          cacheHits++;
+          return { scanResults: hit.scanResults, normalizedFindings: hit.normalizedFindings };
         }
-      }),
-    );
-    for (const { scanResults, normalizedFindings } of settled) {
+        const scanResults = scanContent(content, f, rules);
+        const normalizedFindings = toNormalizedFindings(scanResults);
+        activeCache.set(key, {
+          key,
+          generatedAt: Date.now(),
+          scanResults,
+          normalizedFindings,
+        });
+        return { scanResults, normalizedFindings };
+      }
+      const scanResults = scanContent(content, f, rules);
+      return { scanResults, normalizedFindings: toNormalizedFindings(scanResults) };
+    } catch {
+      filesParseFailed++;
+      return { scanResults: [], normalizedFindings: [] };
+    }
+  };
+
+  // Worker pool: workers pull the next file as soon as one finishes instead of
+  // waiting for an entire batch to settle, keeping all workers busy.
+  let nextIndex = 0;
+  const total = files.length;
+  let processed = 0;
+  const emitProgress = (file: string): void => {
+    opts.onProgress?.({ processed, total, currentFile: file });
+  };
+  const worker = async (): Promise<void> => {
+    for (;;) {
+      const i = nextIndex++;
+      if (i >= total) return;
+      const f = files[i] ?? '';
+      const { scanResults, normalizedFindings } = await scanFile(f);
       results.push(...scanResults);
       allFindings.push(...normalizedFindings);
+      processed++;
+      if (persistBatchSize > 0 && processed % persistBatchSize === 0) {
+        streamPersist();
+      }
+      emitProgress(f);
     }
-  }
+  };
+  await Promise.all(Array.from({ length: Math.min(CONCURRENCY, total) }, () => worker()));
+  await persistChain;
   results.sort((a, b) => (SEVERITY_ORDER[a.rule.severity] ?? 99) - (SEVERITY_ORDER[b.rule.severity] ?? 99));
   const bySeverity: Record<string, number> = {};
   const byCategory: Record<string, number> = {};
@@ -549,27 +585,31 @@ const SOURCES: ReadonlyArray<{ re: RegExp; desc: string }> = [
   { re: /(?:input|gets|readline|Scanner|stdin)\s*\(\s*\)/gi, desc: 'stdin read' },
   { re: /\$_(?:GET|POST|REQUEST|COOKIE|SERVER)\[.?.?(\w+)/gi, desc: 'PHP superglobal' },
   { re: /os\.environ(?:\.get)?\[(?:'|"|`)(\w+)/gi, desc: 'env var' },
+  { re: /event\.target\.value/gi, desc: 'DOM event value' },
+  { re: /process\.argv/gi, desc: 'process.argv' },
+  { re: /crypto\.randomBytes/gi, desc: 'crypto random bytes' },
+  { re: /window\.location\.(?:hash|search)/gi, desc: 'URL location param' },
 ];
 
 const SINKS: ReadonlyArray<{ re: RegExp; desc: string; risk: string }> = [
   { re: /(?:execute|executemany|query|raw)\s*\(/gi, desc: 'SQL execute', risk: 'SQL Injection' },
   { re: /os\.(?:system|popen)\s*\(|subprocess\.(?:run|call|Popen|check_output)\s*\(/gi, desc: 'shell exec', risk: 'Command Injection' },
-  { re: /child_process\.(?:exec|execSync|spawn)\s*\(|Runtime\./gi, desc: 'process exec', risk: 'Command Injection' },
+  { re: /child_process\.(?:exec|execSync|spawn|fork)\s*\(|Runtime\./gi, desc: 'process exec', risk: 'Command Injection' },
   { re: /(?:eval|new\s+Function|exec)\s*\(/gi, desc: 'eval', risk: 'Code Injection' },
   { re: /\.innerHTML\s*=|document\.write\s*\(/gi, desc: 'DOM write', risk: 'XSS' },
   { re: /(?:open|readFile|writeFile|sendFile|File)\s*\(/gi, desc: 'file op', risk: 'Path Traversal' },
   { re: /(?:requests\.|fetch|axios|urlopen|http\.Get)/gi, desc: 'HTTP request', risk: 'SSRF' },
   { re: /(?:pickle\.|unserialize|Marshal\.|yaml\.load)\s*\(/gi, desc: 'deserialize', risk: 'Deserialization' },
+  { re: /res\.(?:send|json|end)\s*\(/gi, desc: 'HTTP response', risk: 'Information Disclosure' },
+  { re: /console\.(?:log|error|warn|info)\s*\(/gi, desc: 'console output', risk: 'Info Leak' },
+  { re: /fs\.promises\.\w+\s*\(/gi, desc: 'fs.promises op', risk: 'Path Traversal' },
 ];
 
 function escapeRe(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-export function taintAnalyzeContent(content: string, file: string): TaintFinding[] {
-  const lines = content.split('\n');
-  const findings: TaintFinding[] = [];
-
+function collectSourceTaint(lines: readonly string[]): Map<string, { line: number; desc: string }> {
   const tainted = new Map<string, { line: number; desc: string }>();
   lines.forEach((line, i) => {
     for (const src of SOURCES) {
@@ -588,9 +628,13 @@ export function taintAnalyzeContent(content: string, file: string): TaintFinding
       }
     }
   });
+  return tainted;
+}
 
-  if (tainted.size === 0) return [];
-
+function propagateTaint(
+  lines: readonly string[],
+  tainted: Map<string, { line: number; desc: string }>,
+): void {
   for (let pass = 0; pass < 3; pass++) {
     let changed = false;
     for (const line of lines) {
@@ -607,7 +651,14 @@ export function taintAnalyzeContent(content: string, file: string): TaintFinding
     }
     if (!changed) break;
   }
+}
 
+function collectSinkFindings(
+  lines: readonly string[],
+  file: string,
+  tainted: Map<string, { line: number; desc: string }>,
+): TaintFinding[] {
+  const findings: TaintFinding[] = [];
   lines.forEach((line, i) => {
     for (const sink of SINKS) {
       sink.re.lastIndex = 0;
@@ -626,8 +677,15 @@ export function taintAnalyzeContent(content: string, file: string): TaintFinding
       }
     }
   });
-
   return findings;
+}
+
+export function taintAnalyzeContent(content: string, file: string): TaintFinding[] {
+  const lines = content.split('\n');
+  const tainted = collectSourceTaint(lines);
+  if (tainted.size === 0) return [];
+  propagateTaint(lines, tainted);
+  return collectSinkFindings(lines, file, tainted);
 }
 
 export async function taintAnalyze(kaos: Kaos, file: string): Promise<TaintFinding[]> {
@@ -637,6 +695,242 @@ export async function taintAnalyze(kaos: Kaos, file: string): Promise<TaintFindi
   } catch {
     return [];
   }
+}
+
+/**
+ * Extract module import specifiers (ESM `import ... from 'x'` plus
+ * side-effect `import 'x'`, and CJS `require('x')`). Returns the raw
+ * specifier strings; relative specifiers are resolved by the caller.
+ */
+function extractImportSpecifiers(content: string): string[] {
+  const specs: string[] = [];
+  const esm = /import\s+(?:[^;]*?\bfrom\s+)?(['"])([^'"]+)\1/g;
+  const cjs = /require\s*\(\s*(['"])([^'"]+)\1\s*\)/g;
+  for (const m of content.matchAll(esm)) if (m[2]) specs.push(m[2]);
+  for (const m of content.matchAll(cjs)) if (m[2]) specs.push(m[2]);
+  return specs;
+}
+
+/** Name given to an exported symbol in the importing module. */
+interface ModuleBinding {
+  /** Specifier of the imported module (verbatim from the import statement). */
+  spec: string;
+  /** Local name bound in the importer, or null for side-effect imports. */
+  local?: string;
+  /** The exporter-side symbol this binding is resolved to (defaults to local). */
+  remote?: string;
+}
+
+/**
+ * Parse the import statements of a module into a list of bindings. Covers
+ * the common ESM named/default/side-effect forms and CJS `require` forms.
+ * Unparseable or bare (npm) imports yield bindings with no local name so the
+ * graph walk simply skips them.
+ */
+function extractModuleBindings(content: string): ModuleBinding[] {
+  const bindings: ModuleBinding[] = [];
+  for (const line of content.split('\n')) {
+    if (/require\s*\(/.test(line)) {
+      const local = line.match(/(?:const|let|var)\s+\{?\s*([A-Za-z_$][\w$]*)\s*\}?\s*=\s*require\s*\(/);
+      const spec = line.match(/require\s*\(\s*(['"])([^'"]+)\1\s*\)/);
+      if (spec && spec[2]) bindings.push({ spec: spec[2], local: local?.[1] });
+      continue;
+    }
+    if (/import\s+.*\bfrom\s+/.test(line) || /^import\s+['"]/.test(line.trimStart())) {
+      const spec = line.match(/from\s+(['"])([^'"]+)\1/);
+      if (!spec || !spec[2]) continue;
+      const s = spec[2];
+      const named = line.match(/import\s*\{([^}]+)\}\s*from/);
+      if (named) {
+        for (const part of named[1]!.split(',')) {
+          const [remotePart, asLocal] = part.trim().split(/\s+as\s+/);
+          if (!remotePart) continue;
+          bindings.push({
+            spec: s,
+            local: (asLocal ?? remotePart)?.trim(),
+            remote: remotePart.trim(),
+          });
+        }
+        continue;
+      }
+      const ns = line.match(/import\s*\*\s+as\s+([\w$]+)\s+from/);
+      if (ns) {
+        bindings.push({ spec: s, local: ns[1] });
+        continue;
+      }
+      const def = line.match(/import\s+([A-Za-z_$][\w$]*)\s+from\s+/);
+      if (def) {
+        bindings.push({ spec: s, local: def[1] });
+        continue;
+      }
+      // Side-effect import — no bindings.
+      bindings.push({ spec: s });
+    }
+  }
+  return bindings;
+}
+
+/** Names exported by a module (ESM `export const/function/class/default` and `export { a }`, CJS `module.exports = x`). */
+function extractExportedNames(content: string): Set<string> {
+  const names = new Set<string>();
+  for (const m of content.matchAll(/\bexport\s+(?:(?:const|let|var|function|class|namespace)\s+|default\s+)?(\w+)/g)) {
+    if (m[1]) names.add(m[1]);
+  }
+  for (const m of content.matchAll(/\bexport\s*\{\s*([^}]+)\}\s*[;]?$/gm)) {
+    for (const part of m[1]!.split(',')) {
+      const name = part.split(/\s+as\s+/)[0]?.trim();
+      if (name) names.add(name);
+    }
+  }
+  for (const m of content.matchAll(/\bmodule\.exports\s*=\s*(\w+)/g)) {
+    if (m[1]) names.add(m[1]);
+  }
+  return names;
+}
+
+/**
+ * Resolve a relative module specifier against the importing file's directory,
+ * probing for an existing file (explicit extension, common TS/JS extensions,
+ * and directory `index`). Returns null for bare/npm specifiers or when no
+ * candidate exists on disk.
+ */
+async function resolveModuleFile(kaos: Kaos, spec: string, fromDir: string): Promise<string | null> {
+  if ((!spec.startsWith('.') && !spec.startsWith('/')) || spec.startsWith('node:')) return null;
+  if (spec.startsWith('/')) return null; // absolute paths are outside the module graph walk
+  const base = join(fromDir, spec);
+  const candidates = [
+    base,
+    `${base}.js`,
+    `${base}.ts`,
+    `${base}.jsx`,
+    `${base}.tsx`,
+    `${base}.mjs`,
+    `${base}.cjs`,
+    join(base, 'index.js'),
+    join(base, 'index.ts'),
+    join(base, 'index.mjs'),
+  ];
+  for (const c of candidates) {
+    try {
+      const stat = await kaos.stat(c);
+      if ((stat.stMode & 0o170000) === 0o100000) return c;
+    } catch {}
+  }
+  return null;
+}
+
+/**
+ * Cross-file taint analysis. Traces source taint across a module graph:
+ * loads the entry file and every relative module it imports (recursively),
+ * propagates taint through exported symbols into importers, and reports
+ * sink flows on the file where the tainted value reaches a sink.
+ *
+ * Limitation: bare/npm imports (`import x from 'pkg'`) are not followed, and
+ * dynamic imports / re-exports are resolved on a best-effort line basis.
+ */
+export async function taintAnalyzeModule(kaos: Kaos, file: string): Promise<TaintFinding[]> {
+  interface ModuleState {
+    content: string;
+    bindings: ModuleBinding[];
+    exports: Set<string>;
+    lines: string[];
+  }
+
+  const modules = new Map<string, ModuleState>();
+  const queue: string[] = [file];
+
+  while (queue.length > 0) {
+    const f = queue.shift()!;
+    if (modules.has(f)) continue;
+    let content: string;
+    try {
+      content = await kaos.readText(f, { errors: 'replace' });
+    } catch {
+      continue;
+    }
+    const state: ModuleState = {
+      content,
+      bindings: extractModuleBindings(content),
+      exports: extractExportedNames(content),
+      lines: content.split('\n'),
+    };
+    modules.set(f, state);
+    const fromDir = dirname(f);
+    for (const b of state.bindings) {
+      const resolved = await resolveModuleFile(kaos, b.spec, fromDir);
+      if (resolved) queue.push(resolved);
+    }
+  }
+
+  const findings: TaintFinding[] = [];
+
+  // Persistent set of exported symbol -> source meta, fed forward between
+  // fixpoint rounds so taint that arrives via imports can cascade onward.
+  const exportTaint = new Map<string, Map<string, { line: number; desc: string }>>();
+
+  for (let round = 0; round < 8; round++) {
+    let changed = false;
+
+    for (const [f, state] of modules) {
+      const tainted = collectSourceTaint(state.lines);
+
+      // Imports whose source module exports tainted symbols bind taint locally.
+      for (const b of state.bindings) {
+        if (!b.local) continue;
+        const fromDir = dirname(f);
+        const dep = await resolveModuleFile(kaos, b.spec, fromDir);
+        if (!dep) continue;
+        const depExport = exportTaint.get(dep);
+        if (depExport) {
+          const remoteName = b.remote ?? b.local;
+          const meta = depExport.get(remoteName);
+          if (meta && !tainted.has(b.local)) {
+            tainted.set(b.local, {
+              line: meta.line,
+              desc: `${meta.desc} (via ${basename(dep)})`,
+            });
+            changed = true;
+          }
+        }
+      }
+
+      propagateTaint(state.lines, tainted);
+
+      // Record which of this module's exports are now tainted for importers.
+      let prev = exportTaint.get(f);
+      if (!prev) {
+        prev = new Map();
+        exportTaint.set(f, prev);
+      }
+      for (const name of state.exports) {
+        const meta = tainted.get(name);
+        if (meta && !prev.has(name)) {
+          prev.set(name, meta);
+          changed = true;
+        }
+      }
+
+      const fileFindings = collectSinkFindings(state.lines, f, tainted);
+      if (fileFindings.length > 0) {
+        findings.push(...fileFindings);
+      }
+    }
+
+    if (!changed) break;
+  }
+
+  // The fixpoint loop may re-emit identical flows across rounds; dedupe by
+  // (file, variable, sink line) to keep the result stable.
+  const seen = new Set<string>();
+  const unique: TaintFinding[] = [];
+  for (const f of findings) {
+    const key = `${f.file}:${f.varName}:${String(f.source.line)}:${String(f.sink.line)}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(f);
+    }
+  }
+  return unique;
 }
 
 export function formatTaint(findings: readonly TaintFinding[]): string {

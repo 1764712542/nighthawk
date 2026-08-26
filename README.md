@@ -2,7 +2,7 @@
 
 **A security-first AI agent for the terminal — penetration testing, code audit, and full-strength coding in one loop.**
 
-NightHawk is built around a simple thesis: offensive security and serious engineering belong in the same agent. It pairs a modern coding agent core (Plan/Act/Observe/Reflect loop, sub-agents, MCP, skills, persistent memory) with a native security engine — 116 vulnerability rules mapped to OWASP Top 10 and CWE, Shannon-entropy secret detection, variable-level taint analysis, and dependency auditing — all exposed as first-class tools the agent can invoke mid-session.
+NightHawk is built around a simple thesis: offensive security and serious engineering belong in the same agent. It pairs a modern coding agent core (Plan/Act/Observe/Reflect loop, sub-agents, MCP, skills, persistent memory) with a native security engine — 116+ vulnerability rules mapped to OWASP Top 10 and CWE, Shannon-entropy secret detection, cross-file taint analysis, and dependency auditing (offline, OSV, and host package-manager) — all exposed as first-class tools the agent can invoke mid-session.
 
 [中文文档](README.zh-CN.md)
 
@@ -22,10 +22,10 @@ Most AI coding agents help you write code faster. NightHawk helps you **break it
 
 | Tool | What it does |
 | --- | --- |
-| `SecurityScan` | Rule engine with 116 patterns across SQLi, XSS, command injection, path traversal, SSRF, deserialization, weak crypto, auth flaws, XXE, and per-language risks (Node/Python/Java/Go/PHP). Every finding carries CWE/OWASP IDs, severity, and a fix suggestion — bilingual (EN/中文). |
+| `SecurityScan` | Rule engine with 116+ patterns across SQLi, XSS, command injection, path traversal, SSRF, deserialization, weak crypto, auth flaws, XXE, and per-language risks (Node/Python/Java/Go/PHP). Every finding carries CWE/OWASP IDs, severity, and a fix suggestion — bilingual (EN/中文). Caches results to disk so rescanning unchanged files is fast. |
 | `SecretScan` | Detects hardcoded credentials — AWS/GCP/Azure keys, tokens, private keys — combining known patterns with Shannon-entropy scoring. |
-| `TaintTrace` | Variable-level taint tracking: identifies user-controlled sources (HTTP params, env, stdin) and traces assignment chains (up to 3 passes) to dangerous sinks (exec, eval, innerHTML, SQL). |
-| `DepAudit` | Flags risky dependency patterns: postinstall scripts, unpinned versions, known-risk config. |
+| `TaintTrace` | Taint tracking: identifies user-controlled sources (HTTP params, env, stdin) and traces assignment chains to dangerous sinks (exec, eval, innerHTML, SQL). Follows data flow across module imports by default (`scope: file` restricts to a single file). |
+| `DepAudit` | Flags risky dependency patterns (postinstall scripts, unpinned versions, known-risk config) via offline checks, queries the OSV API, and can run the host package-manager audit (`useExternal: true`) to merge real CVEs. |
 
 The tools compound: rule hits seed taint traces, taint flows confirm exploitability, and confirmed findings feed the fix proposal.
 

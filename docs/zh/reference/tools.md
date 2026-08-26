@@ -118,7 +118,7 @@ Plan 模式是一种受约束的工作状态：进入后 `Write` 与 `Edit` 只�
 
 ## 安全工具
 
-安全工具负责对代码和依赖执行静态安全分析。内置 4 个安全工具：`SecurityScan`、`SecretScan`、`DepAudit` 和 `TaintTrace`，均不需要外部 server 即可使用。
+安全工具负责对代码和依赖执行静态安全分析。内置 4 个安全工具：`SecurityScan`、`SecretScan`、`DepAudit` 和 `TaintTrace`，均不需要外部 server 即可使用。四个工具均为只读并在会话内运行；只有 `DepAudit` 在显式开启 `useExternal` 时才会调用包管理器进程。
 
 | 工具 | 默认审批 | 说明 |
 | --- | --- | --- |
@@ -127,7 +127,7 @@ Plan 模式是一种受约束的工作状态：进入后 `Write` 与 `Edit` 只�
 | `DepAudit` | 自动放行 | 依赖风险审计 |
 | `TaintTrace` | 自动放行 | 变量级污点追踪分析 |
 
-**`SecurityScan`** 对代码进行静态漏洞扫描，内置 116 条映射到 OWASP Top 10 和 CWE 的模式规则。扫描结果包含匹配的规则名、CWE 编号、代码位置和修复建议；启发式规则的结果需人工确认后才能判定为漏洞。
+**`SecurityScan`** 对代码进行静态漏洞扫描，内置 116 条映射到 OWASP Top 10 和 CWE 的模式规则。扫描结果包含匹配的规则名、CWE 编号、代码位置和修复建议；启发式规则的结果需人工确认后才能判定为漏洞。扫描结果按工作区缓存于 `.nighthawk/scan-cache.json`，重复扫描未变更文件时显著加快。
 
 参数：
 
@@ -151,15 +151,17 @@ Plan 模式是一种受约束的工作状态：进入后 `Write` 与 `Edit` 只�
 参数：
 
 - `path`（可选）：依赖清单所在目录，默认当前工作目录
+- `useExternal`（可选，默认 `false`）：为 `true` 时，还会运行宿主系统包管理器审计工具（根据生态调用 `npm audit`、`pnpm audit` 或 `pip-audit`）并合并其报告的真实 CVE。未安装对应工具链的机器请关闭此选项。
 
-**`TaintTrace`** 对单个源文件执行变量级污点追踪，分析用户可控输入到危险 sink 的数据流。追踪的 source 包括请求参数（`req.query`、`req.body` 等）、PHP superglobals（`$_GET`、`$_POST` 等）、`stdin`、环境变量（`process.env`）；追踪的 sink 包括 SQL 注入、命令注入、代码注入、XSS、路径遍历、SSRF、反序列化等。
+**`TaintTrace`** 执行轻量级污点追踪，分析用户可控输入到危险 sink 的数据流。默认沿 import/require 图追踪：传入入口文件（例如路由处理器），被污染的变量会通过导出与导入跨模块传播，因此定义在一个文件、在使用于另一个文件的 source→sink 也会被报告。将 `scope` 设为 `file` 可限定为单文件分析。追踪的 source 包括请求参数（`req.query`、`req.body` 等）、PHP superglobals（`$_GET`、`$_POST` 等）、`stdin`、环境变量（`process.env`）；追踪的 sink 包括 SQL 注入、命令注入、代码注入、XSS、路径遍历、SSRF、反序列化等。
 
 参数：
 
-- `path`（必填）：单个源文件路径
+- `path`（必填）：要分析的源文件路径；`module` 作用域下为要追踪的模块图入口
+- `scope`（可选）：`module`（默认）或 `file`
 
 ::: warning 注意
-`TaintTrace` 仅进行轻量级单文件分析，不追踪跨文件或跨模块的数据流。对于复杂应用，需要结合 `SecurityScan` 进行全面扫描。
+`TaintTrace` 为启发式分析——只沿相对导入追踪，动态导入按尽力而为解析。裸导入、npm 导入及混合 eval 模式不会被追踪，请将结果视为待用 `Read` 核实的证据。
 :::
 
 ## 定时任务

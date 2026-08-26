@@ -19,6 +19,7 @@ import { literalRulePattern } from '../../support/rule-match';
 import { toInputJsonSchema } from '../../support/input-schema';
 import type { WorkspaceConfig } from '../../support/workspace';
 import DEP_AUDIT_DESCRIPTION from './dep-audit.md?raw';
+import type { FindingKind, NormalizedFinding } from './engine';
 
 export const DepAuditInputSchema = z.object({
   path: z
@@ -27,9 +28,18 @@ export const DepAuditInputSchema = z.object({
     .describe(
       'Directory containing dependency manifests (package.json, requirements.txt, go.mod, pom.xml). Accepts an absolute path, or a path relative to the current working directory. Omit to audit the current working directory.',
     ),
+  useExternal: z
+    .boolean()
+    .optional()
+    .default(false)
+    .describe(
+      'When true, runs the host system\'s package-manager audit tool (npm audit, pnpm audit, pip-audit) in addition to offline checks and OSV queries.',
+    ),
 });
 
 export type DepAuditInput = z.infer<typeof DepAuditInputSchema>;
+
+export type DepAuditInputArgs = z.input<typeof DepAuditInputSchema>;
 
 interface KnownRisk {
   name: string;
@@ -73,6 +83,8 @@ export interface DepAuditFinding {
   cvss?: number;
   aliases?: string[];
   fixedVersion?: string;
+  /** Origin: 'offline' for built-in checks, 'osv' for OSV API, 'external' for host package-manager tools. */
+  source?: 'offline' | 'osv' | 'external';
 }
 
 export interface DepAuditManifest {
@@ -114,7 +126,7 @@ export function parsePackageJson(manifestPath: string, content: string): DepAudi
   ];
 
   for (const [section, deps] of sections) {
-    if (deps === undefined) continue;
+    if (deps == null) continue;
     for (const [name, range] of Object.entries(deps)) {
       const bare = name.startsWith('@') ? name.split('/')[1] ?? name : name;
       for (const risk of KNOWN_RISKS) {
@@ -218,6 +230,125 @@ function toOsvEcosystem(eco: 'npm' | 'pip' | 'go'): 'npm' | 'PyPI' | 'Go' {
   return 'npm';
 }
 
+export interface LockFileInfo {
+  ecosystem: 'npm' | 'pip';
+  packageManager: string;
+}
+
+const LOCKFILE_MAP: Array<{ filename: string; info: LockFileInfo }> = [
+  { filename: 'pnpm-lock.yaml', info: { ecosystem: 'npm', packageManager: 'pnpm' } },
+  { filename: 'package-lock.json', info: { ecosystem: 'npm', packageManager: 'npm' } },
+  { filename: 'yarn.lock', info: { ecosystem: 'npm', packageManager: 'npm' } },
+  { filename: 'Pipfile.lock', info: { ecosystem: 'pip', packageManager: 'pip-audit' } },
+  { filename: 'poetry.lock', info: { ecosystem: 'pip', packageManager: 'pip-audit' } },
+];
+
+/**
+ * Detect the package manager by probing for lockfiles under `root`.
+ * Returns the first match; priority is pnpm > npm > pip.
+ */
+export async function detectPackageManager(kaos: Kaos, root: string): Promise<LockFileInfo | undefined> {
+  for (const { filename, info } of LOCKFILE_MAP) {
+    try {
+      const stat = await kaos.stat(join(root, filename));
+      if ((stat.stMode & 0o170000) === 0o100000) return info;
+    } catch {}
+  }
+  return undefined;
+}
+
+/**
+ * Collect stdout from a KaosProcess.
+ */
+async function collectStream(stream: NodeJS.ReadableStream): Promise<string> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of stream) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  }
+  return Buffer.concat(chunks).toString('utf8');
+}
+
+/**
+ * Parse `npm audit --json` / `pnpm audit --json` output.
+ */
+export function parseNpmAuditJson(
+  raw: string,
+  pm: string,
+): DepAuditFinding[] {
+  const findings: DepAuditFinding[] = [];
+  let data: any;
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    return findings;
+  }
+
+  const vulnerabilities = data.vulnerabilities as Record<string, any> | undefined;
+  if (!vulnerabilities) return findings;
+
+  for (const [pkgName, vuln] of Object.entries(vulnerabilities)) {
+    if (!vuln || typeof vuln !== 'object') continue;
+    const severity: string = vuln.severity ?? 'unknown';
+    const via: any[] = Array.isArray(vuln.via) ? vuln.via : [];
+    for (const entry of via) {
+      if (!entry || typeof entry === 'string') continue;
+      const title: string = entry.title ?? 'unknown vulnerability';
+      const url: string = entry.url ?? '';
+      const cve = (url.match(/(CVE-\d{4}-\d+)/) ?? entry.cve ?? [])[1];
+      const range: string = entry.range ?? '';
+      findings.push({
+        ecosystem: 'npm',
+        package: pkgName,
+        version: range || (vuln.range ?? ''),
+        kind: 'cve',
+        message: `[${pm} audit] ${title} (severity: ${severity})`,
+        cve,
+        cvss: severity === 'critical' ? 9.5 : severity === 'high' ? 7.5 : severity === 'moderate' ? 5 : severity === 'low' ? 2.5 : undefined,
+        fixedVersion: entry.fixAvailable ? (typeof entry.fixAvailable === 'object' ? entry.fixAvailable.version : 'see advisory') : undefined,
+        source: 'external',
+      });
+    }
+  }
+  return findings;
+}
+
+/**
+ * Parse `pip-audit --format json` output.
+ */
+export function parsePipAuditJson(raw: string): DepAuditFinding[] {
+  const findings: DepAuditFinding[] = [];
+  let data: any;
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    return findings;
+  }
+
+  const deps: any[] = Array.isArray(data) ? data : (data.dependencies ?? []);
+  for (const dep of deps) {
+    if (!dep || typeof dep !== 'object') continue;
+    const vulns: any[] = dep.vulns ?? dep.vulnerabilities ?? [];
+    for (const v of vulns) {
+      if (!v || typeof v !== 'object') continue;
+      const aliases: string[] = v.aliases ?? [];
+      const cve = aliases.find((a: string) => a.startsWith('CVE-'));
+      const fixedVersions: string[] = v.fixed_versions ?? [];
+      findings.push({
+        ecosystem: 'pip',
+        package: dep.name ?? '',
+        version: dep.version ?? '',
+        kind: 'cve',
+        message: `[pip-audit] ${v.id ?? v.description ?? 'unknown vulnerability'}`,
+        cve,
+        fixedVersion: fixedVersions.length > 0 ? fixedVersions[fixedVersions.length - 1] : undefined,
+        aliases,
+        source: 'external',
+      });
+    }
+  }
+  return findings;
+}
+
 export interface OsvClient {
   queryBatch(queries: Array<{ package: { name: string; ecosystem: string }; version: string }>): Promise<any[][]>;
 }
@@ -233,7 +364,8 @@ export class DepAuditTool implements BuiltinTool<DepAuditInput> {
     private readonly osvClient?: OsvClient,
   ) {}
 
-  resolveExecution(args: DepAuditInput): ToolExecution {
+  resolveExecution(args: DepAuditInputArgs): ToolExecution {
+    const useExternal = args.useExternal ?? false;
     const auditPath =
       args.path !== undefined
         ? resolvePathAccessPath(args.path, {
@@ -253,7 +385,7 @@ export class DepAuditTool implements BuiltinTool<DepAuditInput> {
           return { isError: true, output: 'Aborted before audit started' };
         }
         try {
-          const output = await this.audit(auditPath);
+          const output = await this.audit(auditPath, useExternal);
           return { isError: false, output };
         } catch (error) {
           return {
@@ -265,7 +397,7 @@ export class DepAuditTool implements BuiltinTool<DepAuditInput> {
     };
   }
 
-  private async audit(root: string): Promise<string> {
+  private async audit(root: string, useExternal = false): Promise<string> {
     const manifests = await collectDependencyManifests(this.kaos, root);
     const findings: DepAuditFinding[] = [];
     const allDeps: Array<{ name: string; version: string; ecosystem: 'npm' | 'pip' | 'go' }> = [];
@@ -345,6 +477,14 @@ export class DepAuditTool implements BuiltinTool<DepAuditInput> {
       }
     }
 
+    // --- External tool audit (opt-in) ---
+    const { findings: externalToolFindings, toolName: externalToolName } = useExternal
+      ? await this.runExternalAudit(root)
+      : { findings: [], toolName: '' };
+
+    // Merge: combine all three sources into externalVulnerabilities for unified reporting
+    externalVulnerabilities.push(...externalToolFindings);
+
     if (manifests.length === 0) {
       return `No dependency manifests (package.json / requirements.txt / go.mod) found under ${root}`;
     }
@@ -361,18 +501,49 @@ export class DepAuditTool implements BuiltinTool<DepAuditInput> {
       parts.push('No offline risk patterns found.');
     }
 
-    if (osvQueried && externalVulnerabilities.length > 0) {
-      parts.push(`\n${String(externalVulnerabilities.length)} CVE(s) found via OSV:`);
+    if (externalVulnerabilities.length > 0) {
+      const sources: string[] = [];
+      if (osvQueried) sources.push('OSV');
+      if (externalToolFindings.length > 0) sources.push(externalToolName || 'external');
+      parts.push(`\n${String(externalVulnerabilities.length)} CVE(s) found via ${sources.join(' + ')}:`);
       for (const v of externalVulnerabilities) {
         parts.push(
           `- [${v.ecosystem}:${v.package}@${v.version}] ${v.message}${v.fixedVersion ? ` (fix: ${v.fixedVersion})` : ''}`,
         );
       }
-    } else if (osvQueried) {
-      parts.push('\nNo CVEs found via OSV.');
+    } else if (osvQueried || useExternal) {
+      parts.push('\nNo CVEs found via external sources.');
     }
 
     return parts.join('\n');
+  }
+
+  /**
+   * Run the host system's package-manager audit tool (npm audit, pnpm audit,
+   * pip-audit) and return parsed CVE findings. Detection is lockfile-based;
+   * if no lockfile is found the method returns empty results.
+   */
+  async runExternalAudit(
+    root: string,
+  ): Promise<{ findings: DepAuditFinding[]; toolName: string }> {
+    const lockInfo = await detectPackageManager(this.kaos, root);
+    if (!lockInfo) return { findings: [], toolName: '' };
+    try {
+      const args =
+        lockInfo.ecosystem === 'npm'
+          ? [lockInfo.packageManager, 'audit', '--json']
+          : ['pip-audit', '--format', 'json'];
+      const proc = await this.kaos.exec(...args);
+      const stdout = await collectStream(proc.stdout);
+      await proc.dispose();
+      const findings =
+        lockInfo.ecosystem === 'npm'
+          ? parseNpmAuditJson(stdout, lockInfo.packageManager)
+          : parsePipAuditJson(stdout);
+      return { findings, toolName: lockInfo.packageManager };
+    } catch {
+      return { findings: [], toolName: lockInfo.packageManager };
+    }
   }
 }
 
@@ -394,7 +565,7 @@ export function depFindingToNormalized(f: DepAuditFinding): NormalizedFinding {
       {
         kind: 'dep' as FindingKind,
         ruleId: f.cve,
-        source: f.kind === 'cve' ? 'osv' : 'offline',
+        source: f.source ?? (f.kind === 'cve' ? 'osv' : 'offline'),
         confidence: f.kind === 'cve' ? 'high' : 'medium',
         analyzerVersion: '1.0.0',
       },

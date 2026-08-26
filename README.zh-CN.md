@@ -2,7 +2,7 @@
 
 **安全为先的终端 AI Agent —— 渗透测试、代码审计与高强度编程，同一个闭环。**
 
-NightHawk 的核心命题：进攻性安全与严肃工程属于同一个 Agent。它将现代化编程 Agent 内核（Plan/Act/Observe/Reflect 循环、子 Agent、MCP、Skills、持久记忆）与原生安全引擎结合 —— 116 条映射到 OWASP Top 10 与 CWE 的漏洞规则、基于 Shannon 熵的密钥检测、变量级污点追踪、依赖审计 —— 全部作为一等工具暴露给 Agent，可在会话中随时调用。
+NightHawk 的核心命题：进攻性安全与严肃工程属于同一个 Agent。它将现代化编程 Agent 内核（Plan/Act/Observe/Reflect 循环、子 Agent、MCP、Skills、持久记忆）与原生安全引擎结合 —— 116+ 条映射到 OWASP Top 10 与 CWE 的漏洞规则、基于 Shannon 熵的密钥检测、跨文件污点追踪、依赖审计（离线 / OSV / 宿主机包管理器）—— 全部作为一等工具暴露给 Agent，可在会话中随时调用。
 
 [English](README.md)
 
@@ -22,10 +22,10 @@ NightHawk 的核心命题：进攻性安全与严肃工程属于同一个 Agent�
 
 | 工具 | 功能 |
 | --- | --- |
-| `SecurityScan` | 规则引擎，116 模式覆盖 SQL 注入、XSS、命令注入、路径穿越、SSRF、反序列化、弱加密、认证缺陷、XXE 及分语言风险（Node/Python/Java/Go/PHP）。每个发现携带 CWE/OWASP 编号、严重度和修复建议 —— 中英双语。 |
+| `SecurityScan` | 规则引擎，116+ 模式覆盖 SQL 注入、XSS、命令注入、路径穿越、SSRF、反序列化、弱加密、认证缺陷、XXE 及分语言风险（Node/Python/Java/Go/PHP）。每个发现携带 CWE/OWASP 编号、严重度和修复建议 —— 中英双语。结果写入磁盘缓存，重复扫描未变更文件时更快。 |
 | `SecretScan` | 检测硬编码凭据 —— AWS/GCP/Azure 密钥、token、私钥 —— 已知模式与 Shannon 熵评分相结合。 |
-| `TaintTrace` | 变量级污点追踪：识别用户可控源（HTTP 参数、环境变量、stdin），沿赋值链（最多 3 轮）追踪到危险汇点（exec、eval、innerHTML、SQL）。 |
-| `DepAudit` | 标记高风险依赖模式：postinstall 脚本、未锁定版本、已知风险配置。 |
+| `TaintTrace` | 污点追踪：识别用户可控源（HTTP 参数、环境变量、stdin），追踪赋值链到危险汇点（exec、eval、innerHTML、SQL）。默认沿模块导入跨文件追踪数据流（`scope: file` 可限定单文件）。 |
+| `DepAudit` | 通过离线检查标记高风险依赖模式（postinstall 脚本、未锁定版本、已知风险配置），查询 OSV API，并可调用宿主机包管理器审计工具（`useExternal: true`）合并真实 CVE。 |
 
 工具间形成合力：规则命中为污点追踪提供种子，污点流确认可利用性，确认后的发现驱动修复建议。
 

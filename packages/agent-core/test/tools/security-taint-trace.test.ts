@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { taintAnalyzeContent } from '../../src/tools/builtin/security/engine.js';
+import { createFakeKaos } from './fixtures/fake-kaos.js';
+import { taintAnalyzeContent, taintAnalyzeModule } from '../../src/tools/builtin/security/engine.js';
 
 describe('taint analysis content', () => {
   it('detects a direct source-to-sink flow', () => {
@@ -47,5 +48,47 @@ describe('taint analysis content', () => {
 
   it('returns no findings for an empty file', () => {
     expect(taintAnalyzeContent('', 'empty.ts')).toEqual([]);
+  });
+});
+
+describe('taint analysis module graph', () => {
+  const files = {
+    '/workspace/input.ts': 'export const payload = req.query.q;\n',
+    '/workspace/route.ts': "import { payload } from './input';\neval(payload);\n",
+  };
+
+  function makeModuleKaos() {
+    return createFakeKaos({
+      stat: async (p: string) => {
+        if (p.endsWith('.ts')) return { stMode: 0o100644 } as any;
+        throw new Error('not found');
+      },
+      readText: async (p: string) => {
+        const c = files[p as keyof typeof files];
+        if (c !== undefined) return c;
+        throw new Error('not found');
+      },
+    });
+  }
+
+  it('traces taint across an import boundary', async () => {
+    const kaos = makeModuleKaos();
+    const findings = await taintAnalyzeModule(kaos, '/workspace/route.ts');
+
+    expect(findings).toHaveLength(1);
+    const flow = findings[0]!;
+    expect(flow.varName).toBe('payload');
+    expect(flow.sink.risk).toBe('Code Injection');
+    expect(flow.file).toBe('/workspace/route.ts');
+    expect(flow.source.desc).toContain('(via input.ts)');
+  });
+
+  it('scope "file" does not cross the module boundary', async () => {
+    const kaos = makeModuleKaos();
+    const { taintAnalyze } = await import('../../src/tools/builtin/security/engine.js');
+
+    const findings = await taintAnalyze(kaos, '/workspace/route.ts');
+
+    expect(findings).toEqual([]);
   });
 });

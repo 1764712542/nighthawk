@@ -17,18 +17,26 @@ import { resolvePathAccessPath } from '../../policies/path-access';
 import { literalRulePattern } from '../../support/rule-match';
 import { toInputJsonSchema } from '../../support/input-schema';
 import type { WorkspaceConfig } from '../../support/workspace';
-import { formatTaint, taintAnalyze } from './engine';
+import { formatTaint, taintAnalyze, taintAnalyzeModule } from './engine';
 import TAINT_TRACE_DESCRIPTION from './taint-trace.md?raw';
 
 export const TaintTraceInputSchema = z.object({
   path: z
     .string()
     .describe(
-      'File to analyze. Accepts an absolute path, or a path relative to the current working directory. Taint analysis is per-file; iterate over files of interest (e.g. route handlers, controllers) rather than passing a directory.',
+      'File to analyze. Accepts an absolute path, or a path relative to the current working directory. Pass the entry point (e.g. a route handler) and taint will be traced across files it imports.',
+    ),
+  scope: z
+    .enum(['file', 'module'])
+    .default('module')
+    .describe(
+      "Analysis granularity. 'module' (default) follows imports/requires across related files; 'file' restricts analysis to the single file. When 'module', the given path is treated as the entry point of a module graph.",
     ),
 });
 
 export type TaintTraceInput = z.infer<typeof TaintTraceInputSchema>;
+
+export type TaintTraceInputArgs = z.input<typeof TaintTraceInputSchema>;
 
 export class TaintTraceTool implements BuiltinTool<TaintTraceInput> {
   readonly name = 'TaintTrace' as const;
@@ -40,7 +48,7 @@ export class TaintTraceTool implements BuiltinTool<TaintTraceInput> {
     private readonly workspace: WorkspaceConfig,
   ) {}
 
-  resolveExecution(args: TaintTraceInput): ToolExecution {
+  resolveExecution(args: TaintTraceInputArgs): ToolExecution {
     const filePath = resolvePathAccessPath(args.path, {
       kaos: this.kaos,
       workspace: this.workspace,
@@ -57,7 +65,10 @@ export class TaintTraceTool implements BuiltinTool<TaintTraceInput> {
           return { isError: true, output: 'Aborted before analysis started' };
         }
         try {
-          const findings = await taintAnalyze(this.kaos, filePath);
+          const findings =
+            args.scope === 'file'
+              ? await taintAnalyze(this.kaos, filePath)
+              : await taintAnalyzeModule(this.kaos, filePath);
           return { isError: false, output: formatTaint(findings) };
         } catch (error) {
           return {

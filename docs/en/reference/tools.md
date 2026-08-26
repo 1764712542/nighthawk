@@ -118,7 +118,7 @@ Background task tools manage tasks started via `Bash`, `Agent`, or `AskUserQuest
 
 ## Security tools
 
-Security tools perform static security analysis on code and dependencies. They are built-in — no external server is required — and include four tools: `SecurityScan`, `SecretScan`, `DepAudit`, and `TaintTrace`. All four are read-only and run inside the session without spawning external processes.
+Security tools perform static security analysis on code and dependencies. They are built-in — no external server is required — and include four tools: `SecurityScan`, `SecretScan`, `DepAudit`, and `TaintTrace`. All four are read-only and run inside the session; only `DepAudit` can spawn a package-manager process, and only when you explicitly enable `useExternal`.
 
 | Tool | Default Approval | Description |
 | --- | --- | --- |
@@ -127,7 +127,7 @@ Security tools perform static security analysis on code and dependencies. They a
 | `DepAudit` | Auto-allow | Audit project dependencies for known risks |
 | `TaintTrace` | Auto-allow | Trace data flow from user-controlled sources to dangerous sinks |
 
-**`SecurityScan`** runs pattern-based detection against source files. The built-in rule set contains 116 patterns mapped to OWASP Top 10 and CWE identifiers. Each finding includes the matched rule, CWE ID, file location with line number, and a fix suggestion in both English and Chinese. Findings are heuristic — review them manually before acting on the results.
+**`SecurityScan`** runs pattern-based detection against source files. The built-in rule set contains 116 patterns mapped to OWASP Top 10 and CWE identifiers. Each finding includes the matched rule, CWE ID, file location with line number, and a fix suggestion in both English and Chinese. Findings are heuristic — review them manually before acting on the results. Scan results are cached per workspace in `.nighthawk/scan-cache.json`, so rescanning unchanged files is much faster.
 
 Parameters:
 
@@ -149,15 +149,17 @@ Parameters:
 Parameters:
 
 - `path` (optional): project root containing dependency files; defaults to the current working directory
+- `useExternal` (optional, default `false`): when `true`, also runs the host system's package-manager audit tool (`npm audit`, `pnpm audit`, or `pip-audit` depending on the detected ecosystem) and merges the real CVEs it reports. Fall back to false on systems without the toolchain installed.
 
-**`TaintTrace`** performs lightweight single-file taint analysis, tracing data from user-controlled sources to dangerous sinks. Sources include request parameters (`req.query`, `req.body`, etc.), PHP superglobals (`$_GET`, `$_POST`, etc.), `stdin`, and environment variables (`process.env`). Sinks include SQL injection, command injection, code injection (e.g., `eval`), XSS, path traversal, SSRF, and deserialization calls. Results include the source, the propagation path, and the sink with its CWE classification.
+**`TaintTrace`** performs lightweight taint analysis, tracing data from user-controlled sources to dangerous sinks. By default it follows the import/require graph: pass an entry point (for example a route handler) and tainted variables are propagated across module boundaries through exports and imports, so a source defined in one file that reaches a sink in another is still reported. Set `scope` to `file` to restrict analysis to a single file. Sources include request parameters (`req.query`, `req.body`, etc.), PHP superglobals (`$_GET`, `$_POST`, etc.), `stdin`, and environment variables (`process.env`). Sinks include SQL injection, command injection, code injection (e.g., `eval`), XSS, path traversal, SSRF, and deserialization calls. Results include the source, the propagation path, and the sink with its CWE classification.
 
 Parameters:
 
-- `path` (required): a single source file to analyze
+- `path` (required): the source file to analyze; for `module` scope this is the entry point of the module graph to trace
+- `scope` (optional): `module` (default) or `file`
 
 ::: warning Note
-`TaintTrace` is a single-file analysis only — it does not trace cross-file or cross-module data flows. For comprehensive coverage, combine it with `SecurityScan`.
+`TaintTrace` is heuristic — it follows only relative imports and resolves dynamic imports on a best-effort basis. Bare or npm imports and mixed-eval patterns are not traced, so treat results as evidence to confirm with `Read`.
 :::
 
 ## Scheduled Tasks

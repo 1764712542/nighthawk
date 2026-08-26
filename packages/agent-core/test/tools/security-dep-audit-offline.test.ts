@@ -1,12 +1,28 @@
+import { Readable } from 'node:stream';
+
 import { describe, expect, it, vi } from 'vitest';
 
+import type { ToolExecution } from '../../src/loop';
 import {
   parsePackageJson,
   parseRequirementsTxt,
   parseGoMod,
+  parseNpmAuditJson,
   DepAuditTool,
 } from '../../src/tools/builtin/security/dep-audit.js';
 import { createFakeKaos, PERMISSIVE_WORKSPACE } from './fixtures/fake-kaos.js';
+
+/** Run a previously resolved execution, narrowing the ToolExecution union. */
+async function runExecution(execution: ToolExecution) {
+  if (execution.isError === true) {
+    throw new Error(`resolveExecution returned an error: ${String(execution.output)}`);
+  }
+  return execution.execute({
+    turnId: 'test-turn',
+    toolCallId: 'test-tool-call',
+    signal: new AbortController().signal,
+  });
+}
 
 describe('parsePackageJson', () => {
   it('detects known-risk lodash 4.17.20', () => {
@@ -141,7 +157,7 @@ describe('DepAuditTool with OSV client', () => {
 
     const tool = new DepAuditTool(kaos, PERMISSIVE_WORKSPACE, mockOsvClient);
     const execution = tool.resolveExecution({});
-    const result = await execution.execute({ signal: AbortSignal.timeout(5000) });
+    const result = await runExecution(execution);
     const output = result.output as string;
 
     expect(output).toContain('offline risk(s) found');
@@ -165,7 +181,7 @@ describe('DepAuditTool with OSV client', () => {
 
     const tool = new DepAuditTool(kaos, PERMISSIVE_WORKSPACE, mockOsvClient);
     const execution = tool.resolveExecution({});
-    const result = await execution.execute({ signal: AbortSignal.timeout(5000) });
+    const result = await runExecution(execution);
     const output = result.output as string;
 
     expect(result.isError).toBe(false);
@@ -180,11 +196,126 @@ describe('DepAuditTool with OSV client', () => {
 
     const tool = new DepAuditTool(kaos, PERMISSIVE_WORKSPACE);
     const execution = tool.resolveExecution({});
-    const result = await execution.execute({ signal: AbortSignal.timeout(5000) });
+    const result = await runExecution(execution);
     const output = result.output as string;
 
     expect(output).toContain('offline risk(s) found');
     expect(output).not.toContain('CVE(s) found via OSV');
     expect(output).not.toContain('No CVEs found via OSV');
+  });
+});
+
+describe('DepAuditTool external audit (useExternal)', () => {
+  function makeKaosWithLockfileAndExec(args: string[], stdout: string) {
+    const exec = vi.fn().mockResolvedValue({
+      stdout: Readable.from([stdout]),
+      stderr: Readable.from(['']),
+      dispose: vi.fn().mockResolvedValue(undefined),
+    });
+    const kaos = createFakeKaos({
+      stat: async (p: string) => {
+        if (p.endsWith('package.json') || p.endsWith('pnpm-lock.yaml')) {
+          return { stMode: 0o100644 } as any;
+        }
+        throw new Error('not found');
+      },
+      readText: async (p: string) => {
+        if (p.endsWith('package.json')) return '{"dependencies":{"lodash":"4.17.20"}}';
+        throw new Error('not found');
+      },
+      exec,
+    });
+    return { kaos, exec };
+  }
+
+  it('runs the package-manager audit tool and merges CVEs', async () => {
+    const auditJson = JSON.stringify({
+      vulnerabilities: {
+        lodash: {
+          severity: 'high',
+          via: [
+            { title: 'Prototype Pollution in lodash', url: 'https://github.com/advisories/GHSA-jf85-cpcp-j695', range: '4.17.21', fixAvailable: { name: 'lodash', version: '4.17.21' } },
+          ],
+        },
+      },
+    });
+    const { kaos, exec } = makeKaosWithLockfileAndExec(['pnpm', 'audit', '--json'], auditJson);
+
+    const tool = new DepAuditTool(kaos, PERMISSIVE_WORKSPACE);
+    const execution = tool.resolveExecution({ useExternal: true });
+    const result = await runExecution(execution);
+    const output = result.output as string;
+
+    expect(result.isError).toBe(false);
+    expect(exec).toHaveBeenCalledOnce();
+    expect(exec.mock.calls[0]).toEqual(['pnpm', 'audit', '--json']);
+    expect(output).toContain('CVE(s) found via');
+    expect(output).toContain('pnpm audit');
+    expect(output).toContain('lodash@4.17.21');
+    expect(output).toContain('(fix: 4.17.21)');
+  });
+
+  it('does not run external tools when useExternal is off', async () => {
+    const { kaos, exec } = makeKaosWithLockfileAndExec(['pnpm', 'audit', '--json'], '{}');
+
+    const tool = new DepAuditTool(kaos, PERMISSIVE_WORKSPACE);
+    const execution = tool.resolveExecution({});
+    const result = await runExecution(execution);
+    const output = result.output as string;
+
+    expect(exec).not.toHaveBeenCalled();
+    expect(output).not.toContain('CVE(s) found via');
+  });
+
+  it('degrades gracefully when the external tool fails', async () => {
+    const exec = vi.fn().mockRejectedValue(new Error('command not found'));
+    const kaos = createFakeKaos({
+      stat: async (p: string) => {
+        if (p.endsWith('package.json') || p.endsWith('pnpm-lock.yaml')) {
+          return { stMode: 0o100644 } as any;
+        }
+        throw new Error('not found');
+      },
+      readText: async (p: string) => {
+        if (p.endsWith('package.json')) return '{"dependencies":{"lodash":"4.17.20"}}';
+        throw new Error('not found');
+      },
+      exec,
+    });
+
+    const tool = new DepAuditTool(kaos, PERMISSIVE_WORKSPACE);
+    const execution = tool.resolveExecution({ useExternal: true });
+    const result = await runExecution(execution);
+    const output = result.output as string;
+
+    expect(result.isError).toBe(false);
+    expect(output).toContain('Dependency audit:');
+    expect(output).toContain('No CVEs found via external sources.');
+  });
+});
+
+describe('parseNpmAuditJson', () => {
+  it('parses pnpm audit json into CVE findings', () => {
+    const raw = JSON.stringify({
+      vulnerabilities: {
+        lodash: {
+          severity: 'high',
+          via: [
+            { title: 'Prototype Pollution', url: 'https://github.com/advisories/CVE-2020-8203', range: '4.17.21' },
+          ],
+        },
+      },
+    });
+
+    const findings = parseNpmAuditJson(raw, 'pnpm');
+    expect(findings).toHaveLength(1);
+    expect(findings[0]!.package).toBe('lodash');
+    expect(findings[0]!.kind).toBe('cve');
+    expect(findings[0]!.source).toBe('external');
+    expect(findings[0]!.cve).toBe('CVE-2020-8203');
+  });
+
+  it('returns empty for unparseable output', () => {
+    expect(parseNpmAuditJson('not json', 'pnpm')).toEqual([]);
   });
 });
