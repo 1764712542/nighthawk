@@ -1,5 +1,13 @@
 # @nighthawk/nighthawk-sdk
 
+## 0.19.2
+
+### Patch Changes
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - Add an optional `cwd` parameter to the global MCP management methods; `verify: false` on the global MCP authorization-status listing now returns a fully offline classification instead of behaving like an omitted `verify`.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - Expose prompt queue entities through the transcript surface: accepted and queued prompts carry their content, queued prompts keep it after dequeueing, and the schema-less prompt.accepted event no longer leaks into the v1 event stream.
+
 ## 0.19.1
 
 ### Patch Changes

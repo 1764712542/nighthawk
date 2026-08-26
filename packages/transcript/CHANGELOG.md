@@ -1,5 +1,13 @@
 # @nighthawk/transcript
 
+## 0.0.2
+
+### Patch Changes
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - Publish per-agent transcript activity state (idle / turn) on transcript snapshots, derived from live loop status and preserved across cold rebuilds and live backfills.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - Keep subagent task model and thinking-effort metadata on transcript tasks, including after the task terminates.
+
 ## 0.0.1
 
 ### Patch Changes

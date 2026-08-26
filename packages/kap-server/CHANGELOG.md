@@ -1,5 +1,19 @@
 # @nighthawk/kap-server
 
+## 0.2.3
+
+### Patch Changes
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - Publish per-agent transcript activity state (idle / turn) on transcript snapshots, derived from live loop status and preserved across cold rebuilds and live backfills.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - Expose prompt queue entities through the transcript surface: accepted and queued prompts carry their content, queued prompts keep it after dequeueing, and the schema-less prompt.accepted event no longer leaks into the v1 event stream.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - Keep subagent task model and thinking-effort metadata on transcript tasks, including after the task terminates.
+
+- Updated dependencies [[`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401), [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401), [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401)]:
+  - @nighthawk/transcript@0.0.2
+  - @nighthawk/agent-core-v2@0.4.2
+
 ## 0.2.2
 
 ### Patch Changes

@@ -1,5 +1,115 @@
 # @nighthawk/nighthawk
 
+## 0.39.0
+
+### Minor Changes
+
+- [#1](https://github.com/1764712542/nighthawk/pull/1) [`9c00380`](https://github.com/1764712542/nighthawk/commit/9c003805745bbee101e4339ffc9d089f94b6ff87) Thanks [@1764712542](https://github.com/1764712542)! - DepAudit can now run the host package-manager audit tool (`npm audit`, `pnpm audit`, `pip-audit`) and merge real CVEs. Enable it with `useExternal: true`.
+
+- [#1](https://github.com/1764712542/nighthawk/pull/1) [`eb9ebc8`](https://github.com/1764712542/nighthawk/commit/eb9ebc84e40180c6e66d300179ac633e186148b8) Thanks [@1764712542](https://github.com/1764712542)! - Publish a Homebrew formula so NightHawk can be installed with `brew install 1764712542/nighthawk/nighthawk`.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - web: Fix the slash-command and @-mention panels failing to open on mobile — both panels and the + menu are now grab-handle bottom sheets on small screens.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - web: Add a flat/by-workspace tab to the mobile session list — the flat view sorts purely by recency and the grouped view orders each workspace by its latest session.
+
+- [#1](https://github.com/1764712542/nighthawk/pull/1) [`9a9f142`](https://github.com/1764712542/nighthawk/commit/9a9f1428e61cd82071e6d1a24ec80cb6e9304d95) Thanks [@1764712542](https://github.com/1764712542)! - Enhance security scan with real-time OSV CVE lookup, persistent scan cache, and SARIF 2.1.0 output. SecurityScan now accepts `output_format: "sarif"` for CI/CD integration, and scan results are cached across runs for faster incremental scans.
+
+- [#1](https://github.com/1764712542/nighthawk/pull/1) [`9c00380`](https://github.com/1764712542/nighthawk/commit/9c003805745bbee101e4339ffc9d089f94b6ff87) Thanks [@1764712542](https://github.com/1764712542)! - Security scans now persist their cache to disk and resume incrementally, so rescanning unchanged files is much faster.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - Add an optional ‎`fork` parameter to the subagent and swarm tools that starts the subagent with a snapshot of the calling agent’s conversation history instead of an empty context. Experimental: enable it by setting `KIMI_CODE_EXPERIMENTAL_SUBAGENT_FORK=true` or `subagent_fork = true` under `[experimental]` in config.toml.
+
+- [#1](https://github.com/1764712542/nighthawk/pull/1) [`9c00380`](https://github.com/1764712542/nighthawk/commit/9c003805745bbee101e4339ffc9d089f94b6ff87) Thanks [@1764712542](https://github.com/1764712542)! - Cross-file taint analysis now follows data flow across module imports by default. Pass `scope: file` to restrict analysis to a single file.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - Tower mode is NightHawk's experimental multi-agent collaboration mode. Once enabled with `/tower on`, you can hand off research, development, or verification tasks at any time, and orchestration begins right away: agents work in parallel, each in its own isolated git worktree; an independent reviewer agent examines every change, and only approved work is merged into your chosen branch — with a summary reported back when done. Task boundaries, reviews, and merge order are enforced by tooling rather than prompts alone, so tasks never interfere with one another. Everything is logged and auditable, and you can adjust requirements at any point while work is underway.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - Add tower mode as a plan-parallel mode gated behind the experimental flag `KIMI_CODE_EXPERIMENTAL_TOWER` (off by default): /tower reports status, /tower on|off toggles the mode with a footer indicator, and /tower <objective> starts multi-agent orchestration.
+
+### Patch Changes
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - web: fix thinking blocks in the subagent detail panel being stuck expanded and not collapsible.
+
+- [#1](https://github.com/1764712542/nighthawk/pull/1) [`0e10e11`](https://github.com/1764712542/nighthawk/commit/0e10e11410e0deef752ba900bfccb19713699a34) Thanks [@1764712542](https://github.com/1764712542)! - Raise the AgentSwarm subagent limit to 2000 and accelerate the launch ramp proportionally for batches larger than 128.
+
+- [#1](https://github.com/1764712542/nighthawk/pull/1) [`8367b60`](https://github.com/1764712542/nighthawk/commit/8367b60cde0bb194802ac1df14be257727bcca69) Thanks [@1764712542](https://github.com/1764712542)! - Rename the web appearance theme options to White Hat and Black Hat.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - Fix sessions failing to archive when their workspace folder no longer exists.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - web: Fix pressing Esc to cancel an IME candidate also closing the BTW side chat.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - web: Fix the composer not receiving focus after opening the BTW side chat via the shortcut or /btw.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - Preserve the active session and its selected model when logging out of a provider.
+
+- [#1](https://github.com/1764712542/nighthawk/pull/1) [`ba79d3f`](https://github.com/1764712542/nighthawk/commit/ba79d3feed0c494053fef86f534df50c7e03ff3c) Thanks [@1764712542](https://github.com/1764712542)! - Show the built-in provider list instead of silently doing nothing when the models.dev catalog cannot be reached.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - Add the Tencent CloudBase plugin to the curated marketplace.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - web: Fix composer toolbar buttons squeezing and overlapping each other in very narrow windows.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - Fix the latest reply disappearing from the transcript after a scheduled cron reminder fires.
+
+- [#1](https://github.com/1764712542/nighthawk/pull/1) [`8367b60`](https://github.com/1764712542/nighthawk/commit/8367b60cde0bb194802ac1df14be257727bcca69) Thanks [@1764712542](https://github.com/1764712542)! - Fix the web favicon showing a stale icon after upgrading.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - Fix ACP session regressions: Bash, Grep, and Glob failing when the editor does not support terminal command execution, session creation failing with stdio MCP servers, and reopening a closed session failing with an internal error.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - web: Fix memory usage growing steadily after repeatedly switching sessions and toggling the side chat and subagent panels.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - web: Fix unsent composer attachments such as images being lost after switching sessions on the new-session page.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - web: Fix long question text in question cards being truncated with an ellipsis instead of wrapping.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - Prevent AskUserQuestion from starting background tasks when task controls are unavailable.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - web: Remove the redundant parenthesized domain from the login entry card titles.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - web: Fix the send and stop button icons rendering too small in the mobile composer.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - web: Present the mobile model picker as a bottom sheet consistent with the other mobile drawers.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - web: Fix the oversized appearance theme cards in the mobile first-run wizard.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - web: Temporarily remove the custom-provider entry from the mobile first-run wizard.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - web: Improve mobile UI styling.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - web: Fix tool-call rows alternating heights on mobile by unifying them to the compact row height.
+
+- [#1](https://github.com/1764712542/nighthawk/pull/1) [`8367b60`](https://github.com/1764712542/nighthawk/commit/8367b60cde0bb194802ac1df14be257727bcca69) Thanks [@1764712542](https://github.com/1764712542)! - Show image-input and thinking capability badges for custom multimodal models in the model list.
+
+- [#1](https://github.com/1764712542/nighthawk/pull/1) [`7f8d354`](https://github.com/1764712542/nighthawk/commit/7f8d354f3de2d3bccc9e83c9aefd286070b8bc08) Thanks [@1764712542](https://github.com/1764712542)! - Use the correct context window for known models (e.g. DeepSeek V4 at 1M tokens) instead of defaulting every OpenAI-compatible model to 128k.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - web: Collapse the composer model picker to an icon when space is tight; hovering still shows the model and reasoning effort.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - web: Fix the composer permission mode label being hidden even when there is enough space.
+
+- [#1](https://github.com/1764712542/nighthawk/pull/1) [`0e10e11`](https://github.com/1764712542/nighthawk/commit/0e10e11410e0deef752ba900bfccb19713699a34) Thanks [@1764712542](https://github.com/1764712542)! - Fix Read tool argument validation failures when models pass `offset`/`count` aliases or numeric strings for line ranges.
+
+- [#1](https://github.com/1764712542/nighthawk/pull/1) [`8367b60`](https://github.com/1764712542/nighthawk/commit/8367b60cde0bb194802ac1df14be257727bcca69) Thanks [@1764712542](https://github.com/1764712542)! - Remove the managed OAuth login entry points from the CLI, TUI, ACP, and web UI.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - web: Remove the /auto, /yolo, and /thinking slash commands; permission mode and thinking effort remain adjustable from their settings UI.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - Respect workspace trust and configuration readiness when managing MCP servers.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - Fix subagents bound to a configured secondary model ignoring its default thinking effort; [secondary_model].default_effort and the bound model's own default_effort are now honored.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - web: Fix mismatched left and right margins in the sidebar session list, and show the scrollbar only while hovering or scrolling.
+
+- [#1](https://github.com/1764712542/nighthawk/pull/1) [`0e10e11`](https://github.com/1764712542/nighthawk/commit/0e10e11410e0deef752ba900bfccb19713699a34) Thanks [@1764712542](https://github.com/1764712542)! - Fix sessions hanging forever when a provider stream silently stops emitting events. Set `NIGHTHAWK_STREAM_STALL_TIMEOUT_MS` to tune the stall timeout (default 5 minutes, 0 disables).
+
+- [#1](https://github.com/1764712542/nighthawk/pull/1) [`8367b60`](https://github.com/1764712542/nighthawk/commit/8367b60cde0bb194802ac1df14be257727bcca69) Thanks [@1764712542](https://github.com/1764712542)! - Fix the swarm mode failing when a single-agent prompt argument is passed.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - Add a dedicated `[swarm] timeout_ms` config option (or the `KIMI_CODE_SWARM_TIMEOUT_MS` env var) for AgentSwarm subagent timeouts, which no longer follow `[subagent] timeout_ms`.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - web: Restyle background task notifications as a lighter notice that shows the task summary, output files, and output preview directly.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - Fix the cold transcript rebuild splitting a turn at background-task completion notices; they now fold into the current turn like the live stream does.
+
+- [#1](https://github.com/1764712542/nighthawk/pull/1) [`eb9ebc8`](https://github.com/1764712542/nighthawk/commit/eb9ebc84e40180c6e66d300179ac633e186148b8) Thanks [@1764712542](https://github.com/1764712542)! - Replace the TUI welcome logo with a colorful gradient NightHawk wordmark and add quick-start tips next to it.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - web: Fix the reset-time hint in the sidebar usage panel being ellipsized even when there is enough room.
+
+- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - Fix file tools and shell working directories failing to resolve Git Bash paths such as /c/Users or /tmp on Windows.
+
 ## 0.38.0
 
 ### Minor Changes
