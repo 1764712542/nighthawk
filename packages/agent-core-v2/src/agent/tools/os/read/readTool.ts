@@ -25,6 +25,7 @@ import {
   MAX_BYTES,
   MAX_LINE_LENGTH,
   MAX_LINES,
+  normalizeReadInput,
   ReadInputSchema,
   TRANSCODE_MAX_BYTES,
   type ReadInput,
@@ -208,6 +209,10 @@ export class ReadTool implements IReadTool {
     @ISessionWorkspaceContext private readonly workspaceCtx: ISessionWorkspaceContext,
     @ISessionSkillCatalog private readonly skillCatalog: ISessionSkillCatalog,
   ) {}
+
+  normalizeInput(args: unknown): unknown {
+    return normalizeReadInput(args);
+  }
 
   private workspaceConfig(view: RuntimeWorkspaceView): WorkspaceConfig {
     return { workspaceDir: view.workDir, additionalDirs: view.additionalDirs };

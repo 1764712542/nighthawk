@@ -124,6 +124,35 @@ describe('AgentToolExecutorService', () => {
     });
   });
 
+  it('applies normalizeInput before strict schema validation', async () => {
+    const tool = new TestTool('read', {
+      parameters: {
+        type: 'object',
+        properties: { path: { type: 'string' }, line_offset: { type: 'number' } },
+        required: ['path'],
+        additionalProperties: false,
+      },
+      normalizeInput: (args) => {
+        const raw = args as Record<string, unknown>;
+        if (raw['offset'] !== undefined) {
+          return { path: raw['path'], line_offset: raw['offset'] };
+        }
+        return args;
+      },
+      execute: async (_ctx, args) => ({ output: JSON.stringify(args) }),
+    });
+    registry.register(tool);
+
+    const results = await execute([
+      toolCall('call_read', 'read', { path: 'a.txt', offset: 5 }),
+    ]);
+
+    expect(results[0]).toMatchObject({ output: expect.stringContaining('"line_offset":5') });
+    expect(tool.calls[0]).toMatchObject({
+      args: { path: 'a.txt', line_offset: 5 },
+    });
+  });
+
   it('rejects by policy before dynamic availability when a tool-call guard denies it', async () => {
     const tool = new TestTool('blocked');
     registry.register(tool, { source: 'mcp' });
@@ -1092,6 +1121,7 @@ class TestTool implements ExecutableTool<Record<string, unknown>> {
       readonly description?: string;
       readonly display?: ToolInputDisplay;
       readonly result?: ExecutableToolResult;
+      readonly normalizeInput?: (args: unknown) => unknown;
       readonly execute?: (
         ctx: ExecutableToolContext,
         args: Record<string, unknown>,
@@ -1099,6 +1129,10 @@ class TestTool implements ExecutableTool<Record<string, unknown>> {
     } = {},
   ) {
     this.parameters = options.parameters ?? { type: 'object', additionalProperties: true };
+  }
+
+  normalizeInput(args: unknown): unknown {
+    return this.options.normalizeInput !== undefined ? this.options.normalizeInput(args) : args;
   }
 
   resolveExecution(args: Record<string, unknown>): ToolExecution {

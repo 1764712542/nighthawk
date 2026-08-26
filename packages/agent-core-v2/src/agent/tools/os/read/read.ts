@@ -47,5 +47,52 @@ export const ReadOutputSchema = z.object({
 export type ReadInput = z.infer<typeof ReadInputSchema>;
 export type ReadOutput = z.infer<typeof ReadOutputSchema>;
 
+const LINE_OFFSET_ALIAS_KEYS = ['offset', 'start_line', 'startLine'] as const;
+const N_LINES_ALIAS_KEYS = ['count', 'limit', 'max_lines', 'maxLines'] as const;
+
+function coerceInteger(value: unknown): number | undefined {
+  if (typeof value === 'number') return Number.isInteger(value) ? value : undefined;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (/^-?\d+$/.test(trimmed)) return Number.parseInt(trimmed, 10);
+  }
+  return undefined;
+}
+
+function pickDefined(record: Record<string, unknown>, keys: readonly string[]): unknown {
+  for (const key of keys) {
+    const value = record[key];
+    if (value !== undefined && value !== null) return value;
+  }
+  return undefined;
+}
+
+/**
+ * Pre-validation normalizer for raw model-supplied Read arguments. Maps
+ * Claude-style aliases (`offset`/`start_line` → `line_offset`, `count`/`limit`
+ * → `n_lines`) and coerces numeric strings so the strict schema accepts them.
+ * Unknown keys and nulls are dropped; uncoercible values are preserved so the
+ * schema still reports them.
+ */
+export function normalizeReadInput(args: unknown): unknown {
+  if (typeof args !== 'object' || args === null || Array.isArray(args)) return args;
+  const raw = args as Record<string, unknown>;
+  const normalized: Record<string, unknown> = {};
+
+  if (raw['path'] !== undefined) normalized['path'] = raw['path'];
+
+  const rawOffset = raw['line_offset'] ?? pickDefined(raw, LINE_OFFSET_ALIAS_KEYS);
+  if (rawOffset !== undefined && rawOffset !== null) {
+    normalized['line_offset'] = coerceInteger(rawOffset) ?? rawOffset;
+  }
+
+  const rawCount = raw['n_lines'] ?? pickDefined(raw, N_LINES_ALIAS_KEYS);
+  if (rawCount !== undefined && rawCount !== null) {
+    normalized['n_lines'] = coerceInteger(rawCount) ?? rawCount;
+  }
+
+  return normalized;
+}
+
 export interface IReadTool extends AgentTool<ReadInput> { readonly _serviceBrand: undefined }
 export const IReadTool = createDecorator<IReadTool>('readTool');
