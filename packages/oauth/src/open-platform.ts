@@ -3,6 +3,7 @@ import { isRecord } from './utils';
 import { parseNighthawkCustomHeaders } from './identity';
 import { parseSupportsThinkingType, parseThinkEfforts } from './managed-nighthawk';
 import { MANAGED_NIGHTHAWK_MODEL_FIELDS, mergeRefreshedModelAlias } from './model-alias-merge';
+import { lookupModelContextLength } from './generated/model-context';
 import type {
   ManagedNighthawkModelInfo,
   ManagedNighthawkConfigShape,
@@ -45,8 +46,9 @@ export function isOpenPlatformId(id: string): boolean {
 }
 
 // OpenAI-standard /v1/models responses carry no context_length field (only the
-// managed endpoint does), so absent/invalid values fall back to this instead
-// of failing the whole provider connection. Users can refine it in config.toml.
+// managed endpoint does), so absent/invalid values fall back to the built-in
+// model-context table first, then to this default instead of failing the whole
+// provider connection. Users can refine it in config.toml.
 const DEFAULT_OPEN_PLATFORM_CONTEXT_LENGTH = 131_072;
 
 function toModelInfo(item: unknown): ManagedNighthawkModelInfo | undefined {
@@ -57,7 +59,7 @@ function toModelInfo(item: unknown): ManagedNighthawkModelInfo | undefined {
   const contextLength =
     Number.isInteger(rawContextLength) && rawContextLength > 0
       ? rawContextLength
-      : DEFAULT_OPEN_PLATFORM_CONTEXT_LENGTH;
+      : (lookupModelContextLength(item['id']) ?? DEFAULT_OPEN_PLATFORM_CONTEXT_LENGTH);
   const displayName = item['display_name'];
   const normalizedDisplayName =
     typeof displayName === 'string' && displayName.length > 0 ? displayName : undefined;
