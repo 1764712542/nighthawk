@@ -1,6 +1,7 @@
 /**
  * Welcome panel shown at the top of the TUI.
- * Renders a round-bordered box with the logo, session, model, and version.
+ * Renders a round-bordered box with the NightHawk wordmark, quick-start tips,
+ * session info, and model/version metadata.
  */
 
 import type { Component } from '@nighthawk/pi-tui';
@@ -12,6 +13,13 @@ import { effectiveModelAlias } from '@nighthawk/nighthawk-sdk';
 import { isRainbowDancing, renderDanceWelcomeHeader } from '#/tui/easter-eggs/dance';
 import type { AppState } from '#/tui/types';
 import { currentTheme } from '#/tui/theme';
+import { gradientText } from '#/tui/theme/gradient-text';
+import {
+  NIGHTHAWK_LOGO_LINES,
+  renderNightHawkWordmark,
+} from '#/tui/components/chrome/nighthawk-logo';
+
+const WORDMARK_TIP_MIN_WIDTH = 26;
 
 export class WelcomeComponent implements Component {
   private state: AppState;
@@ -44,54 +52,47 @@ export class WelcomeComponent implements Component {
 
     const innerWidth = Math.max(1, safeWidth - 4);
     const pad = '  ';
-
-    // Logo + side-by-side text. NightHawk totem: raised wings, crown
-    // feathers, twin blazing eyes, raptor beak — the night hunter.
-    const fullLogo = [
-      '  ▄▟██▙▄     ▄▄▄▀▄▄▄     ▄▙██▟▄',
-      ' ▟█▀    ▀█▙▄ ▟█▀▀█▀▀█▟ ▄▙█▀    ▀█▟',
-      ' ▟█▀      ▀▀█▙▀ ▄▄█▄▄ ▀▙█▀▀      ▀█▟',
-      '▟█▀   ▄▄▄    ▀▀▙ ◉ ◉ ▙▀▀    ▄▄▄   ▀█▟',
-      '▟█▀  ▟█▀▀█▙▄▄  ▄█▙▙▙█▄  ▄▄▙█▀▀█▟  ▀█▟',
-      '█▀  ▟█▀    ▀▀█▙▄▟█▀▀▀█▟▄▙█▀▀    ▀█▟  ▀█',
-      '▀█▙ ▟█▀       ▀▀▄▄ ▄▄▀▀       ▀█▟ ▙█▀',
-      ' ▀▀█▙▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▙█▀▀',
-      '   ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀',
-    ] as const;
-    const fullLogoWidth = Math.max(...fullLogo.map((row) => visibleWidth(row)));
-    const compactLogo = ['▄▟███▙▄', '▟█▀▀▀▀█▙', '█▌◉ ◉▐█', '▜█▙▼▟█▛', ' ▀▀▀▀▀'] as const;
-    const useCompactLogo = innerWidth < fullLogoWidth + 22;
-    const logo = useCompactLogo ? compactLogo : fullLogo;
-    const logoWidth = Math.max(...logo.map((row) => visibleWidth(row)));
-    const gap = '  ';
-    const textWidth = Math.max(4, innerWidth - logoWidth - gap.length);
-
-    const rightRow0 = truncateToWidth(
-      chalk.bold.hex(currentTheme.palette.primary)('Welcome to NightHawk!'),
-      textWidth,
-      '…',
-    );
     const dim = chalk.hex(currentTheme.palette.textDim);
-    const labelStyle = chalk.bold.hex(currentTheme.palette.textDim);
-    const rightRow1 = truncateToWidth(
-      dim(isLoggedOut ? 'Run /connect or /provider to get started.' : 'Send /help for help information.'),
-      textWidth,
-      '…',
-    );
 
-    let renderedHeaderLines = [
-      primary(logo[0].padEnd(logoWidth)) + gap + rightRow0,
-      primary(logo[1].padEnd(logoWidth)) + gap + rightRow1,
-      ...logo.slice(2).map((row) => primary(row.padEnd(logoWidth))),
-    ];
-    if (isRainbowDancing()) {
-      renderedHeaderLines = renderDanceWelcomeHeader(logo, textWidth, rightRow1);
+    const wordmark = renderNightHawkWordmark(currentTheme.palette);
+    const wordmarkWidth = Math.max(...wordmark.map((row) => visibleWidth(row)));
+    const gap = '  ';
+    const sideBySide = innerWidth >= wordmarkWidth + WORDMARK_TIP_MIN_WIDTH;
+    const textWidth = Math.max(4, innerWidth - wordmarkWidth - gap.length);
+
+    const tips = this.buildTips(isLoggedOut, primary, dim);
+
+    let headerLines: string[];
+    if (innerWidth >= wordmarkWidth) {
+      if (sideBySide) {
+        headerLines = wordmark.map((row, index) => {
+          const right = tips[index] ?? '';
+          return row.padEnd(wordmarkWidth) + gap + truncateToWidth(right, textWidth, '…');
+        });
+      } else {
+        headerLines = [...wordmark, '', ...tips];
+      }
+      if (isRainbowDancing()) {
+        headerLines = renderDanceWelcomeHeader(
+          [...NIGHTHAWK_LOGO_LINES],
+          sideBySide ? textWidth : innerWidth,
+          tips[1] ?? '',
+        );
+      }
+    } else {
+      const brandTitle = gradientText(
+        'NightHawk',
+        currentTheme.palette.primary,
+        currentTheme.palette.accent,
+      );
+      headerLines = [brandTitle, '', ...tips];
     }
 
     const modelValue = isLoggedOut
       ? chalk.hex(currentTheme.palette.warning)('not set, run /connect or /provider')
       : (effectiveActiveModel?.displayName ?? effectiveActiveModel?.model ?? this.state.model);
 
+    const labelStyle = chalk.bold.hex(currentTheme.palette.textDim);
     const infoLines = [
       labelStyle('Directory: ') + this.state.workDir,
       labelStyle('Session:   ') + this.state.sessionId,
@@ -103,7 +104,7 @@ export class WelcomeComponent implements Component {
       infoLines.push(labelStyle('MCP:       ') + this.state.mcpServersSummary);
     }
 
-    const contentLines: string[] = [...renderedHeaderLines, '', ...infoLines];
+    const contentLines: string[] = [...headerLines, '', ...infoLines];
 
     const lines: string[] = [
       '',
@@ -123,5 +124,28 @@ export class WelcomeComponent implements Component {
     lines.push('');
 
     return lines.map((line) => truncateToWidth(line, safeWidth, '…'));
+  }
+
+  private buildTips(
+    isLoggedOut: boolean,
+    primary: (s: string) => string,
+    dim: (s: string) => string,
+  ): string[] {
+    const tagline = [
+      dim('Security-first AI coding agent for'),
+      dim('pen-test, code audit & coding.'),
+    ];
+    const actions = isLoggedOut
+      ? [
+          primary('▸') + dim(' /connect — add a provider'),
+          primary('▸') + dim(' /provider — manage models'),
+          primary('▸') + dim(' /help — all commands'),
+        ]
+      : [
+          primary('▸') + dim(' Type a task and press Enter'),
+          primary('▸') + dim(' /help — all commands'),
+          primary('▸') + dim(' /model — switch model'),
+        ];
+    return [...tagline, ...actions];
   }
 }

@@ -77,11 +77,16 @@ describe('WelcomeComponent', () => {
     setRainbowDance(undefined);
   });
 
-  it('renders the banner in a single brand color by default', () => {
+  it('renders the banner with the brand gradient by default', () => {
     const codes = truecolorCodes(headerOf(new WelcomeComponent(appState).render(80)));
 
-    // No rainbow by default — just the brand primary (plus the dim tagline).
-    expect(codes.size).toBeLessThanOrEqual(2);
+    // Brand primary→accent gradient wordmark plus the dim tagline — no
+    // rainbow palette colors in the default view.
+    expect(codes.size).toBeGreaterThan(1);
+    for (const code of codes) {
+      const red = Number(code.split(',')[0]);
+      expect([0, 127]).toContain(red);
+    }
   });
 
   it('paints the banner in rainbow while colored', () => {

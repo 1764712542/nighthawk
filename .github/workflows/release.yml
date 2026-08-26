@@ -128,3 +128,51 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ needs.release.outputs.nighthawk_release_tag }}
         run: gh release upload "$RELEASE_TAG" dist-native-release/* --clobber
+
+  publish-brew:
+    name: Publish Homebrew formula
+    needs:
+      - release
+      - native-artifacts
+    if: needs.release.outputs.nighthawk_native_release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Download native artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: nighthawk-native-*
+          path: dist-native-release
+          merge-multiple: true
+
+      - name: Produce manifest.json
+        env:
+          RELEASE_TAG: ${{ needs.release.outputs.nighthawk_release_tag }}
+        run: node apps/nighthawk/scripts/native/produce-manifest.mjs dist-native-release "$RELEASE_TAG"
+
+      - name: Generate Homebrew formula
+        env:
+          RELEASE_TAG: ${{ needs.release.outputs.nighthawk_release_tag }}
+        run: node apps/nighthawk/scripts/native/update-brew-formula.mjs dist-native-release/manifest.json --out nighthawk.rb
+
+      - name: Push formula to homebrew-nighthawk tap
+        if: env.HOMEBREW_TAP_TOKEN != ''
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          RELEASE_TAG: ${{ needs.release.outputs.nighthawk_release_tag }}
+        run: |
+          VERSION="${RELEASE_TAG#*@}"
+          VERSION="${VERSION#v}"
+          git clone --depth 1 "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/1764712542/homebrew-nighthawk.git" tap
+          cp nighthawk.rb "tap/nighthawk.rb"
+          cd tap
+          git config user.name "nighthawk-bot"
+          git config user.email "nighthawk-bot@users.noreply.github.com"
+          git add nighthawk.rb
+          git diff --cached --quiet || git commit -m "Update NightHawk formula to ${VERSION}"
+          git push
+        shell: bash
