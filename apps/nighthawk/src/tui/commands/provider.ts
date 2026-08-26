@@ -168,6 +168,7 @@ export async function handleCatalogProviderAdd(host: SlashCommandHost): Promise<
 
   const spinner = host.showLoginProgressSpinner(`Fetching catalog from ${DEFAULT_CATALOG_URL}`);
   let catalog: Catalog | undefined;
+  let aborted = false;
   try {
     const loaded = await fetchCatalogOrBuiltIn(DEFAULT_CATALOG_URL, {
       signal: controller.signal,
@@ -182,6 +183,7 @@ export async function handleCatalogProviderAdd(host: SlashCommandHost): Promise<
     });
   } catch (error) {
     if (controller.signal.aborted) {
+      aborted = true;
       spinner.stop({ ok: false, label: 'Aborted.' });
     } else {
       const hint = error instanceof CatalogFetchError ? ` (HTTP ${error.status})` : '';
@@ -192,7 +194,19 @@ export async function handleCatalogProviderAdd(host: SlashCommandHost): Promise<
     if (host.cancelInFlight === cancel) host.cancelInFlight = undefined;
   }
 
-  if (catalog === undefined) return;
+  if (catalog === undefined) {
+    if (aborted) return;
+    // models.dev is unreachable and no built-in snapshot exists (dev builds
+    // have none): fall back to the quick-connect provider list so the flow
+    // still shows choices and the user can add a known provider.
+    host.showStatus('models.dev unreachable — showing built-in providers instead.', 'warning');
+    const { promptPlatformSelection } = await import('./prompts');
+    const { resolvePlatformSelection } = await import('./auth');
+    const platformId = await promptPlatformSelection(host);
+    if (platformId === undefined || platformId === '__catalog__') return;
+    await resolvePlatformSelection(host, platformId);
+    return;
+  }
 
   const providerId = await promptCatalogProviderSelection(host, catalog);
   if (providerId === undefined) return;

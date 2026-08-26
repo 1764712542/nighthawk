@@ -31,7 +31,18 @@ import type { SlashCommandHost } from './dispatch';
 export async function handleLoginCommand(host: SlashCommandHost): Promise<void> {
   const platformId = await promptPlatformSelection(host);
   if (platformId === undefined) return;
+  await resolvePlatformSelection(host, platformId);
+}
 
+/**
+ * Routes a platform selector result to the matching setup flow: the models.dev
+ * catalog browser, a custom OpenAI-compatible endpoint, a quick-connect preset,
+ * or an open-platform login. Shared by /connect and the catalog-fallback path.
+ */
+export async function resolvePlatformSelection(
+  host: SlashCommandHost,
+  platformId: string,
+): Promise<void> {
   if (platformId === '__catalog__') {
     const { handleCatalogProviderAdd } = await import('./provider');
     await handleCatalogProviderAdd(host);
