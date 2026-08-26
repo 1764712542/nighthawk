@@ -53,7 +53,7 @@ describe('secretFindingToNormalized', () => {
     expect(out.file).toBe('.env');
     expect(out.startLine).toBe(3);
     expect(out.severity).toBe('medium');
-    expect(out.evidence[0].confidence).toBe('medium');
+    expect(out.evidence[0]!.confidence).toBe('medium');
   });
 });
 
@@ -72,7 +72,7 @@ describe('taintFindingToNormalized', () => {
     expect(out.startLine).toBe(5);
     expect(out.endLine).toBe(20);
     expect(out.severity).toBe('critical');
-    expect(out.evidence[0].kind).toBe('taint');
+    expect(out.evidence[0]!.kind).toBe('taint');
   });
 
   it('maps XSS to high', () => {
@@ -165,8 +165,8 @@ describe('depFindingToNormalized', () => {
     expect(out.file).toBe('lodash');
     expect(out.startLine).toBe(1);
     expect(out.severity).toBe('critical');
-    expect(out.evidence[0].source).toBe('osv');
-    expect(out.evidence[0].ruleId).toBe('CVE-2020-8203');
+    expect(out.evidence[0]!.source).toBe('osv');
+    expect(out.evidence[0]!.ruleId).toBe('CVE-2020-8203');
   });
 
   it('maps cve with low cvss to high', () => {
@@ -194,7 +194,7 @@ describe('depFindingToNormalized', () => {
     };
     const out = depFindingToNormalized(f);
     expect(out.severity).toBe('high');
-    expect(out.evidence[0].confidence).toBe('high');
+    expect(out.evidence[0]!.confidence).toBe('high');
   });
 
   it('maps known-risk to high', () => {
@@ -207,8 +207,8 @@ describe('depFindingToNormalized', () => {
     };
     const out = depFindingToNormalized(f);
     expect(out.severity).toBe('high');
-    expect(out.evidence[0].source).toBe('offline');
-    expect(out.evidence[0].confidence).toBe('medium');
+    expect(out.evidence[0]!.source).toBe('offline');
+    expect(out.evidence[0]!.confidence).toBe('medium');
   });
 
   it('maps script-risk to high', () => {
@@ -269,7 +269,7 @@ describe('depFindingToNormalized', () => {
       cve: 'CVE-2024-0001',
     };
     const out = depFindingToNormalized(f);
-    expect(out.evidence[0].source).toBe('osv');
+    expect(out.evidence[0]!.source).toBe('osv');
   });
 
   it('sets evidence source to offline for known-risk', () => {
@@ -281,6 +281,6 @@ describe('depFindingToNormalized', () => {
       message: 'deprecated',
     };
     const out = depFindingToNormalized(f);
-    expect(out.evidence[0].source).toBe('offline');
+    expect(out.evidence[0]!.source).toBe('offline');
   });
 });

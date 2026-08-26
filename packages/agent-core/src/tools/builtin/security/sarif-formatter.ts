@@ -156,7 +156,7 @@ export function formatToSarif(
   const rules = buildSarifRules(findings);
   const ruleIndexMap = new Map<string, number>();
   for (let i = 0; i < rules.length; i++) {
-    ruleIndexMap.set(rules[i].id!, i);
+    ruleIndexMap.set(rules[i]!.id!, i);
   }
 
   const sorted = [...findings].sort((a, b) => a.file.localeCompare(b.file));
