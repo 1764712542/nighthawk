@@ -17,6 +17,7 @@ import { resolvePathAccessPath } from '../../policies/path-access';
 import { literalRulePattern } from '../../support/rule-match';
 import { toInputJsonSchema } from '../../support/input-schema';
 import type { WorkspaceConfig } from '../../support/workspace';
+import { createScanCache } from './scan-cache-persist';
 import { formatScanReport, runScan, type Severity } from './engine';
 import SECURITY_SCAN_DESCRIPTION from './security-scan.md?raw';
 
@@ -41,6 +42,10 @@ export const SecurityScanInputSchema = z.object({
     .describe(
       'Restrict the scan to rule categories, e.g. ["sqli", "xss", "crypto"]. Omit to scan all categories. Known categories: sqli, xss, cmdi, path-traversal, ssrf, deserialization, crypto, auth, xxe, node, python, java, go, php, dependency.',
     ),
+  output_format: z
+    .enum(['text', 'sarif'])
+    .optional()
+    .describe('Output format. Defaults to "text". Use "sarif" for SARIF 2.1.0 JSON output.'),
 });
 
 export type SecurityScanInput = z.infer<typeof SecurityScanInputSchema>;
@@ -75,16 +80,21 @@ export class SecurityScanTool implements BuiltinTool<SecurityScanInput> {
           return { isError: true, output: 'Aborted before scan started' };
         }
         try {
-          const report = await runScan(this.kaos, {
-            root: scanPath,
-            include: args.include,
-            minSeverity: args.min_severity as Severity | undefined,
-            categories: args.categories,
-          });
+          const report = await runScan(
+            this.kaos,
+            {
+              root: scanPath,
+              include: args.include,
+              minSeverity: args.min_severity as Severity | undefined,
+              categories: args.categories,
+            },
+            undefined,
+            () => createScanCache(this.workspace.workspaceDir),
+          );
           if (report.filesScanned === 0) {
             return { isError: false, output: `No scannable files found under ${scanPath}` };
           }
-          return { isError: false, output: formatScanReport(report) };
+          return { isError: false, output: formatScanReport(report, args.output_format) };
         } catch (error) {
           return {
             isError: true,

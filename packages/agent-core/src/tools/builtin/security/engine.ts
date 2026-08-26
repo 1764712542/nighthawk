@@ -4,6 +4,9 @@ import { basename, join } from 'pathe';
 import type { SecurityRule, Severity } from './rules';
 import { detectLanguage, SECURITY_RULES } from './rules';
 
+import type { SarifLog } from './sarif-formatter';
+import { formatToSarif } from './sarif-formatter';
+
 export type { Severity } from './rules';
 
 export interface ScanResult {
@@ -14,12 +17,42 @@ export interface ScanResult {
   context: string;
 }
 
+export type FindingKind = 'rule' | 'ast' | 'secret' | 'taint' | 'dep';
+
+export interface FindingEvidence {
+  kind: FindingKind;
+  ruleId?: string;
+  source?: string;
+  confidence?: 'high' | 'medium' | 'low';
+  analyzerVersion?: string;
+}
+
+export interface NormalizedFinding {
+  file: string;
+  startLine: number;
+  endLine?: number;
+  message: string;
+  severity: Severity;
+  evidence: FindingEvidence[];
+}
+
+export interface ScanMetrics {
+  filesScanned: number;
+  filesSkipped: number;
+  filesParseFailed: number;
+  cacheHits: number;
+  durationMs: number;
+}
+
 export interface ScanReport {
   results: ScanResult[];
   filesScanned: number;
   durationMs: number;
   bySeverity: Record<string, number>;
   byCategory: Record<string, number>;
+  findings?: NormalizedFinding[];
+  metrics?: ScanMetrics;
+  sarif?: SarifLog;
 }
 
 export interface SecretFinding {
@@ -137,7 +170,20 @@ export function scanContent(content: string, file: string, rules: readonly Secur
   return out;
 }
 
-export async function runScan(kaos: Kaos, opts: ScanOptions): Promise<ScanReport> {
+export async function runScan(
+  kaos: Kaos,
+  opts: ScanOptions,
+  cache?: ScanCache,
+  createCache?: () => Promise<ScanCache>,
+): Promise<ScanReport> {
+  let activeCache = cache;
+  if (!activeCache && createCache) {
+    try {
+      activeCache = await createCache();
+    } catch {
+      // 降级为无缓存
+    }
+  }
   const start = Date.now();
   const minSev = opts.minSeverity !== undefined ? (SEVERITY_ORDER[opts.minSeverity] ?? 99) : 99;
   let rules = SECURITY_RULES_FILTERED(minSev);
@@ -147,22 +193,78 @@ export async function runScan(kaos: Kaos, opts: ScanOptions): Promise<ScanReport
   }
   const files = await collectFiles(kaos, opts.root, opts.include, opts.maxFiles);
   const results: ScanResult[] = [];
+  const allFindings: NormalizedFinding[] = [];
   const CONCURRENCY = 16;
+  let filesSkipped = 0;
+  let filesParseFailed = 0;
+  let cacheHits = 0;
   for (let i = 0; i < files.length; i += CONCURRENCY) {
     const batch = files.slice(i, i + CONCURRENCY);
     const settled = await Promise.all(
       batch.map(async f => {
         try {
           const stat = await kaos.stat(f);
-          if (stat.stSize > MAX_FILE_BYTES) return [];
+          if (stat.stSize > MAX_FILE_BYTES) {
+            filesSkipped++;
+            return { scanResults: [], normalizedFindings: [] };
+          }
           const content = await kaos.readText(f, { errors: 'replace' });
-          return scanContent(content, f, rules);
+          if (activeCache !== undefined) {
+            const key = createScanCacheKey('1', f, content);
+            const hit = activeCache.get(key);
+            if (hit !== undefined) {
+              cacheHits++;
+              return { scanResults: hit.scanResults, normalizedFindings: hit.normalizedFindings };
+            }
+            const scanResults = scanContent(content, f, rules);
+            const normalizedFindings: NormalizedFinding[] = scanResults.map(r => ({
+              file: r.file,
+              startLine: r.line,
+              message: `[${r.rule.id}] ${r.rule.name}`,
+              severity: r.rule.severity,
+              evidence: [
+                {
+                  kind: 'rule' as const,
+                  ruleId: r.rule.id,
+                  source: 'regex',
+                  confidence: 'medium',
+                },
+              ],
+            }));
+            activeCache.set(key, {
+              key,
+              generatedAt: Date.now(),
+              scanResults,
+              normalizedFindings,
+            });
+            return { scanResults, normalizedFindings };
+          }
+          const scanResults = scanContent(content, f, rules);
+          const normalizedFindings: NormalizedFinding[] = scanResults.map(r => ({
+            file: r.file,
+            startLine: r.line,
+            message: `[${r.rule.id}] ${r.rule.name}`,
+            severity: r.rule.severity,
+            evidence: [
+              {
+                kind: 'rule' as const,
+                ruleId: r.rule.id,
+                source: 'regex',
+                confidence: 'medium',
+              },
+            ],
+          }));
+          return { scanResults, normalizedFindings };
         } catch {
-          return [];
+          filesParseFailed++;
+          return { scanResults: [], normalizedFindings: [] };
         }
       }),
     );
-    results.push(...settled.flat());
+    for (const { scanResults, normalizedFindings } of settled) {
+      results.push(...scanResults);
+      allFindings.push(...normalizedFindings);
+    }
   }
   results.sort((a, b) => (SEVERITY_ORDER[a.rule.severity] ?? 99) - (SEVERITY_ORDER[b.rule.severity] ?? 99));
   const bySeverity: Record<string, number> = {};
@@ -171,14 +273,124 @@ export async function runScan(kaos: Kaos, opts: ScanOptions): Promise<ScanReport
     bySeverity[r.rule.severity] = (bySeverity[r.rule.severity] ?? 0) + 1;
     byCategory[r.rule.category] = (byCategory[r.rule.category] ?? 0) + 1;
   }
-  return { results, filesScanned: files.length, durationMs: Date.now() - start, bySeverity, byCategory };
+  const findings: NormalizedFinding[] = activeCache !== undefined
+    ? allFindings
+    : results.map(r => ({
+        file: r.file,
+        startLine: r.line,
+        message: `[${r.rule.id}] ${r.rule.name}`,
+        severity: r.rule.severity,
+        evidence: [
+          {
+            kind: 'rule',
+            ruleId: r.rule.id,
+            source: 'regex',
+            confidence: 'medium',
+          },
+        ],
+      }));
+
+  if (activeCache && typeof (activeCache as any).persist === 'function') {
+    await (activeCache as any).persist();
+  }
+
+  return {
+    results,
+    filesScanned: files.length,
+    durationMs: Date.now() - start,
+    bySeverity,
+    byCategory,
+    findings,
+    metrics: {
+      filesScanned: files.length,
+      filesSkipped,
+      filesParseFailed,
+      cacheHits,
+      durationMs: Date.now() - start,
+    },
+    sarif: formatToSarif(findings, {
+      filesScanned: files.length,
+      filesSkipped,
+      filesParseFailed,
+      cacheHits,
+      durationMs: Date.now() - start,
+    }),
+  };
+}
+
+export interface ScanCacheKey {
+  version: string;
+  file: string;
+  contentHash: string;
+}
+
+export interface ScanCacheEntry {
+  key: ScanCacheKey;
+  generatedAt: number;
+  scanResults: ScanResult[];
+  normalizedFindings: NormalizedFinding[];
+}
+
+const MEMORY_SCAN_CACHE_MAX_ENTRIES = 2048;
+
+export class ScanCache {
+  private readonly entries = new Map<string, ScanCacheEntry>();
+
+  constructor(private readonly maxSize = MEMORY_SCAN_CACHE_MAX_ENTRIES) {}
+
+  get(key: ScanCacheKey): ScanCacheEntry | undefined {
+    return this.entries.get(this.toIndex(key));
+  }
+
+  set(key: ScanCacheKey, value: ScanCacheEntry): void {
+    const index = this.toIndex(key);
+    if (this.entries.has(index)) {
+      this.entries.set(index, value);
+      return;
+    }
+    if (this.entries.size >= this.maxSize) {
+      const first = this.entries.keys().next().value;
+      if (first !== undefined) {
+        this.entries.delete(first);
+      }
+    }
+    this.entries.set(index, value);
+  }
+
+  clear(): void {
+    this.entries.clear();
+  }
+
+  get size(): number {
+    return this.entries.size;
+  }
+
+  private toIndex(key: ScanCacheKey): string {
+    return `${key.version}::${key.file}::${key.contentHash}`;
+  }
+}
+
+export function createScanCacheKey(version: string, file: string, content: string): ScanCacheKey {
+  let hash = 0;
+  for (let i = 0; i < content.length; i++) {
+    hash = (hash * 31 + content.charCodeAt(i)) | 0;
+  }
+  return {
+    version,
+    file,
+    contentHash: `h32:${String(hash >>> 0)}`,
+  };
 }
 
 function SECURITY_RULES_FILTERED(minSev: number): readonly SecurityRule[] {
   return SECURITY_RULES.filter(r => (SEVERITY_ORDER[r.severity] ?? 99) <= minSev);
 }
 
-export function formatScanReport(report: ScanReport): string {
+export function formatScanReport(report: ScanReport, outputFormat?: 'text' | 'sarif'): string {
+  if (outputFormat === 'sarif' && report.sarif !== undefined) {
+    return JSON.stringify(report.sarif, null, 2);
+  }
+
   const sevIcon: Record<string, string> = {
     critical: '[CRITICAL]',
     high: '[HIGH]',
@@ -443,4 +655,44 @@ export function formatTaint(findings: readonly TaintFinding[]): string {
       )
       .join('\n\n')
   );
+}
+
+export function secretFindingToNormalized(f: SecretFinding): NormalizedFinding {
+  return {
+    file: f.file,
+    startLine: f.line,
+    message: `[secret:${f.type}] ${f.preview}`,
+    severity: f.confidence === 'high' ? 'high' : 'medium',
+    evidence: [
+      {
+        kind: 'secret' as FindingKind,
+        source: 'regex+entropy',
+        confidence: f.confidence,
+        analyzerVersion: '1.0.0',
+      },
+    ],
+  };
+}
+
+export function taintFindingToNormalized(f: TaintFinding): NormalizedFinding {
+  const sev = f.sink.risk === 'SQL Injection' || f.sink.risk === 'Command Injection'
+    ? 'critical' as Severity
+    : f.sink.risk === 'XSS' || f.sink.risk === 'Code Injection'
+    ? 'high' as Severity
+    : 'medium' as Severity;
+  return {
+    file: f.file,
+    startLine: f.source.line,
+    endLine: f.sink.line,
+    message: `[taint:${f.sink.risk}] ${f.varName}: ${f.flow}`,
+    severity: sev,
+    evidence: [
+      {
+        kind: 'taint' as FindingKind,
+        source: 'flow-analysis',
+        confidence: 'high',
+        analyzerVersion: '1.0.0',
+      },
+    ],
+  };
 }
