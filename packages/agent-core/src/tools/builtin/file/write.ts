@@ -43,6 +43,35 @@ export const WriteInputSchema = z.object({
     ),
 });
 
+function normalizeWriteContent(value: unknown): unknown {
+  if (typeof value === 'string') return value;
+  if (Array.isArray(value)) return value.map(String).join('\n');
+  if (value === undefined || value === null) return undefined;
+  return JSON.stringify(value);
+}
+
+/**
+ * Pre-validation normalizer for raw model-supplied Write arguments. Maps the
+ * `file_path` alias onto the canonical `path` field (some models emit it) and
+ * coerces non-string content (e.g. a line array) into a string so the strict
+ * schema still accepts the call. Unknown keys and nulls are dropped.
+ */
+export function normalizeWriteInput(args: unknown): unknown {
+  if (typeof args !== 'object' || args === null || Array.isArray(args)) return args;
+  const raw = args as Record<string, unknown>;
+  const normalized: Record<string, unknown> = {};
+
+  const path = raw['path'] ?? raw['file_path'];
+  if (path !== undefined && path !== null) normalized['path'] = path;
+
+  const content = normalizeWriteContent(raw['content']);
+  if (content !== undefined) normalized['content'] = content;
+
+  if (raw['mode'] !== undefined && raw['mode'] !== null) normalized['mode'] = raw['mode'];
+
+  return normalized;
+}
+
 export const WriteOutputSchema = z.object({
   /** Number of UTF-8 bytes written to disk by this call. */
   bytesWritten: z.number().int().nonnegative(),
@@ -60,6 +89,10 @@ export class WriteTool implements BuiltinTool<WriteInput> {
     private readonly kaos: Kaos,
     private readonly workspace: WorkspaceConfig,
   ) {}
+
+  normalizeInput(args: unknown): unknown {
+    return normalizeWriteInput(args);
+  }
 
   resolveExecution(args: WriteInput): ToolExecution {
     const path = resolvePathAccessPath(args.path, {

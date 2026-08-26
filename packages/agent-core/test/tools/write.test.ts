@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { type WriteInput, WriteTool } from '../../src/tools/builtin/file/write';
+import {
+  normalizeWriteInput,
+  type WriteInput,
+  WriteTool,
+} from '../../src/tools/builtin/file/write';
 import { createFakeKaos, PERMISSIVE_WORKSPACE, toolContentString } from './fixtures/fake-kaos';
 import { executeTool } from './fixtures/execute-tool';
 
@@ -322,5 +326,45 @@ describe('WriteTool', () => {
 
     expect(result.isError).toBeFalsy();
     expect(writeText).toHaveBeenCalledWith('/workspace-sneaky/file.txt', 'content');
+  });
+});
+
+describe('normalizeWriteInput', () => {
+  it('maps the file_path alias onto the canonical path field', () => {
+    expect(normalizeWriteInput({ file_path: 'a.txt', content: 'x' })).toEqual({
+      path: 'a.txt',
+      content: 'x',
+    });
+  });
+
+  it('keeps canonical values when both path and file_path exist', () => {
+    expect(normalizeWriteInput({ path: 'a.txt', file_path: 'b.txt', content: 'x' })).toEqual({
+      path: 'a.txt',
+      content: 'x',
+    });
+  });
+
+  it('joins array content into newline-separated text', () => {
+    expect(normalizeWriteInput({ path: 'a.txt', content: ['line1', 'line2'] })).toEqual({
+      path: 'a.txt',
+      content: 'line1\nline2',
+    });
+  });
+
+  it('stringifies other non-string content and drops unknown keys', () => {
+    expect(normalizeWriteInput({ path: 'a.txt', content: 42, extra: true })).toEqual({
+      path: 'a.txt',
+      content: '42',
+    });
+  });
+
+  it('preserves mode and passes through non-object args', () => {
+    expect(normalizeWriteInput({ path: 'a.txt', content: 'x', mode: 'append' })).toEqual({
+      path: 'a.txt',
+      content: 'x',
+      mode: 'append',
+    });
+    expect(normalizeWriteInput('oops')).toBe('oops');
+    expect(normalizeWriteInput(null)).toBe(null);
   });
 });
