@@ -38,6 +38,16 @@ irm https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/install.ps1 | iex
 
 脚本会自动下载最新版本、校验 checksum，并把 `nighthawk` 可执行文件放到你的 `PATH` 中。
 
+### Homebrew 安装（macOS / Linux）
+
+如果你使用 [Homebrew](https://brew.sh/)，可通过 NightHawk tap 安装：
+
+```sh
+brew install 1764712542/nighthawk/nighthawk
+```
+
+Formula 会从 GitHub Release 下载对应平台的二进制，并以常规 Homebrew 公式方式安装。
+
 ### npm 安装
 
 需要 Node.js 22.19.0 或更高版本：
@@ -67,7 +77,7 @@ nighthawk --version
 npm install -g @nighthawk/nighthawk@latest
 ```
 
-**卸载**：脚本安装的用户删除 `nighthawk` 可执行文件即可；npm 安装的用户：
+**卸载**：脚本安装的用户删除 `nighthawk` 可执行文件即可；Homebrew 安装的用户执行 `brew uninstall 1764712542/nighthawk/nighthawk`；npm 安装的用户：
 
 ```sh
 npm uninstall -g @nighthawk/nighthawk

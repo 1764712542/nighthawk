@@ -38,6 +38,16 @@ irm https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/install.ps1 | iex
 
 The script automatically downloads the latest release, verifies the checksum, and places the `nighthawk` executable on your `PATH`.
 
+### Homebrew (macOS / Linux)
+
+If you use [Homebrew](https://brew.sh/), install from the NightHawk tap:
+
+```sh
+brew install 1764712542/nighthawk/nighthawk
+```
+
+The formula downloads the platform binary from the GitHub Release and installs it as a regular Homebrew formula.
+
 ### npm installation
 
 Requires Node.js 22.19.0 or later:
@@ -67,7 +77,7 @@ nighthawk --version
 npm install -g @nighthawk/nighthawk@latest
 ```
 
-**Uninstall**: if you installed via the script, delete the `nighthawk` executable. If you installed via npm:
+**Uninstall**: if you installed via the script, delete the `nighthawk` executable. Via Homebrew, `brew uninstall 1764712542/nighthawk/nighthawk`. If you installed via npm:
 
 ```sh
 npm uninstall -g @nighthawk/nighthawk
