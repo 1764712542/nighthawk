@@ -4,7 +4,8 @@
  * reads as a single colored banner. Used by the TUI welcome panel.
  */
 
-import { gradientText } from '#/tui/theme/gradient-text';
+import chalk from 'chalk';
+
 import type { ColorPalette } from '#/tui/theme/colors';
 
 const GLYPHS: Record<string, readonly string[]> = {
@@ -28,8 +29,7 @@ export const NIGHTHAWK_LOGO_LINES: readonly string[] = Array.from({ length: 5 },
 
 export function renderNightHawkWordmark(colors: ColorPalette): string[] {
   return NIGHTHAWK_LOGO_LINES.map((line, index) => {
-    const from = index % 2 === 0 ? colors.primary : colors.accent;
-    const to = index % 2 === 0 ? colors.accent : colors.primary;
-    return gradientText(line, from, to);
+    const color = index % 2 === 0 ? colors.primary : colors.accent;
+    return chalk.hex(color).bold(line);
   });
 }

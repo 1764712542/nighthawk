@@ -352,6 +352,6 @@ export const MODEL_CONTEXT_LENGTH: Readonly<Record<string, number>> = {
 
 export function lookupModelContextLength(modelId: string): number | undefined {
   const segments = modelId.split('/');
-  const model = (segments[segments.length - 1] ?? '').split(':')[0].toLowerCase();
+  const model = ((segments[segments.length - 1] ?? '').split(':')[0] ?? '').toLowerCase();
   return MODEL_CONTEXT_LENGTH[model];
 }

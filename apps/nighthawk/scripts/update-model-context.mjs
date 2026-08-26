@@ -54,7 +54,7 @@ ${body}
 
 export function lookupModelContextLength(modelId: string): number | undefined {
   const segments = modelId.split('/');
-  const model = (segments[segments.length - 1] ?? '').split(':')[0].toLowerCase();
+  const model = ((segments[segments.length - 1] ?? '').split(':')[0] ?? '').toLowerCase();
   return MODEL_CONTEXT_LENGTH[model];
 }
 `;

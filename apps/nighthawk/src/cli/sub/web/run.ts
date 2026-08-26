@@ -19,6 +19,7 @@ import { type Command } from 'commander';
 import { CLI_SHUTDOWN_TIMEOUT_MS, WEB_USER_AGENT_SUFFIX } from '#/constant/app';
 import { getNativeWebAssetsDir } from '#/native/web-assets';
 import { darkColors } from '#/tui/theme/colors';
+import { renderNightHawkWordmark } from '#/tui/components/chrome/nighthawk-logo';
 import { openUrl as defaultOpenUrl } from '#/utils/open-url';
 import { getDataDir } from '#/utils/paths';
 
@@ -384,7 +385,6 @@ export function formatReadyBanner(
   host: string,
   opts: FormatReadyBannerOptions = {},
 ): string {
-  const primary = (text: string): string => chalk.hex(darkColors.primary)(text);
   const title = (text: string): string => chalk.bold.hex(darkColors.primary)(text);
   const dim = (text: string): string => chalk.hex(darkColors.textDim)(text);
   const muted = (text: string): string => chalk.hex(darkColors.textMuted)(text);
@@ -398,14 +398,14 @@ export function formatReadyBanner(
   };
 
   const port = Number(new URL(origin).port);
-  // Borderless header: the NightHawk sprite (the little mascot with eyes) sits next
-  // to the title, keeping the brand without the enclosing box.
-  const logo = ['▄▟███▙▄', '▟█▀▀▀▀█▙', '█▌◉ ◉▐█', '▜█▙▼▟█▛', ' ▀▀▀▀▀'] as const;
+  // Borderless header: the NightHawk wordmark (gradient block letters) sits
+  // next to the title, keeping the brand without the enclosing box.
+  const logo = renderNightHawkWordmark(darkColors);
   const lines: string[] = [
     '',
-    `  ${primary(logo[0])}  ${title('NightHawk server ready')}  ${dim(getVersion())}`,
-    `  ${primary(logo[1])}  ${dim('Local web UI is available from this machine.')}`,
-    ...logo.slice(2).map((row) => `  ${primary(row)}`),
+    `  ${logo[0]}  ${title('NightHawk server ready')}  ${dim(getVersion())}`,
+    `  ${logo[1]}  ${dim('Local web UI is available from this machine.')}`,
+    ...logo.slice(2).map((row) => `  ${row}`),
     '',
   ];
 
