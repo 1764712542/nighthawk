@@ -116,6 +116,52 @@ Plan 模式是一种受约束的工作状态：进入后 `Write` 与 `Edit` 只�
 
 **`WaitFor`** 把当前轮次挂起，直到后台任务结束或超时。参数：`timeout`（必填，单位秒，上限 600）和可选的 `task_id`。不传 `task_id` 时，调用时刻运行中的任意一个后台任务结束即返回；当前没有运行中的后台任务时立即返回。超时不是错误——结果会列出仍在运行的任务，Agent 可以再次等待，也可以先处理其他工作。已通过 `WaitFor` 汇报结果的任务不会再推送自动完成通知。
 
+## 安全工具
+
+安全工具负责对代码和依赖执行静态安全分析。内置 4 个安全工具：`SecurityScan`、`SecretScan`、`DepAudit` 和 `TaintTrace`，均不需要外部 server 即可使用。
+
+| 工具 | 默认审批 | 说明 |
+| --- | --- | --- |
+| `SecurityScan` | 自动放行 | 基于模式规则的静态漏洞扫描 |
+| `SecretScan` | 自动放行 | 硬编码凭证和密钥检测 |
+| `DepAudit` | 自动放行 | 依赖风险审计 |
+| `TaintTrace` | 自动放行 | 变量级污点追踪分析 |
+
+**`SecurityScan`** 对代码进行静态漏洞扫描，内置 116 条映射到 OWASP Top 10 和 CWE 的模式规则。扫描结果包含匹配的规则名、CWE 编号、代码位置和修复建议；启发式规则的结果需人工确认后才能判定为漏洞。
+
+参数：
+
+- `path`（可选）：要扫描的文件或目录，默认当前工作目录
+- `include`（可选）：glob 过滤模式，仅扫描匹配的文件
+- `min_severity`（可选）：最低严重级别，可选 `critical`、`high`、`medium`、`low`、`info`，默认 `low`
+- `categories`（可选）：分类数组，已知分类包括 `sqli`、`xss`、`cmdi`、`path-traversal`、`ssrf`、`deserialization`、`crypto`、`auth`、`xxe`、`node`、`python`、`java`、`go`、`php`、`dependency`
+- `output_format`（可选）：`text`（默认）或 `sarif`；`sarif` 输出符合 SARIF 2.1.0 标准的 JSON 格式，适用于集成到 CI 流程或其他安全工具链
+
+**`SecretScan`** 检测代码中硬编码的凭证和密钥。支持识别 AWS/GitHub/GitLab/Slack/Google/OpenAI/Anthropic/Stripe/Telegram 等平台的 token、私钥和 JWT，以及数据库连接 URI。还内置基于 Shannon entropy（香农熵）的通用 key/password 启发式检测。
+
+参数：
+
+- `path`（可选）：要扫描的文件或目录，默认当前工作目录
+- `include`（可选）：glob 过滤模式，仅扫描匹配的文件
+
+检测到的敏感值在输出中会被遮蔽；该工具为只读操作，不会修改任何文件。
+
+**`DepAudit`** 审计项目依赖的安全性和版本合规性。支持解析 `package.json`（Node.js）、`requirements.txt`（Python）和 `go.mod`（Go）。检查项包括已知漏洞、宽松版本约束、HTTP registry URL、可疑的 postinstall 脚本，以及 Go pseudo-version 是否有已知问题。网络不可用时仍会进行离线检查；`OSV.dev` 漏洞数据库查询结果作为补充信息提供。
+
+参数：
+
+- `path`（可选）：依赖清单所在目录，默认当前工作目录
+
+**`TaintTrace`** 对单个源文件执行变量级污点追踪，分析用户可控输入到危险 sink 的数据流。追踪的 source 包括请求参数（`req.query`、`req.body` 等）、PHP superglobals（`$_GET`、`$_POST` 等）、`stdin`、环境变量（`process.env`）；追踪的 sink 包括 SQL 注入、命令注入、代码注入、XSS、路径遍历、SSRF、反序列化等。
+
+参数：
+
+- `path`（必填）：单个源文件路径
+
+::: warning 注意
+`TaintTrace` 仅进行轻量级单文件分析，不追踪跨文件或跨模块的数据流。对于复杂应用，需要结合 `SecurityScan` 进行全面扫描。
+:::
+
 ## 定时任务
 
 定时任务工具允许 Agent 把一段 prompt 在未来某个时间重新注入到当前会话——既可以是一次性提醒，也可以是按 cron 周期触发的任务（定期巡检、每日报表、部署监控等）。计划绑定到会话，用 `nighthawk --session` 恢复会话后仍然有效，但不会带入全新的会话。单个会话最多保留 50 个生效中的定时任务。设置 `NIGHTHAWK_DISABLE_CRON=1` 可整体禁用，详见[环境变量](../configuration/env-vars.md#运行时开关)。

@@ -116,6 +116,50 @@ Background task tools manage tasks started via `Bash`, `Agent`, or `AskUserQuest
 
 **`WaitFor`** suspends the current turn until a background task finishes or the timeout elapses. Parameters: `timeout` (required, in seconds, max 600) and optional `task_id`. Without `task_id`, the wait ends as soon as any background task that was running at call time finishes; when no background tasks are running, it returns immediately. A timeout is not an error — the result lists the tasks still running, and the Agent can wait again or do other work meanwhile. A task whose result was reported by `WaitFor` does not also produce an automatic completion notification.
 
+## Security tools
+
+Security tools perform static security analysis on code and dependencies. They are built-in — no external server is required — and include four tools: `SecurityScan`, `SecretScan`, `DepAudit`, and `TaintTrace`. All four are read-only and run inside the session without spawning external processes.
+
+| Tool | Default Approval | Description |
+| --- | --- | --- |
+| `SecurityScan` | Auto-allow | Scan files for known vulnerability patterns |
+| `SecretScan` | Auto-allow | Detect hardcoded credentials and secrets |
+| `DepAudit` | Auto-allow | Audit project dependencies for known risks |
+| `TaintTrace` | Auto-allow | Trace data flow from user-controlled sources to dangerous sinks |
+
+**`SecurityScan`** runs pattern-based detection against source files. The built-in rule set contains 116 patterns mapped to OWASP Top 10 and CWE identifiers. Each finding includes the matched rule, CWE ID, file location with line number, and a fix suggestion in both English and Chinese. Findings are heuristic — review them manually before acting on the results.
+
+Parameters:
+
+- `path` (optional): file or directory to scan; defaults to the current working directory
+- `include` (optional): glob pattern to include matching files
+- `min_severity` (optional): minimum severity to report — `critical`, `high`, `medium`, `low`, or `info`; defaults to `low`
+- `categories` (optional): array of rule categories to include; known categories are `sqli`, `xss`, `cmdi`, `path-traversal`, `ssrf`, `deserialization`, `crypto`, `auth`, `xxe`, `node`, `python`, `java`, `go`, `php`, and `dependency`
+- `output_format` (optional): `text` (default) or `sarif`; `sarif` returns SARIF 2.1.0 JSON
+
+**`SecretScan`** detects hardcoded credentials across multiple secret types. Supported secret types include AWS access keys and secret keys, GitHub / GitLab / Slack / Google / OpenAI / Anthropic / Stripe / Telegram tokens, RSA and EC private keys, JSON Web Tokens (JWTs), and database connection URIs. The scanner also applies a Shannon-entropy heuristic to flag generic keys and passwords that do not match a known pattern. Matching values are masked in the output — the tool is read-only and never exfiltrates secrets.
+
+Parameters:
+
+- `path` (optional): file or directory to scan; defaults to the current working directory
+- `include` (optional): glob pattern to include matching files
+
+**`DepAudit`** inspects project dependency manifests for supply-chain risks. Supported manifest formats: `package.json` (npm / pnpm / yarn), `requirements.txt` (Python), and `go.mod` (Go). The audit checks for known vulnerabilities, unpinned or overly loose version ranges, HTTP registry URLs, and suspicious `postinstall` scripts. For Go modules it also flags pseudo-version usage. When the network is available, the tool queries [OSV.dev](https://osv.dev) for real-time vulnerability data; results from OSV are supplementary to the offline checks and are clearly labeled as such. Offline checks always run regardless of network availability.
+
+Parameters:
+
+- `path` (optional): project root containing dependency files; defaults to the current working directory
+
+**`TaintTrace`** performs lightweight single-file taint analysis, tracing data from user-controlled sources to dangerous sinks. Sources include request parameters (`req.query`, `req.body`, etc.), PHP superglobals (`$_GET`, `$_POST`, etc.), `stdin`, and environment variables (`process.env`). Sinks include SQL injection, command injection, code injection (e.g., `eval`), XSS, path traversal, SSRF, and deserialization calls. Results include the source, the propagation path, and the sink with its CWE classification.
+
+Parameters:
+
+- `path` (required): a single source file to analyze
+
+::: warning Note
+`TaintTrace` is a single-file analysis only — it does not trace cross-file or cross-module data flows. For comprehensive coverage, combine it with `SecurityScan`.
+:::
+
 ## Scheduled Tasks
 
 Scheduled task tools allow the Agent to re-inject a prompt into the current session at a future time — either as a one-time reminder or as a recurring cron-triggered task (periodic checks, daily reports, deployment monitoring, etc.). Schedules are bound to the session and remain active when you resume it with `nighthawk --session`, but are not carried into a brand-new session. A single session can hold at most 50 active scheduled tasks. Set `NIGHTHAWK_DISABLE_CRON=1` to disable them entirely; see [Environment Variables](../configuration/env-vars.md#runtime-switches).
