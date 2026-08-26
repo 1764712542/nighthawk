@@ -10,16 +10,15 @@ import chalk from 'chalk';
 
 import { effectiveModelAlias } from '@nighthawk/nighthawk-sdk';
 
-import { isRainbowDancing, renderDanceWelcomeHeader } from '#/tui/easter-eggs/dance';
+import {
+  getDanceRainbowPalette,
+  getRainbowDanceView,
+  isRainbowDancing,
+  rainbowText,
+} from '#/tui/easter-eggs/dance';
 import type { AppState } from '#/tui/types';
 import { currentTheme } from '#/tui/theme';
 import { gradientText } from '#/tui/theme/gradient-text';
-import {
-  NIGHTHAWK_LOGO_LINES,
-  renderNightHawkWordmark,
-} from '#/tui/components/chrome/nighthawk-logo';
-
-const WORDMARK_TIP_MIN_WIDTH = 26;
 
 export class WelcomeComponent implements Component {
   private state: AppState;
@@ -54,39 +53,16 @@ export class WelcomeComponent implements Component {
     const pad = '  ';
     const dim = chalk.hex(currentTheme.palette.textDim);
 
-    const wordmark = renderNightHawkWordmark(currentTheme.palette);
-    const wordmarkWidth = Math.max(...wordmark.map((row) => visibleWidth(row)));
-    const gap = '  ';
-    const sideBySide = innerWidth >= wordmarkWidth + WORDMARK_TIP_MIN_WIDTH;
-    const textWidth = Math.max(4, innerWidth - wordmarkWidth - gap.length);
+    const brand = isRainbowDancing()
+      ? rainbowText('NightHawk', getDanceRainbowPalette(), getRainbowDanceView()?.phase ?? 0)
+      : gradientText(
+          'NightHawk',
+          currentTheme.palette.primary,
+          currentTheme.palette.accent,
+        );
 
     const tips = this.buildTips(isLoggedOut, primary, dim);
-
-    let headerLines: string[];
-    if (innerWidth >= wordmarkWidth) {
-      if (sideBySide) {
-        headerLines = wordmark.map((row, index) => {
-          const right = tips[index] ?? '';
-          return row.padEnd(wordmarkWidth) + gap + truncateToWidth(right, textWidth, '…');
-        });
-      } else {
-        headerLines = [...wordmark, '', ...tips];
-      }
-      if (isRainbowDancing()) {
-        headerLines = renderDanceWelcomeHeader(
-          [...NIGHTHAWK_LOGO_LINES],
-          sideBySide ? textWidth : innerWidth,
-          tips[1] ?? '',
-        );
-      }
-    } else {
-      const brandTitle = gradientText(
-        'NightHawk',
-        currentTheme.palette.primary,
-        currentTheme.palette.accent,
-      );
-      headerLines = [brandTitle, '', ...tips];
-    }
+    const headerLines: string[] = [brand, '', ...tips];
 
     const modelValue = isLoggedOut
       ? chalk.hex(currentTheme.palette.warning)('not set, run /connect or /provider')

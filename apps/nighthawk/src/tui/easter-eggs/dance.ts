@@ -44,7 +44,7 @@ const LIGHT_RAINBOW = [
   '#354CB5',
 ] as const;
 
-function getDanceRainbowPalette(): readonly [string, ...string[]] {
+export function getDanceRainbowPalette(): readonly [string, ...string[]] {
   return currentTheme.palette.text === '#1A1A1A' ? LIGHT_RAINBOW : DARK_RAINBOW;
 }
 
