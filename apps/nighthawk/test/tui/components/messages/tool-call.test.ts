@@ -1005,13 +1005,16 @@ describe('ToolCallComponent', () => {
     out = strip(component.render(120).join('\n'));
     expect(out).toContain('Explore Agent Running (explore project xxx) · 1 tool · 10s');
     expect(out).toContain('Using Read (apps/nighthawk/src/tui/utils/background-agent-status.ts)');
-    // Thinking and text are mutually exclusive in the active window: the most
-    // recently streamed (text) wins, so thinking is hidden entirely.
+    // The trajectory streams the ongoing sub-tool under the summary line.
+    expect(out).toContain('│ ⠋ Read (apps/nighthawk/src/tui/utils/background-agent-status.ts)');
+    // Thinking and text are mutually exclusive in the live tail: the most
+    // recently streamed (text) wins, so thinking is hidden entirely. The tail
+    // is a single row under a trajectory.
     expect(out).not.toContain('think1');
     expect(out).not.toContain('think2');
     expect(out).not.toContain('think3');
     expect(out).not.toContain('answer1');
-    expect(out).toContain('answer2');
+    expect(out).not.toContain('answer2');
     expect(out).toContain('answer3');
     expect(out).toContain('│ answer3');
 
@@ -1137,11 +1140,14 @@ describe('ToolCallComponent', () => {
     expect(out).toContain('Explore Agent Running (inspect tools) · 5 tools · 0s');
     // Only the current (most recent ongoing) tool appears in the summary line.
     expect(out).toContain('Using Grep (auth)');
-    // No per-tool activity rows are rendered.
+    // The trajectory keeps the last four sub-tool rows; the oldest is folded
+    // into the hidden-count marker.
+    expect(out).toContain('… +1 earlier tool (ctrl+o to expand)');
     expect(out).not.toContain('file1.ts');
-    expect(out).not.toContain('file2.ts');
-    expect(out).not.toContain('file3.ts');
-    expect(out).not.toContain('file4.ts');
+    expect(out).toContain('✓ Read (file2.ts)');
+    expect(out).toContain('✓ Read (file3.ts)');
+    expect(out).toContain('✓ Read (file4.ts)');
+    expect(out).toContain('⠋ Grep (auth)');
     expect(out).not.toContain('Used Read');
   });
 
@@ -1183,11 +1189,16 @@ describe('ToolCallComponent', () => {
     const out = strip(component.render(120).join('\n'));
     // The updated/finished older tool must not surface in the summary.
     expect(out).not.toContain('file1-updated.ts');
-    expect(out).not.toContain('file2.ts');
-    expect(out).not.toContain('file3.ts');
-    expect(out).not.toContain('file4.ts');
-    // Only the most recent ongoing tool is shown.
+    // The trajectory keeps the last four sub-tools; the finished read-1 with
+    // its updated args stays folded into the hidden-count marker. read-2..5
+    // never finished, so they stream with the ongoing spinner mark.
+    expect(out).toContain('… +1 earlier tool (ctrl+o to expand)');
+    expect(out).toContain('⠋ Read (file2.ts)');
+    expect(out).toContain('⠋ Read (file3.ts)');
+    expect(out).toContain('⠋ Read (file4.ts)');
+    // Only the most recent ongoing tool is shown in the summary.
     expect(out).toContain('Using Read (file5.ts)');
+    expect(out).toContain('⠋ Read (file5.ts)');
   });
 
   it('wraps the single subagent active window with a hanging gutter', () => {
@@ -1273,14 +1284,15 @@ describe('ToolCallComponent', () => {
 
     let out = strip(component.render(120).join('\n'));
     expect(out).toContain('Using Bash (ls -la)');
-    // The active window keeps only the last two rows of live output.
-    expect(out).toContain('bash-line-8');
+    // The live tail under the trajectory keeps only the last row of output.
+    expect(out).toContain('⠋ Bash (ls -la)');
     expect(out).toContain('bash-line-9');
+    expect(out).not.toContain('bash-line-8');
     expect(out).not.toContain('bash-line-7');
-    // No ctrl+o promise for the subagent window.
+    // No ctrl+o promise when nothing is folded into the hidden-count marker.
     expect(out).not.toContain('ctrl+o');
 
-    // The global ctrl+o expand toggle must NOT expand the window.
+    // The global ctrl+o expand toggle must NOT expand the tail window.
     component.setExpanded(true);
     out = strip(component.render(120).join('\n'));
     expect(out).toContain('bash-line-9');
@@ -1326,9 +1338,9 @@ describe('ToolCallComponent', () => {
     const out = strip(component.render(120).join('\n'));
     // Recognized tool output never appears.
     expect(out).not.toContain('recognized-read-body');
-    // Generic tool output shows as the two-row active window tail.
-    expect(out).toContain('mcp-line-3');
+    // Generic tool output shows as the one-row live tail under the trajectory.
     expect(out).toContain('mcp-line-4');
+    expect(out).not.toContain('mcp-line-3');
     expect(out).not.toContain('mcp-line-2');
     expect(out).not.toContain('ctrl+o');
   });

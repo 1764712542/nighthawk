@@ -31,6 +31,7 @@ import { ProtocolErrors } from '#/kosong/protocol/errors';
 
 import {
   convertOpenAIError,
+  getGenericModelCapability,
   hasModelPrefix,
   isMediaPart,
   isOpenAIInsufficientQuotaCode,
@@ -1207,5 +1208,5 @@ export function getOpenAIResponsesModelCapability(modelName: string) {
   if (hasModelPrefix(normalized, OPENAI_VISION_TOOL_PREFIXES)) {
     return OPENAI_VISION_TOOL_CAPABILITY;
   }
-  return undefined;
+  return getGenericModelCapability(normalized);
 }

@@ -132,18 +132,14 @@ describe('acp-server initialize handshake', () => {
   );
 
   it(
-    'advertises terminal-auth with forwarded env and the legacy _meta fallback',
+    'advertises no auth methods',
     async () => {
       const homeDir = await mkdtemp(join(tmpdir(), 'acp-server-auth-'));
       const toAgent = new PassThrough();
       const toClient = new PassThrough();
       try {
         const stream = ndJsonStream(Writable.toWeb(toClient), Readable.toWeb(toAgent));
-        const server = await runAcpServerWithStream(stream, {
-          homeDir,
-          terminalAuthEnv: { NIGHTHAWK_HOME: '/tmp/sandbox' },
-          terminalAuthLegacyCommand: '/opt/nighthawk/bin/nighthawk',
-        });
+        const server = await runAcpServerWithStream(stream, { homeDir });
 
         toAgent.write(
           `${JSON.stringify({
@@ -156,21 +152,7 @@ describe('acp-server initialize handshake', () => {
 
         const response = await readOneMessage(toClient);
         const authMethods = (response.result as { authMethods?: unknown[] })?.authMethods;
-        expect(Array.isArray(authMethods)).toBe(true);
-        const method = authMethods?.[0] as {
-          type: string;
-          args: string[];
-          env: Record<string, string>;
-          _meta?: { 'terminal-auth'?: { command: string; args: string[]; env: Record<string, string> } };
-        };
-        expect(method.type).toBe('terminal');
-        expect(method.args).toEqual(['--login']);
-        expect(method.env).toEqual({ NIGHTHAWK_HOME: '/tmp/sandbox' });
-        expect(method._meta?.['terminal-auth']).toMatchObject({
-          command: '/opt/nighthawk/bin/nighthawk',
-          args: ['login'],
-          env: { NIGHTHAWK_HOME: '/tmp/sandbox' },
-        });
+        expect(authMethods).toEqual([]);
 
         await server.close();
         toAgent.end();

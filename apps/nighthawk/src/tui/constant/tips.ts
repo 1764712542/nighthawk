@@ -43,3 +43,26 @@ export const ALL_TIPS: readonly ToolbarTip[] = [
   { text: 'shift-tab to Plan mode to review the approach before NightHawk edits files.', priority: 2 },
   { text: '/model: switch model', priority: 2 },
 ];
+
+/**
+ * Playful Chinese one-liners shown behind the waiting spinner while the
+ * agent works. Picked at random per loading burst; kept short so they fit
+ * on one activity-pane row.
+ */
+export const WORKING_WITS: readonly ToolbarTip[] = [
+  { text: '发现 SSR 菜单~' },
+  { text: '正在施展黑魔法…' },
+  { text: '编译五彩斑斓的黑…' },
+  { text: '和比特精灵谈判中…' },
+  { text: '夜鹰出巡，bug 退散' },
+  { text: '翻代码比翻书还快' },
+  { text: '正在召唤良构代码…' },
+  { text: '深潜上下文之海…' },
+  { text: '嗅探 bug 的气味中…' },
+  { text: '偷偷加载了 buff' },
+  { text: '这边建议直接跑路（并没有' },
+  { text: '猫头鹰说：快了快了' },
+  { text: '代码在蒸锅里，马上出炉' },
+  { text: '重构引力场中…' },
+  { text: '给灵感一点时间' },
+];

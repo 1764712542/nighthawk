@@ -40,6 +40,9 @@ import { buildWaitForHeader } from './tool-renderers/wait-for';
 
 const MAX_ARG_LENGTH = 60;
 const MAX_SUB_TOOL_CALLS_SHOWN = 4;
+/** Sub-tool trajectory rows kept visible in the single-subagent card. */
+const SUBAGENT_TRAJECTORY_COLLAPSED_LINES = 4;
+const SUBAGENT_TRAJECTORY_EXPANDED_LINES = 12;
 // Cap the Agent `description` in the single-subagent header so a long prompt
 // cannot wrap the header onto a second row and break the card's stable height.
 const MAX_SUBAGENT_DESCRIPTION_LENGTH = 60;
@@ -615,6 +618,13 @@ export class ToolCallComponent extends Container {
   private subagentStartedAtMs: number | undefined;
   private subagentEndedAtMs: number | undefined;
   private subagentSpinnerFrame = 0;
+  /**
+   * The trajectory line of the currently ongoing sub-tool, refreshed on each
+   * spinner tick so the braille frame keeps spinning without a full body
+   * rebuild (mirrors the headerText.setText pattern used by the elapsed timer).
+   */
+  private trajectoryOngoingText: Text | undefined;
+  private trajectoryOngoingActivity: SubToolActivity | undefined;
 
   // ── Live progress lines ──────────────────────────────────────────
   //
@@ -1094,6 +1104,9 @@ export class ToolCallComponent extends Container {
       // the body (which would defeat the per-component render caches).
       this.subagentSpinnerFrame = (this.subagentSpinnerFrame + 1) % BRAILLE_SPINNER_FRAMES.length;
       this.headerText.setText(this.buildHeader());
+      if (this.trajectoryOngoingText !== undefined && this.trajectoryOngoingActivity !== undefined) {
+        this.trajectoryOngoingText.setText(this.formatTrajectoryLine(this.trajectoryOngoingActivity));
+      }
       this.notifySnapshotChange();
       this.ui?.requestRender();
     }, BRAILLE_SPINNER_INTERVAL_MS);
@@ -1864,19 +1877,74 @@ export class ToolCallComponent extends Container {
     const phase = this.getDerivedSubagentPhase();
 
     // Every state shares the same skeleton — header, a one-line tool summary,
-    // and a fixed two-row content window — so the card height is identical
-    // while running and after it finishes (no end-of-run shrink).
+    // the streaming sub-tool trajectory, and a bounded live tail — so the
+    // card height is identical while running and after it finishes (no
+    // end-of-run shrink).
     this.addChild(new Text(this.buildSingleSubagentSummaryLine(), 0, 0));
+    const hasTrajectory = this.buildSubagentTrajectory();
 
     if (phase === 'failed') {
-      this.addChild(this.buildSingleSubagentResultWindow('error'));
+      this.addChild(this.buildSingleSubagentResultWindow('error', hasTrajectory));
       return;
     }
     if (phase === 'done' || phase === 'backgrounded') {
-      this.addChild(this.buildSingleSubagentResultWindow('output'));
+      this.addChild(this.buildSingleSubagentResultWindow('output', hasTrajectory));
       return;
     }
-    this.addChild(this.buildSingleSubagentActiveWindow());
+    this.addChild(this.buildSingleSubagentActiveWindow(hasTrajectory));
+  }
+
+  /**
+   * Streams the sub-tool trajectory under the summary line: one line per
+   * recent sub-tool call, oldest → newest, status-marked (`✓` / `✗` /
+   * braille spinner). Collapsed cards keep the last few rows; an expanded
+   * card (global Ctrl+O / idle Ctrl+B toggle) keeps more. Returns whether
+   * any trajectory row rendered.
+   */
+  private buildSubagentTrajectory(): boolean {
+    this.trajectoryOngoingText = undefined;
+    this.trajectoryOngoingActivity = undefined;
+    if (this.subToolActivities.size === 0) return false;
+
+    const activities = [...this.subToolActivities.values()].sort(
+      (a, b) => a.orderSeq - b.orderSeq,
+    );
+    const maxEntries = this.expanded
+      ? SUBAGENT_TRAJECTORY_EXPANDED_LINES
+      : SUBAGENT_TRAJECTORY_COLLAPSED_LINES;
+    const shown = activities.slice(-maxEntries);
+    const hidden = activities.length - shown.length;
+    const gutter = currentTheme.dim('│');
+    if (hidden > 0) {
+      const label = `  ${gutter}  … +${String(hidden)} earlier tool${hidden === 1 ? '' : 's'} (ctrl+o to expand)`;
+      this.addChild(new Text(currentTheme.dim(label), 0, 0));
+    }
+    for (const activity of shown) {
+      if (activity.phase === 'ongoing') {
+        const text = new Text(this.formatTrajectoryLine(activity), 0, 0);
+        this.trajectoryOngoingText = text;
+        this.trajectoryOngoingActivity = activity;
+        this.addChild(text);
+        continue;
+      }
+      this.addChild(new Text(this.formatTrajectoryLine(activity), 0, 0));
+    }
+    return true;
+  }
+
+  private formatTrajectoryLine(activity: SubToolActivity): string {
+    const gutter = currentTheme.dim('│');
+    const keyArg = extractKeyArgument(activity.name, activity.args, this.workspaceDir);
+    const nameCol = currentTheme.fg('primary', activity.name);
+    const argCol = keyArg ? currentTheme.dim(` (${keyArg})`) : '';
+    if (activity.phase === 'failed') {
+      return `  ${gutter} ${currentTheme.fg('error', '✗')} ${nameCol}${argCol}`;
+    }
+    if (activity.phase === 'ongoing') {
+      const frame = BRAILLE_SPINNER_FRAMES[this.subagentSpinnerFrame] ?? BRAILLE_SPINNER_FRAMES[0]!;
+      return `  ${gutter} ${currentTheme.fg('primary', frame)} ${nameCol}${argCol}`;
+    }
+    return `  ${gutter} ${currentTheme.fg('success', '✓')} ${nameCol}${argCol}`;
   }
 
   /** Most-recently-started sub-tool, preferring one that is still running. */
@@ -1942,40 +2010,45 @@ export class ToolCallComponent extends Container {
     return `${currentTheme.dim(`  · ${countLabel} · `)}${verb} ${nameCol}${argCol}${mark}`;
   }
 
-  private buildSingleSubagentActiveWindow(): Component {
+  private buildSingleSubagentActiveWindow(hasTrajectory: boolean): Component {
     const gutter = currentTheme.dim('│');
     const content = this.getActiveSubagentContent();
     // Keep both tones muted: a bright `fg('text')` here flashed white whenever
     // the window flipped between thinking and a brief text/tool-output segment.
+    // Trailing newlines are dropped so a one-row tail never degrades to an
+    // empty row.
+    const trimmed = content?.text.replace(/\n+$/u, '');
     const styled =
-      content === undefined
+      content === undefined || trimmed === undefined || trimmed.length === 0
         ? currentTheme.dim('…')
         : content.tone === 'thinking'
-          ? currentTheme.dim(content.text)
-          : currentTheme.fg('textDim', content.text);
-    // Always exactly two rows (padded when short) so the live window matches
-    // the finished card's height.
+          ? currentTheme.dim(trimmed)
+          : currentTheme.fg('textDim', trimmed);
+    // Fixed-height live tail: one row under a trajectory, two rows standalone
+    // (no sub-tools yet) so the running and finished cards keep one height.
+    const rows = hasTrajectory ? 1 : THINKING_PREVIEW_LINES;
     return new PrefixedWrappedLine(
       `  ${gutter} `,
       `  ${gutter} `,
       styled,
-      THINKING_PREVIEW_LINES,
-      THINKING_PREVIEW_LINES,
+      rows,
+      rows,
     );
   }
 
-  private buildSingleSubagentResultWindow(kind: 'output' | 'error'): Component {
+  private buildSingleSubagentResultWindow(kind: 'output' | 'error', hasTrajectory: boolean): Component {
     const gutter = currentTheme.dim('│');
     const source = kind === 'error' ? this.subagentError : this.subagentText;
-    const text = source === undefined ? '' : tailNonEmptyLines(source, 2).join('\n');
+    const rows = hasTrajectory ? 1 : THINKING_PREVIEW_LINES;
+    const text = source === undefined ? '' : tailNonEmptyLines(source, rows).join('\n');
     const styled =
       kind === 'error' ? currentTheme.fg('error', text) : currentTheme.fg('text', text);
     return new PrefixedWrappedLine(
       `  ${gutter} `,
       `  ${gutter} `,
       styled,
-      THINKING_PREVIEW_LINES,
-      THINKING_PREVIEW_LINES,
+      rows,
+      rows,
     );
   }
 

@@ -73,6 +73,7 @@ import { currentTheme } from '#/tui/theme';
 import type { ColorToken } from '#/tui/theme';
 import { errorReportHintLine } from '../constant/feedback';
 import { formatStepDebugTiming } from '#/utils/usage/debug-timing';
+import { createEmptySessionStats } from '../utils/session-stats';
 import { nextTranscriptId } from '../utils/transcript-id';
 import type { BtwPanelController } from './btw-panel';
 import { isPluginMcpToolName, PluginUpdateNotifier } from './plugin-update-notifier';
@@ -83,6 +84,7 @@ import type {
   AppState,
   LivePaneState,
   QueuedMessage,
+  SessionStats,
   ToolCallBlockData,
   ToolResultBlockData,
   TranscriptEntry,
@@ -170,6 +172,10 @@ export class SessionEventHandler {
   private queuedGoalPromotionInFlight = false;
   private queuedGoalPromotionTimer: ReturnType<typeof setTimeout> | undefined;
   private stepRetryAttemptTimer: ReturnType<typeof setTimeout> | undefined;
+  /** Cumulative footer stats — reset between sessions. */
+  private stats: SessionStats = createEmptySessionStats();
+  /** llmDurationMs snapshot at turn start, to split turn duration into LLM vs tool time. */
+  private turnStartLlmDurationMs = 0;
 
   resetRuntimeState(): void {
     this.backgroundTasks.clear();
@@ -187,6 +193,9 @@ export class SessionEventHandler {
     this.pendingModelBlockedFallback = undefined;
     this.queuedGoalPromotionPending = false;
     this.queuedGoalPromotionInFlight = false;
+    this.stats = createEmptySessionStats();
+    this.turnStartLlmDurationMs = 0;
+    this.host.setAppState({ sessionStats: this.stats });
     this.clearQueuedGoalPromotionTimer();
     this.clearStepRetryAttemptTimer();
     this.stopAllMcpServerStatusSpinners();
@@ -322,6 +331,7 @@ export class SessionEventHandler {
 
   private handleTurnBegin(event: TurnStartedEvent): void {
     this.host.handleTurnStarted?.(event);
+    this.noteTurnStarted(event.turnId);
     this.currentTurnHasAssistantText = false;
     if (event.origin?.kind === 'plugin_command') {
       this.pluginCommandTurns.set(String(event.turnId), event.origin.pluginId);
@@ -360,6 +370,7 @@ export class SessionEventHandler {
 
   private handleTurnEnd(event: TurnEndedEvent, sendQueued: (item: QueuedMessage) => void): void {
     this.host.handleTurnEnded?.(event);
+    this.noteTurnEnded(event.durationMs);
     this.host.streamingUI.flushNow();
     this.clearStepRetry();
     if (event.reason === 'cancelled') {
@@ -424,6 +435,7 @@ export class SessionEventHandler {
     this.host.streamingUI.flushNow();
     this.clearStepRetry();
     this.host.noteStepUsage(event.usage);
+    this.noteStepCompleted(event);
     this.maybeShowDebugTiming(event);
 
     if (event.providerFinishReason === 'filtered') {
@@ -504,6 +516,61 @@ export class SessionEventHandler {
       renderMode: 'plain',
       content: text,
     });
+  }
+
+  /** Turns come from the engine's turnId, so resumed sessions keep their history. */
+  private noteTurnStarted(turnId: number): void {
+    const turns = Math.max(this.stats.turns, turnId);
+    if (turns !== this.stats.turns) {
+      this.stats = { ...this.stats, turns };
+      this.host.setAppState({ sessionStats: this.stats });
+    }
+    this.turnStartLlmDurationMs = this.stats.llmDurationMs;
+  }
+
+  private noteStepCompleted(event: TurnStepCompletedEvent): void {
+    let next: SessionStats = { ...this.stats, steps: this.stats.steps + 1 };
+    const firstTokenMs = event.llmFirstTokenLatencyMs;
+    const streamMs = event.llmStreamDurationMs;
+    if (firstTokenMs !== undefined) {
+      next = {
+        ...next,
+        firstTokenSamples: next.firstTokenSamples + 1,
+        firstTokenTotalMs: next.firstTokenTotalMs + firstTokenMs,
+        llmDurationMs: next.llmDurationMs + firstTokenMs,
+      };
+    }
+    if (streamMs !== undefined) {
+      next = {
+        ...next,
+        streamDurationMs: next.streamDurationMs + streamMs,
+        llmDurationMs: next.llmDurationMs + streamMs,
+      };
+    }
+    const usage = event.usage;
+    if (usage !== undefined) {
+      next = {
+        ...next,
+        inputOtherTokens: next.inputOtherTokens + usage.inputOther,
+        inputCacheReadTokens: next.inputCacheReadTokens + usage.inputCacheRead,
+        inputCacheCreationTokens: next.inputCacheCreationTokens + usage.inputCacheCreation,
+        outputTokens: next.outputTokens + usage.output,
+      };
+    }
+    this.stats = next;
+    this.host.setAppState({ sessionStats: next });
+  }
+
+  /**
+   * Tool time is what remains of the turn's wall clock after the LLM windows:
+   * turn duration minus the llmDurationMs accumulated since this turn began.
+   */
+  private noteTurnEnded(durationMs: number | undefined): void {
+    if (durationMs === undefined) return;
+    const turnLlmMs = this.stats.llmDurationMs - this.turnStartLlmDurationMs;
+    const toolMs = Math.max(0, durationMs - turnLlmMs);
+    this.stats = { ...this.stats, toolDurationMs: this.stats.toolDurationMs + toolMs };
+    this.host.setAppState({ sessionStats: this.stats });
   }
 
   private markActiveAgentSwarmsCancelled(): void {

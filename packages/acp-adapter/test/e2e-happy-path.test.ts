@@ -179,14 +179,9 @@ describe('AcpServer end-to-end happy path', () => {
       },
     });
 
-    // Phase 10 does not supply agentInfo; authMethods advertises terminal-auth.
+    // Phase 10 does not supply agentInfo; no auth methods are advertised.
     expect(response.agentInfo).toBeUndefined();
-    expect(response.authMethods).toHaveLength(1);
-    expect(response.authMethods?.[0]).toMatchObject({
-      id: 'login',
-      type: 'terminal',
-      args: ['--login'],
-    });
+    expect(response.authMethods).toEqual([]);
   });
 
   it('drives the full happy path: initialize → newSession → prompt(end_turn)', async () => {

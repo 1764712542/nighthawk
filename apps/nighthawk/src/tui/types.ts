@@ -13,6 +13,33 @@ import type { NotificationsConfig, StatusLineConfig, UpgradePreferences } from '
 import type { PendingApproval, PendingQuestion } from './reverse-rpc/types';
 import type { ColorToken, ThemeName } from './theme';
 
+/**
+ * Live per-session aggregate statistics rendered in the footer. All fields
+ * are cumulative observations from the engine's turn/step events — turns uses
+ * the engine's turnId (so resumed sessions show their real history), while
+ * the remaining counters accumulate while this TUI is attached.
+ */
+export interface SessionStats {
+  /** Highest observed engine turnId. */
+  readonly turns: number;
+  /** Steps completed while attached. */
+  readonly steps: number;
+  /** Σ (llmFirstTokenLatencyMs + llmStreamDurationMs) across steps. */
+  readonly llmDurationMs: number;
+  /** Σ (turn.durationMs − that turn's LLM time) — tool + overhead window. */
+  readonly toolDurationMs: number;
+  /** Count of steps that reported first-token latency. */
+  readonly firstTokenSamples: number;
+  /** Σ llmFirstTokenLatencyMs. */
+  readonly firstTokenTotalMs: number;
+  /** Σ llmStreamDurationMs — the decode window used for the tok/s rate. */
+  readonly streamDurationMs: number;
+  readonly inputOtherTokens: number;
+  readonly inputCacheReadTokens: number;
+  readonly inputCacheCreationTokens: number;
+  readonly outputTokens: number;
+}
+
 export type BannerDisplay = 'always' | 'once' | 'cooldown';
 
 export interface BannerState {
@@ -61,6 +88,8 @@ export interface AppState {
   contextUsage: number;
   contextTokens: number;
   maxContextTokens: number;
+  /** Aggregate turn/step/LLM/tool/token statistics for the footer status line. */
+  sessionStats: SessionStats;
   isCompacting: boolean;
   isReplaying: boolean;
   streamingPhase: 'idle' | 'waiting' | 'thinking' | 'composing' | 'shell';

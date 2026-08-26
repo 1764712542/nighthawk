@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 import { getCacheDir } from '#/utils/paths';
 import { readJsonFile, writeJsonFile } from '#/utils/persistence';
-import { currentNighthawkProfile, currentNighthawkRegion } from '#/utils/region';
+import { currentNighthawkRegion } from '#/utils/region';
 
 /**
  * Generic client for the public client-configs endpoint:
@@ -25,11 +25,14 @@ const CLIENT_CONFIGS_PATH = '/client_configs';
 const CONFIG_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 const FETCH_TIMEOUT_MS = 5000;
 
-/** The endpoint's API base: the env override keeps winning (custom/internal
-    envs); otherwise the active region profile, so a global login's token is
-    not sent to the mainland-China deployment. */
-function clientConfigsBaseUrl(): string {
-  return (process.env['NIGHTHAWK_BASE_URL'] ?? currentNighthawkProfile().baseUrl).replace(/\/+$/, '');
+/** The endpoint's API base: opt-in via `NIGHTHAWK_BASE_URL` only. Without an
+    explicit override no config is fetched at all — the default region
+    profile's API base belongs to the upstream managed service, whose served
+    content (e.g. marketing banners) is not meant for this distribution. */
+function clientConfigsBaseUrl(): string | undefined {
+  const override = process.env['NIGHTHAWK_BASE_URL'];
+  if (override === undefined || override.trim().length === 0) return undefined;
+  return override.replace(/\/+$/, '');
 }
 
 /** Cache entries are partitioned by region so a login switch never serves
@@ -102,12 +105,16 @@ async function writeDiskCache(file: string, data: unknown, now: number): Promise
   }
 }
 
-/** Returns the named client config, preferring the caches over the network. */
+/** Returns the named client config, preferring the caches over the network.
+ *  Always resolves to `undefined` unless `NIGHTHAWK_BASE_URL` is explicitly
+ *  set — including the caches, so a stale entry fetched from a different
+ *  base never surfaces. */
 export async function getClientConfig<S extends z.ZodType>(
   name: string,
   schema: S,
   options: ClientConfigFetchOptions = {},
 ): Promise<z.infer<S> | undefined> {
+  if (clientConfigsBaseUrl() === undefined) return undefined;
   const now = options.now ?? Date.now();
   const key = cacheKeyFor(name);
   const hit = cache.get(key);
@@ -161,6 +168,8 @@ export async function fetchClientConfig<S extends z.ZodType>(
   schema: S,
   options: ClientConfigFetchOptions = {},
 ): Promise<z.infer<S> | undefined> {
+  const baseUrl = clientConfigsBaseUrl();
+  if (baseUrl === undefined) return undefined;
   const fetchFn = options.fetchImpl ?? fetch;
   const headers: Record<string, string> = {
     accept: 'application/json',
@@ -170,7 +179,7 @@ export async function fetchClientConfig<S extends z.ZodType>(
     headers['authorization'] = `Bearer ${options.accessToken}`;
   }
   try {
-    const response = await fetchFn(`${clientConfigsBaseUrl()}${CLIENT_CONFIGS_PATH}`, {
+    const response = await fetchFn(`${baseUrl}${CLIENT_CONFIGS_PATH}`, {
       method: 'POST',
       headers,
       body: JSON.stringify({ name }),

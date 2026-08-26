@@ -19,8 +19,6 @@ import type {
 import type { CapabilityEntryContext } from './context';
 
 const PLUGIN_ID = 'nighthawk-webbridge';
-// Matches the artifact layout committed to the repository and published
-// through the distribution CDN (see scripts/build-plugin-marketplace-cdn.mjs).
 const PLUGIN_ZIP_PATH = 'plugins/cdn/official/nighthawk-webbridge.zip';
 const BINARY_CDN_PATH = 'webbridge/latest/releases';
 const DEFAULT_DAEMON_BASE_URL = 'http://127.0.0.1:10086';

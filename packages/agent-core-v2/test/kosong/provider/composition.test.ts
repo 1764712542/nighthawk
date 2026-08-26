@@ -264,6 +264,28 @@ describe('resolveCapability', () => {
     );
     expect(registry.resolveCapability('openai', 'gpt-4o', 'nighthawk').image_in).toBe(true);
   });
+
+  it('infers vision capability from generic multimodal model names', () => {
+    expect(registry.resolveCapability('openai', 'deepseek-v4-flash-vision-exp').image_in).toBe(true);
+    expect(registry.resolveCapability('openai', 'qwen2.5-vl-72b-instruct').image_in).toBe(true);
+    expect(registry.resolveCapability('openai', 'glm-4v-plus').image_in).toBe(true);
+    expect(registry.resolveCapability('openai', 'llava-1.5-7b').image_in).toBe(true);
+    const vision = registry.resolveCapability('openai', 'deepseek-v4-flash-vision-exp');
+    expect(vision.thinking).toBe(false);
+  });
+
+  it('infers thinking capability from generic reasoning model names', () => {
+    expect(registry.resolveCapability('openai', 'deepseek-r1-distill-qwen-7b').thinking).toBe(true);
+    expect(registry.resolveCapability('openai', 'kimi-k3').thinking).toBe(true);
+    expect(registry.resolveCapability('openai', 'qwq-32b').thinking).toBe(true);
+    const thinking = registry.resolveCapability('openai', 'deepseek-r1');
+    expect(thinking.image_in).toBe(false);
+  });
+
+  it('keeps unknown models unknown when no name hint matches', () => {
+    expect(isUnknownCapability(registry.resolveCapability('openai', 'mystery-model'))).toBe(true);
+    expect(isUnknownCapability(registry.resolveCapability('openai', 'deepseek-v4-flash'))).toBe(true);
+  });
 });
 
 describe('explainCapability', () => {

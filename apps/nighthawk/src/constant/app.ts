@@ -112,7 +112,22 @@ export function nighthawkCdnBinariesBase(): string {
 // The marketplace env override name lives in the shared agent-core-v2 plugin
 // domain (kap-server consumes it from there). Deep-path import: this module is
 // evaluated on every CLI invocation, so it must not pull in the engine root.
-export { NIGHTHAWK_PLUGIN_MARKETPLACE_URL_ENV } from '@nighthawk/agent-core-v2/app/plugin/marketplace';
+export {
+  NIGHTHAWK_PLUGIN_MARKETPLACE_URL_ENV,
+  PLUGIN_MARKETPLACE_TIERS,
+  computeUpdateStatus,
+  parsePluginMarketplace,
+  readPluginMarketplace,
+  withBuiltInEntries,
+  withLatestVersions,
+} from '@nighthawk/nighthawk-sdk';
+export type {
+  MarketplaceLocation,
+  MarketplaceUpdateStatus,
+  PluginMarketplace,
+  PluginMarketplaceEntry,
+  PluginMarketplaceTier,
+} from '@nighthawk/nighthawk-sdk';
 // The CLI-side default catalog derives from the current region profile; the
 // env override above takes priority at the call site. It points at the
 // generated catalog committed to the repository (zipped sources).

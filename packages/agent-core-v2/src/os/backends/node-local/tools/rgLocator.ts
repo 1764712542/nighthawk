@@ -64,8 +64,6 @@ export function getShareBinRgPath(): string {
   return join(getShareDir(), 'bin', rgBinaryName());
 }
 
-// Ripgrep archives come straight from the official upstream releases; the
-// pinned SHA-256 table above guarantees integrity regardless of host.
 function rgBaseUrl(): string {
   return `https://github.com/BurntSushi/ripgrep/releases/download/${RG_VERSION}`;
 }

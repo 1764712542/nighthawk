@@ -840,7 +840,7 @@ describe('AgentSwarmTool', () => {
           prompt_template: 'Review {{item}}',
           items: ['src/only.ts'],
         },
-        output: 'AgentSwarm requires at least 2 items unless resume_agent_ids is provided.',
+        output: 'AgentSwarm requires at least 2 items, a prompt, or resume_agent_ids.',
       },
       {
         input: {
@@ -878,6 +878,91 @@ describe('AgentSwarmTool', () => {
       expect(result.isError).toBe(true);
       expect(host.swarmService.run).not.toHaveBeenCalled();
     }
+  });
+
+  it('launches exactly one subagent from a bare prompt', async () => {
+    const host = mockSwarmHost({
+      run: vi.fn().mockResolvedValue([
+        {
+          task: {
+            kind: 'spawn',
+            data: { kind: 'spawn', index: 1, prompt: 'Review src/a.ts' },
+            profileName: 'coder',
+            parentToolCallId: 'call_swarm',
+            prompt: 'Review src/a.ts',
+            description: 'Review one file #1 (coder)',
+            runInBackground: false,
+          },
+          agentId: 'agent-coder-1',
+          status: 'completed',
+          result: 'coder result',
+        },
+      ]),
+    });
+    const tool = new AgentSwarmTool(host.swarmService, makeAgentScopeContext({ agentId: host.callerAgentId, agentScope: '' }), mockSwarmMode(), stubConfig(), stubFlag(true), realSubagents(stubSwarmCatalog(), stubConfig(), stubFlag(true), stubCallerProfile()), stubCallerProfile());
+    const input = {
+      description: 'Review one file',
+      prompt: 'Review src/a.ts',
+    };
+
+    expect(AgentSwarmToolInputSchema.safeParse(input).success).toBe(true);
+
+    const result = await executeTool(tool, context(input));
+
+    expect(host.swarmService.run).toHaveBeenCalledWith(expect.objectContaining({ tasks: [
+      {
+        kind: 'spawn',
+        data: { kind: 'spawn', index: 1, prompt: 'Review src/a.ts' },
+        profileName: 'coder',
+        parentToolCallId: 'call_swarm',
+        prompt: 'Review src/a.ts',
+        description: 'Review one file #1 (coder)',
+        swarmIndex: 1,
+        swarmItem: undefined,
+        runInBackground: false,
+        signal,
+        timeout: DEFAULT_SWARM_TIMEOUT_MS,
+        plan: { profileName: 'coder', model: 'mock-model', thinking: 'off', fork: false },
+      },
+    ] }));
+    expect(result.output).toBe(
+      [
+        '<agent_swarm_result>',
+        '<summary>completed: 1</summary>',
+        '<subagent agent_id="agent-coder-1" outcome="completed">coder result</subagent>',
+        '</agent_swarm_result>',
+      ].join('\n'),
+    );
+    expect(result.isError).toBeUndefined();
+  });
+
+  it('uses prompt as the template when prompt_template is omitted', async () => {
+    const host = mockSwarmHost({
+      run: vi.fn(
+        async <T>({ tasks }: { tasks: readonly SessionSwarmTask<T>[] }) =>
+          tasks.map((task, index) => ({
+            task,
+            agentId: `agent-${String(index + 1)}`,
+            status: 'completed' as const,
+            result: `result ${String(index + 1)}`,
+          })),
+      ),
+    });
+    const tool = new AgentSwarmTool(host.swarmService, makeAgentScopeContext({ agentId: host.callerAgentId, agentScope: '' }), mockSwarmMode(), stubConfig(), stubFlag(true), realSubagents(stubSwarmCatalog(), stubConfig(), stubFlag(true), stubCallerProfile()), stubCallerProfile());
+    const input = {
+      description: 'Review files',
+      prompt: 'Review {{item}}',
+      items: ['src/a.ts', 'src/b.ts'],
+    };
+
+    const result = await executeTool(tool, context(input));
+
+    expect(result.isError).toBeUndefined();
+    const tasks = (host.swarmService.run as Mock).mock.calls[0]![0].tasks;
+    expect(tasks.map((task: { prompt: string }) => task.prompt)).toEqual([
+      'Review src/a.ts',
+      'Review src/b.ts',
+    ]);
   });
 
   it('resumes mapped agents before spawning item subagents', async () => {

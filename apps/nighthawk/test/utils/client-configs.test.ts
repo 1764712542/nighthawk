@@ -32,8 +32,13 @@ function jsonResponse(body: unknown, status = 200): Response {
   });
 }
 
+beforeEach(() => {
+  vi.stubEnv('NIGHTHAWK_BASE_URL', 'https://api.example.test');
+});
+
 afterEach(() => {
   resetClientConfigCache();
+  vi.unstubAllEnvs();
 });
 
 describe('fetchClientConfig', () => {
@@ -367,7 +372,38 @@ describe('region awareness', () => {
     refreshNighthawkRegion();
   });
 
-  it('fetches from the active region profile and partitions the cache by region', async () => {
+  it('does not fetch or serve cached entries without an explicit NIGHTHAWK_BASE_URL', async () => {
+    vi.stubEnv('NIGHTHAWK_BASE_URL', undefined);
+    const fetchImpl = vi.fn(async () => jsonResponse(ENVELOPE));
+
+    await expect(
+      getClientConfig('estimated_cache_duration', configSchema, {
+        fetchImpl: fetchImpl as typeof fetch,
+        cacheFile: null,
+      }),
+    ).resolves.toBeUndefined();
+    expect(fetchImpl).not.toHaveBeenCalled();
+
+    // A fresh disk entry fetched earlier must not surface either — a stale
+    // entry persisted from a different base never shows without the opt-in.
+    const cacheDir = await mkdtemp(join(tmpdir(), 'nighthawk-client-configs-'));
+    const cacheFile = join(cacheDir, 'global:client_banner.json');
+    await writeFile(
+      cacheFile,
+      JSON.stringify({ version: 1, fetchedAt: Date.now(), config: { banner_enabled: true } }),
+      'utf-8',
+    );
+    const bannerSchema = z.looseObject({});
+    await expect(
+      getClientConfig('client_banner', bannerSchema, {
+        fetchImpl: fetchImpl as typeof fetch,
+        cacheFile,
+      }),
+    ).resolves.toBeUndefined();
+    await rm(cacheDir, { recursive: true, force: true });
+  });
+
+  it('partitions the cache by region while the base URL is configured', async () => {
     const fetchImpl = vi.fn(async () => jsonResponse(ENVELOPE));
 
     const data = await getClientConfig('estimated_cache_duration', configSchema, {
@@ -377,7 +413,7 @@ describe('region awareness', () => {
 
     expect(data).toEqual(CONFIG);
     expect(fetchImpl).toHaveBeenCalledWith(
-      expect.stringContaining('https://api.kimi.ai/coding/v1/client_configs'),
+      expect.stringContaining('https://api.example.test/client_configs'),
       expect.anything(),
     );
     expect(peekClientConfig('estimated_cache_duration', configSchema)).toEqual(CONFIG);

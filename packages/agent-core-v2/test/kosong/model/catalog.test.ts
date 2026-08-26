@@ -1026,7 +1026,13 @@ describe('ModelCatalog enumeration', () => {
           capabilities: ['thinking'],
         },
         { provider: 'nighthawk', model: 'turbo', display_name: 'NightHawk Turbo', max_context_size: 32768 },
-        { provider: 'openai', model: 'gpt4o', display_name: 'gpt-4o', max_context_size: 128000 },
+        {
+          provider: 'openai',
+          model: 'gpt4o',
+          display_name: 'gpt-4o',
+          max_context_size: 128000,
+          capabilities: ['image_in', 'tool_use'],
+        },
       ]);
     } finally {
       host.dispose();
@@ -1065,7 +1071,7 @@ describe('ModelCatalog enumeration', () => {
     try {
       const opus = (await catalog.listModels()).find((model) => model.model === 'opus');
       expect(opus).toMatchObject({
-        capabilities: ['thinking'],
+        capabilities: ['image_in', 'thinking', 'tool_use'],
         support_efforts: ['low', 'medium', 'high', 'max'],
         default_effort: 'high',
       });

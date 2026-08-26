@@ -19,7 +19,7 @@ import {
   type MarketplaceLocation,
   type PluginMarketplace,
   type PluginMarketplaceEntry,
-} from '@nighthawk/agent-core-v2/app/plugin/marketplace';
+} from '@nighthawk/nighthawk-sdk';
 
 import {
   NIGHTHAWK_PLUGIN_MARKETPLACE_URL_ENV,
@@ -33,7 +33,7 @@ export {
   type PluginMarketplaceEntry,
   type PluginMarketplaceTier,
   type MarketplaceUpdateStatus,
-} from '@nighthawk/agent-core-v2/app/plugin/marketplace';
+} from '@nighthawk/nighthawk-sdk';
 
 export interface LoadPluginMarketplaceOptions {
   readonly workDir: string;

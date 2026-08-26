@@ -1115,7 +1115,11 @@ describe('NighthawkTUI startup', () => {
     await expect(driver.init()).resolves.toBe(false);
 
     await (driver as unknown as { showSessionPicker(): Promise<void> }).showSessionPicker();
-    expect(listSessionsPage).toHaveBeenCalledWith({ workDir: '/tmp/proj-a', limit: 50 });
+    expect(listSessionsPage).toHaveBeenCalledWith({
+      workDir: '/tmp/proj-a',
+      limit: 50,
+      includeArchived: true,
+    });
     expect(driver.state.sessions).toHaveLength(50);
 
     const picker = driver.state.editorContainer.children[0] as { handleInput(data: string): void };
@@ -1130,6 +1134,7 @@ describe('NighthawkTUI startup', () => {
       workDir: '/tmp/proj-a',
       limit: 50,
       before: 'ses-page1-49',
+      includeArchived: true,
     });
     expect(driver.state.sessions.map((session) => session.id)).toContain('ses-page2-0');
   });
@@ -1153,6 +1158,7 @@ describe('NighthawkTUI startup', () => {
       workDir: '/tmp/proj-a',
       limit: 50,
       before: 'ses-page1-49',
+      includeArchived: true,
     });
   });
 
@@ -1193,6 +1199,7 @@ describe('NighthawkTUI startup', () => {
         workDir: '/tmp/proj-a',
         limit: 50,
         before: 'ses-page1-49',
+        includeArchived: true,
       });
     });
 
@@ -1210,6 +1217,7 @@ describe('NighthawkTUI startup', () => {
       workDir: '/tmp/proj-a',
       limit: 50,
       before: 'ses-page2-0',
+      includeArchived: true,
     });
   });
 

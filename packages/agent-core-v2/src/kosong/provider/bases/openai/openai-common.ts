@@ -260,3 +260,47 @@ export function isOpenAIReasoningModel(normalizedModelName: string): boolean {
 export function hasModelPrefix(modelName: string, prefixes: readonly string[]): boolean {
   return prefixes.some((prefix) => modelName.startsWith(prefix));
 }
+
+const VISION_MODEL_NAME_HINTS = [
+  'vision',
+  '-vl',
+  'vl-',
+  '-4v',
+  '4v-',
+  'llava',
+  'multimodal',
+  'image-',
+  '-image',
+] as const;
+
+const THINKING_MODEL_NAME_HINTS = [
+  'deepseek-r',
+  '-reasoner',
+  '-thinking',
+  'thinking-',
+  'qwq',
+  'kimi-k',
+  '-think',
+] as const;
+
+export function hasVisionModelNameHint(normalizedModelName: string): boolean {
+  return VISION_MODEL_NAME_HINTS.some((hint) => normalizedModelName.includes(hint));
+}
+
+export function hasThinkingModelNameHint(normalizedModelName: string): boolean {
+  return THINKING_MODEL_NAME_HINTS.some((hint) => normalizedModelName.includes(hint));
+}
+
+export function getGenericModelCapability(normalizedModelName: string) {
+  const vision = hasVisionModelNameHint(normalizedModelName);
+  const thinking = hasThinkingModelNameHint(normalizedModelName);
+  if (!vision && !thinking) return undefined;
+  return {
+    image_in: vision,
+    video_in: false,
+    audio_in: false,
+    thinking,
+    tool_use: false,
+    max_context_tokens: 0,
+  };
+}

@@ -35,6 +35,7 @@ import {
   hasModelPrefix,
   isFunctionToolCall,
   isOpenAIReasoningModel,
+  getGenericModelCapability,
   normalizeOpenAIFinishReason,
   OPENAI_REASONING_CAPABILITY,
   OPENAI_TEXT_TOOL_CAPABILITY,
@@ -760,5 +761,5 @@ export function getOpenAILegacyModelCapability(modelName: string) {
   if (normalized.startsWith('gpt-3.5-turbo')) {
     return OPENAI_TEXT_TOOL_CAPABILITY;
   }
-  return undefined;
+  return getGenericModelCapability(normalized);
 }

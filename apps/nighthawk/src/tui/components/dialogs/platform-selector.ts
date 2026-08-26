@@ -1,7 +1,5 @@
 import { OPEN_PLATFORMS, type OpenPlatformDefinition } from '@nighthawk/nighthawk-oauth';
 
-import { NIGHTHAWK_GLOBAL_PLATFORM_VALUE } from '#/utils/region';
-
 import { ChoicePickerComponent, type ChoiceOption } from './choice-picker';
 
 /**
@@ -69,16 +67,6 @@ const CUSTOM_OPTION: ChoiceOption = {
   description: '自定义 base URL + API key',
 };
 
-const NIGHTHAWK_MAINLAND_CN_OPTION: ChoiceOption = {
-  value: 'nighthawk',
-  label: 'NightHawk OAuth · mainland',
-};
-
-const NIGHTHAWK_GLOBAL_OPTION: ChoiceOption = {
-  value: NIGHTHAWK_GLOBAL_PLATFORM_VALUE,
-  label: 'NightHawk OAuth · global',
-};
-
 function platformOptions(): readonly ChoiceOption[] {
   return [
     ...PRESET_PROVIDERS.map((provider) => ({
@@ -88,8 +76,6 @@ function platformOptions(): readonly ChoiceOption[] {
     ...OPEN_PLATFORMS.map((platform) => ({ value: platform.id, label: platform.name })),
     CATALOG_OPTION,
     CUSTOM_OPTION,
-    NIGHTHAWK_MAINLAND_CN_OPTION,
-    NIGHTHAWK_GLOBAL_OPTION,
   ];
 }
 

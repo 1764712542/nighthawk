@@ -1,7 +1,7 @@
 /**
  * SecurityScanTool — OWASP/CWE pattern-based vulnerability scan.
  *
- * Runs the built-in 200+ rule engine (injection, XSS, crypto, auth,
+ * Runs the built-in 116-rule engine (injection, XSS, crypto, auth,
  * deserialization, path traversal, SSRF, language-specific packs) over the
  * workspace or a subpath through Kaos, so it works on local, SSH, and
  * container environments alike.

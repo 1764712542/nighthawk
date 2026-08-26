@@ -71,98 +71,17 @@ describe('nighthawk acp', () => {
     expect(exitSpy).toHaveBeenCalledWith(0);
   });
 
-  it('forwards NIGHTHAWK_HOME to terminalAuthEnv when set', async () => {
-    const previous = process.env['NIGHTHAWK_HOME'];
-    process.env['NIGHTHAWK_HOME'] = '/tmp/nighthawk-debug';
-    try {
-      const program = new Command('nighthawk').exitOverride();
-      registerAcpCommand(program);
-
-      await expect(program.parseAsync(['node', 'nighthawk', 'acp'])).rejects.toThrow(ExitCalled);
-
-      const optsArg = vi.mocked(runAcpServer).mock.calls[0]?.[1];
-      expect(optsArg).toEqual(
-        expect.objectContaining({
-          terminalAuthEnv: { NIGHTHAWK_HOME: '/tmp/nighthawk-debug' },
-        }),
-      );
-    } finally {
-      if (previous === undefined) {
-        delete process.env['NIGHTHAWK_HOME'];
-      } else {
-        process.env['NIGHTHAWK_HOME'] = previous;
-      }
-    }
-  });
-
-  it('omits terminalAuthEnv when NIGHTHAWK_HOME is unset', async () => {
-    const previous = process.env['NIGHTHAWK_HOME'];
-    delete process.env['NIGHTHAWK_HOME'];
-    try {
-      const program = new Command('nighthawk').exitOverride();
-      registerAcpCommand(program);
-
-      await expect(program.parseAsync(['node', 'nighthawk', 'acp'])).rejects.toThrow(ExitCalled);
-
-      const optsArg = vi.mocked(runAcpServer).mock.calls[0]?.[1] as {
-        terminalAuthEnv?: unknown;
-      };
-      expect(optsArg.terminalAuthEnv).toBeUndefined();
-    } finally {
-      if (previous !== undefined) {
-        process.env['NIGHTHAWK_HOME'] = previous;
-      }
-    }
-  });
-
-  it('forwards process.argv[1] as terminalAuthLegacyCommand', async () => {
+  it('passes no terminal-auth options to runAcpServer', async () => {
     const program = new Command('nighthawk').exitOverride();
     registerAcpCommand(program);
 
     await expect(program.parseAsync(['node', 'nighthawk', 'acp'])).rejects.toThrow(ExitCalled);
 
     const optsArg = vi.mocked(runAcpServer).mock.calls[0]?.[1] as {
-      terminalAuthLegacyCommand?: string;
+      terminalAuthEnv?: unknown;
+      terminalAuthLegacyCommand?: unknown;
     };
-    // process.argv[1] points at the test runner entry — non-empty
-    // absolute-ish path, exactly what we want forwarded.
-    expect(typeof optsArg.terminalAuthLegacyCommand).toBe('string');
-    expect((optsArg.terminalAuthLegacyCommand ?? '').length).toBeGreaterThan(0);
-    expect(optsArg.terminalAuthLegacyCommand).toBe(process.argv[1]);
-  });
-
-  it('exits without starting the ACP server when --login is passed', async () => {
-    // Stub the harness module so runLoginFlow doesn't hit a real OAuth
-    // endpoint: harness.auth.login resolves immediately and triggers exit 0.
-    // `importOriginal` preserves the other named exports (`ErrorCodes`, etc.)
-    // that constant/app.ts depends on at module load.
-    const loginStub = vi.fn(async () => ({ providerName: 'nighthawk' }));
-    vi.doMock(import('@nighthawk/nighthawk-sdk'), async (importOriginal) => {
-      const actual = await importOriginal();
-      return {
-        ...actual,
-        createNighthawkHarness: () =>
-          ({
-            auth: { login: loginStub },
-          }) as unknown as ReturnType<typeof actual.createNighthawkHarness>,
-      };
-    });
-    vi.resetModules();
-    const { registerAcpCommand: freshRegister } = await import('#/cli/sub/acp');
-    try {
-      const program = new Command('nighthawk').exitOverride();
-      freshRegister(program);
-
-      await expect(program.parseAsync(['node', 'nighthawk', 'acp', '--login'])).rejects.toThrow(
-        ExitCalled,
-      );
-
-      expect(loginStub).toHaveBeenCalledTimes(1);
-      expect(runAcpServer).not.toHaveBeenCalled();
-      expect(exitSpy).toHaveBeenCalledWith(0);
-    } finally {
-      vi.doUnmock('@nighthawk/nighthawk-sdk');
-      vi.resetModules();
-    }
+    expect(optsArg?.terminalAuthEnv).toBeUndefined();
+    expect(optsArg?.terminalAuthLegacyCommand).toBeUndefined();
   });
 });

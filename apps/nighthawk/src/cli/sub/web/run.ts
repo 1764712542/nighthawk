@@ -270,6 +270,20 @@ async function runServerInProcess(
   // logger, close }`, so adapt it to the `RoutedServer` surface the rest of
   // this runner consumes.
   const logger = createServerLogger({ level: options.logLevel });
+  // When this process takes over from the TUI (`/web`), failures in the state
+  // it replaced — a torn-down session's streaming subscriptions, MCP
+  // heartbeats, in-flight LLM requests — can still surface as unhandled
+  // rejections or uncaught exceptions. Node's default is to crash, which
+  // would kill the freshly started server. Log and keep serving instead.
+  process.on('unhandledRejection', (reason: unknown) => {
+    const err = reason instanceof Error ? reason : new Error(String(reason));
+    logger.warn({ err }, 'unhandled rejection in server process');
+    process.stderr.write(`nighthawk: background task failed: ${err.message}\n`);
+  });
+  process.on('uncaughtException', (error: Error) => {
+    logger.error({ err: error }, 'uncaught exception in server process');
+    process.stderr.write(`nighthawk: unexpected error: ${error.message}\n`);
+  });
   const webAssetsDir = serverWebAssetsDir();
   if (webAssetsDir === undefined) {
     logger.info(

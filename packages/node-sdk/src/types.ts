@@ -271,6 +271,11 @@ export interface ListSessionsOptions {
   readonly limit?: number;
   /** Keyset cursor: return the page strictly older than this session id. */
   readonly before?: string;
+  /**
+   * Include archived sessions in the listing. Only honored by the v2 engine;
+   * the v1 store has no archive concept and always lists everything.
+   */
+  readonly includeArchived?: boolean;
 }
 
 export interface SessionSummaryPage {

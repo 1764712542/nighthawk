@@ -11,6 +11,8 @@ import { currentTheme } from '#/tui/theme';
 
 export type SpinnerStyle = 'moon' | 'braille';
 
+const FLOW_COLOR_TOKENS = ['primary', 'success', 'warning', 'accent', 'error'] as const;
+
 export class MoonLoader extends Text {
   private currentFrame = 0;
   private intervalId: ReturnType<typeof setInterval> | null = null;
@@ -20,6 +22,7 @@ export class MoonLoader extends Text {
   private colorFn?: (s: string) => string;
   private label: string;
   private displayText = '';
+  private flowColors = false;
   // Inline text used when the spinner is embedded into another line (e.g. the
   // agent-swarm progress status line). It intentionally excludes the tip: the
   // tip is only rendered when the loader sits on its own row in the activity
@@ -73,6 +76,12 @@ export class MoonLoader extends Text {
     this.updateDisplay();
   }
 
+  /** When enabled, the frame and label cycle through the palette each tick. */
+  setFlowColors(enabled: boolean): void {
+    this.flowColors = enabled;
+    this.updateDisplay();
+  }
+
   setTip(tip: string): void {
     this.tip = tip;
     this.updateDisplay();
@@ -88,14 +97,26 @@ export class MoonLoader extends Text {
     return this.inlineText;
   }
 
+  private flowPaint(text: string, offset = 0): string {
+    const token = FLOW_COLOR_TOKENS[(this.currentFrame + offset) % FLOW_COLOR_TOKENS.length]!;
+    return currentTheme.fg(token, text);
+  }
+
   private updateDisplay(): void {
     const frame = this.frames[this.currentFrame]!;
-    const coloredFrame = this.colorFn ? this.colorFn(frame) : frame;
-    const baseText = this.label ? `${coloredFrame} ${this.label}` : coloredFrame;
+    const coloredFrame = this.flowColors
+      ? this.flowPaint(frame)
+      : this.colorFn
+        ? this.colorFn(frame)
+        : frame;
+    const shownLabel = this.flowColors && this.label ? this.flowPaint(this.label) : this.label;
+    const baseText = shownLabel ? `${coloredFrame} ${shownLabel}` : coloredFrame;
     this.inlineText = baseText;
     let text = baseText;
     if (this.tip) {
-      const withTip = baseText + currentTheme.fg('textDim', this.tip);
+      const withTip =
+        baseText +
+        (this.flowColors ? this.flowPaint(this.tip, 1) : currentTheme.fg('textDim', this.tip));
       if (this.availableWidth === 0 || visibleWidth(withTip) <= this.availableWidth) {
         text = withTip;
       }

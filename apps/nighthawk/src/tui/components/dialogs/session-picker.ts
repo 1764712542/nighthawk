@@ -22,6 +22,7 @@ export interface SessionRow {
   readonly work_dir: string;
   readonly updated_at: number;
   readonly metadata?: Readonly<Record<string, unknown>> | undefined;
+  readonly archived?: boolean;
 }
 
 const ELLIPSIS = '…';
@@ -380,11 +381,12 @@ export class SessionPickerComponent extends Container implements Focusable {
 
     const time = formatRelativeTime(session.updated_at);
     const badge = isCurrent ? CURRENT_MARK : '';
+    const archivedBadge = session.archived ? '[archived]' : '';
     const rawTitle = (session.title ?? session.id).trim() || session.id;
     const titleSource = formatSessionLabel({ title: rawTitle, metadata: session.metadata });
 
     // Inline trailing parts after the title: "<title>  <time>  ← current".
-    const trailingParts = [time, badge].filter((p) => p.length > 0);
+    const trailingParts = [time, archivedBadge, badge].filter((p) => p.length > 0);
     const trailingText = trailingParts.length > 0 ? '  ' + trailingParts.join('  ') : '';
     const trailingWidth = visibleWidth(trailingText);
     const headerPrefixWidth = visibleWidth(pointer) + 1; // pointer + space
@@ -394,6 +396,9 @@ export class SessionPickerComponent extends Container implements Focusable {
     let header = currentTheme.fg(isSelected ? 'primary' : 'textDim', pointer + ' ');
     header += titleStyle(shownTitle);
     if (time.length > 0) header += '  ' + currentTheme.fg('textDim', time);
+    if (archivedBadge.length > 0) {
+      header += '  ' + currentTheme.fg('textMuted', archivedBadge);
+    }
     if (badge.length > 0) header += '  ' + currentTheme.fg('success', badge);
     const card: string[] = [header];
 

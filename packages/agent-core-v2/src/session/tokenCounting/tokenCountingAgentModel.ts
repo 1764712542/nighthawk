@@ -104,11 +104,13 @@ export class TokenCountingAgentModel extends AgentModel<TokenCountingState> {
     usage: TokenUsage,
   ): Promise<void> {
     const context = this.context();
-    if (!matchesContext(input, context)) return Promise.resolve();
+    if (!matchesContext(input, context)) {
+      return Promise.resolve();
+    }
     return this.emit(
       new TokenCountingMeasured({
         agentId: this.agent.agentId,
-        length: context.length,
+        length: input.length,
         tokens: tokenUsageTotal(usage),
       }),
     );
@@ -193,7 +195,7 @@ export const TokenCountingAgentModelDefinition = defineAgentModel({
 });
 
 function matchesContext(input: readonly Message[], context: readonly ContextMessage[]): boolean {
-  if (input.length !== context.length) return false;
+  if (input.length > context.length) return false;
   for (let index = 0; index < input.length; index += 1) {
     if (input[index] !== context[index]) return false;
   }

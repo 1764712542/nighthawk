@@ -1,4 +1,19 @@
 /**
+ * ARCHITECTURE NOTE:
+ * This file is an intentional exception to the "apps/nighthawk must use SDK" rule.
+ * The print mode runner needs direct access to the engine's DI services for:
+ * 1. Bootstrap and session management
+ * 2. Agent lifecycle control
+ * 3. Turn execution and event handling
+ * 4. Background task management
+ *
+ * These capabilities are not exposed through the SDK because they are
+ * engine-internal operations that should not be part of the public API.
+ * The SDK provides higher-level abstractions (NighthawkHarness, Session)
+ * that wrap these operations for typical use cases.
+ */
+
+/**
  * Native v2 `nighthawk -p` (print mode) runner.
  *
  * Unlike the v1 path (and the former `V2PromptHarness` / `V2Session` shim), this

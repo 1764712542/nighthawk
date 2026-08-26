@@ -43,6 +43,10 @@ Main directories:
 - `theme` is the single source of truth for colors and styles. Components must not bypass the theme system and use chalk named colors directly.
 - `utils` holds utility functions with no UI-state dependency. Logic that needs `TUIState` or a component instance must not live under app-level `src/utils`.
 - `apps/nighthawk` may only use core capabilities through `@nighthawk/nighthawk-sdk`. Do not import `@nighthawk/agent-core` directly in app code.
+- Imports from `@nighthawk/agent-core-v2` are allowed only when:
+  1. The capability is not exposed through the SDK, AND
+  2. The import is a deep-path import (not the root module), AND
+  3. The file has an architecture comment explaining why the SDK cannot be used.
 
 ## TUI Coding Conventions
 

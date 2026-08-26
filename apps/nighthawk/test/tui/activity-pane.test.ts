@@ -179,7 +179,11 @@ describe('updateActivityPane terminal progress', () => {
       expect(setProgress).toHaveBeenLastCalledWith(true);
       expect(state.activitySpinner).not.toBeNull();
       expect(state.activityContainer.children).toHaveLength(0);
-      expect(strip(progress.render(80).join('\n'))).toContain('◐ Working...');
+      // The spinner's inline text (frame + randomly picked working wit) is
+      // embedded in the swarm progress row ahead of the status text.
+      const rendered = strip(progress.render(80).join('\n'));
+      expect(rendered).toContain('Working...');
+      expect(rendered).toMatch(/[◇◈◆]/);
 
       state.activitySpinner?.instance.stop();
       driver.sessionEventHandler.clearAgentSwarmProgress();

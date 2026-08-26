@@ -4,22 +4,16 @@ import {
   filterModelsByPrefix,
   getOpenPlatformById,
   OpenPlatformApiError,
-  type NighthawkRegion,
   type ManagedNighthawkModelInfo,
   type ManagedNighthawkConfigShape,
   type OpenPlatformDefinition,
 } from '@nighthawk/nighthawk-oauth';
-import { log } from '@nighthawk/nighthawk-sdk';
 
 import type { ChoiceOption } from '../components/dialogs/choice-picker';
 import { PRESET_PROVIDERS } from '../components/dialogs/platform-selector';
 import { DEFAULT_OAUTH_PROVIDER_NAME, PRODUCT_NAME } from '../constant/nighthawk-tui';
 import { formatErrorMessage } from '../utils/event-payload';
-import {
-  NIGHTHAWK_GLOBAL_PLATFORM_VALUE,
-  refreshNighthawkRegion,
-} from '#/utils/region';
-import type { LoginProgressSpinnerHandle } from '../types';
+import { refreshNighthawkRegion } from '#/utils/region';
 import {
   promptApiKey,
   promptBaseUrl,
@@ -37,12 +31,6 @@ import type { SlashCommandHost } from './dispatch';
 export async function handleLoginCommand(host: SlashCommandHost): Promise<void> {
   const platformId = await promptPlatformSelection(host);
   if (platformId === undefined) return;
-
-  if (platformId === 'nighthawk' || platformId === NIGHTHAWK_GLOBAL_PLATFORM_VALUE) {
-    const region: NighthawkRegion = platformId === NIGHTHAWK_GLOBAL_PLATFORM_VALUE ? 'global' : 'mainland-cn';
-    await handleNighthawkOAuthLogin(host, region);
-    return;
-  }
 
   if (platformId === '__catalog__') {
     const { handleCatalogProviderAdd } = await import('./provider');
@@ -113,73 +101,6 @@ async function customProviderIdFor(
     if (clash === undefined || clash.baseUrl === baseUrl) return candidate;
   }
   return `${slug}-${Date.now().toString(36)}`.slice(0, 24);
-}
-
-async function handleNighthawkOAuthLogin(
-  host: SlashCommandHost,
-  region: NighthawkRegion,
-): Promise<void> {
-  const status = await host.harness.auth.status(DEFAULT_OAUTH_PROVIDER_NAME);
-  const alreadyLoggedIn = status.providers.some(
-    (provider) => provider.providerName === DEFAULT_OAUTH_PROVIDER_NAME && provider.hasToken,
-  );
-
-  let spinner: LoginProgressSpinnerHandle | undefined;
-  const controller = new AbortController();
-  const cancelLogin = (): void => {
-    controller.abort();
-  };
-  host.cancelInFlight = cancelLogin;
-  try {
-    // The facade maps region → profile hosts (env overrides keep priority);
-    // 'mainland-cn' is passed explicitly too so switching back overrides a
-    // persisted global login.
-    await host.harness.auth.login(DEFAULT_OAUTH_PROVIDER_NAME, {
-      signal: controller.signal,
-      region,
-      onDeviceCode: (data) => {
-        spinner = host.showLoginAuthorizationPrompt(data);
-      },
-    });
-    refreshNighthawkRegion();
-    spinner?.stop({ ok: true, label: 'Logged in.' });
-    spinner = undefined;
-    try {
-      await host.authFlow.refreshConfigAfterLogin();
-    } catch (refreshError) {
-      const message = formatErrorMessage(refreshError);
-      host.showError(`Authentication successful, but failed to refresh config: ${message}`);
-      return;
-    }
-    host.track('login', {
-      provider: DEFAULT_OAUTH_PROVIDER_NAME,
-      method: 'oauth',
-      already_logged_in: alreadyLoggedIn,
-    });
-    if (alreadyLoggedIn) {
-      host.showStatus('Already logged in. Model configuration refreshed.', 'success');
-    }
-  } catch (error) {
-    const cancelled = controller.signal.aborted;
-    spinner?.stop({
-      ok: false,
-      label: cancelled ? 'Login cancelled.' : 'Login failed.',
-    });
-    spinner = undefined;
-    if (cancelled) return;
-    log.warn('login failed', {
-      providerName: DEFAULT_OAUTH_PROVIDER_NAME,
-      alreadyLoggedIn,
-      sessionId: host.session?.id,
-      error,
-    });
-    const message = formatErrorMessage(error);
-    host.showError(`Login failed: ${message}`);
-  } finally {
-    if (host.cancelInFlight === cancelLogin) {
-      host.cancelInFlight = undefined;
-    }
-  }
 }
 
 async function handleOpenPlatformLogin(

@@ -48,5 +48,5 @@ export const SUBAGENT_ARG_STRING_MAX_CHARS = 16 * 1024;
 export const BRAILLE_SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
 export const BRAILLE_SPINNER_INTERVAL_MS = 80;
 
-export const MOON_SPINNER_FRAMES = ['◐', '◓', '◑', '◒'];
+export const MOON_SPINNER_FRAMES = ['◇', '◈', '◆', '◈'];
 export const MOON_SPINNER_INTERVAL_MS = 160;

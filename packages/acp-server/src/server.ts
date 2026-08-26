@@ -68,7 +68,6 @@ import { RPCError } from '@nighthawk/klient';
 
 import type { AcpClient } from './acp-client';
 import type { IAcpConnection } from './acp-fs';
-import { buildTerminalAuthMethod, TERMINAL_AUTH_METHOD } from './auth-methods';
 import { acpMcpServersToConfigRecord } from './convert';
 import { log } from './log';
 import { isAcpModeId } from './modes';
@@ -115,20 +114,6 @@ export interface AcpServerOptions {
    */
   readonly disableAuth?: boolean;
   /**
-   * Env vars to advertise in `authMethods[0].env` so the `nighthawk login`
-   * subprocess the client spawns (via terminal-auth) lands its token under the
-   * same data root the server uses (e.g. `{ NIGHTHAWK_HOME: '/tmp/...' }` for
-   * sandboxed test setups). Leave undefined in production so the advertised
-   * env stays empty.
-   */
-  readonly terminalAuthEnv?: Readonly<Record<string, string>>;
-  /**
-   * Absolute binary path advertised in `_meta['terminal-auth'].command` for
-   * clients that don't yet honor the first-class `type:'terminal'`. Defaults
-   * to undefined (the `_meta` fallback is omitted).
-   */
-  readonly terminalAuthLegacyCommand?: string;
-  /**
    * Resolve a session's media-originals dir for prompt-image compression.
    * This is a composition-root concern (it reads the live engine scope tree,
    * not the klient facade) — `start.ts` builds it from the bootstrapped App
@@ -145,8 +130,6 @@ export class AcpServer {
   private clientCapabilities: ClientCapabilities | undefined;
   private readonly agentInfo: Implementation | undefined;
   private readonly disableAuth: boolean;
-  private readonly terminalAuthEnv: Readonly<Record<string, string>> | undefined;
-  private readonly terminalAuthLegacyCommand: string | undefined;
   private readonly resolveOriginalsDir: ((sessionId: string) => string | undefined) | undefined;
   private readonly bindSessionRuntime: ((sessionId: string) => Promise<void>) | undefined;
   private readonly unbindSessionRuntime: ((sessionId: string) => Promise<void>) | undefined;
@@ -168,8 +151,6 @@ export class AcpServer {
   ) {
     this.agentInfo = opts.agentInfo;
     this.disableAuth = opts.disableAuth ?? false;
-    this.terminalAuthEnv = opts.terminalAuthEnv;
-    this.terminalAuthLegacyCommand = opts.terminalAuthLegacyCommand;
     this.resolveOriginalsDir = opts.resolveOriginalsDir;
     this.bindSessionRuntime = opts.bindSessionRuntime;
     this.unbindSessionRuntime = opts.unbindSessionRuntime;
@@ -227,14 +208,7 @@ export class AcpServer {
     return {
       protocolVersion: negotiated.protocolVersion,
       agentCapabilities,
-      authMethods: [
-        this.terminalAuthEnv !== undefined || this.terminalAuthLegacyCommand !== undefined
-          ? buildTerminalAuthMethod({
-              env: this.terminalAuthEnv,
-              legacyCommand: this.terminalAuthLegacyCommand,
-            })
-          : TERMINAL_AUTH_METHOD,
-      ],
+      authMethods: [],
       ...(this.agentInfo ? { agentInfo: this.agentInfo } : {}),
     };
   }

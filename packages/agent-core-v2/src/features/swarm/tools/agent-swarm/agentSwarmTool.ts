@@ -45,7 +45,7 @@ const AGENT_SWARM_PARAMETERS_NO_MODEL = stripSubagentModelParameter(AGENT_SWARM_
 interface AgentSwarmSpawnSpec {
   readonly kind: 'spawn';
   readonly index: number;
-  readonly item: string;
+  readonly item?: string;
   readonly prompt: string;
 }
 
@@ -109,7 +109,10 @@ export class AgentSwarmTool implements IAgentSwarmTool {
   }
 
   resolveExecution(args: AgentSwarmToolInput): ToolExecution {
-    const agentCount = (args.items?.length ?? 0) + Object.keys(args.resume_agent_ids ?? {}).length;
+    const agentCount =
+      (args.items?.length ?? 0) +
+      Object.keys(args.resume_agent_ids ?? {}).length +
+      promptSpawnCount(args);
     return {
       accesses: ToolAccesses.all(),
       description: `Launching agent swarm: ${args.description}`,
@@ -154,7 +157,7 @@ export class AgentSwarmTool implements IAgentSwarmTool {
       throw new Error2(ErrorCodes.VALIDATION_FAILED, FORK_WITH_RESUME_UNAVAILABLE);
     }
     let plan: SubagentSpawnPlan | undefined;
-    if ((args.items?.length ?? 0) > 0) {
+    if ((args.items?.length ?? 0) + promptSpawnCount(args) > 0) {
       if (fork) {
         const incompatible = forkIncompatibility(
           { subagent_type: args.subagent_type, model: args.model },
@@ -224,11 +227,12 @@ async function createAgentSwarmSpecs(
   const items = (args.items ?? []).map((item) => item.trim());
   const itemCount = items.length;
   const resumeCount = resumeEntries.length;
-  const totalCount = resumeCount + itemCount;
-  if (!hasMinimumAgentSwarmInputs(itemCount, resumeCount)) {
+  const promptSpawns = promptSpawnCount(args);
+  const totalCount = resumeCount + itemCount + promptSpawns;
+  if (!hasMinimumAgentSwarmInputs(itemCount, resumeCount, promptSpawns)) {
     throw new Error2(
       ErrorCodes.VALIDATION_FAILED,
-      'AgentSwarm requires at least 2 items unless resume_agent_ids is provided.',
+      'AgentSwarm requires at least 2 items, a prompt, or resume_agent_ids.',
     );
   }
   if (totalCount > MAX_AGENT_SWARM_SUBAGENTS) {
@@ -238,7 +242,9 @@ async function createAgentSwarmSpecs(
       { details: { total: totalCount, max: MAX_AGENT_SWARM_SUBAGENTS } },
     );
   }
-  const promptTemplate = normalizeOptionalString(args.prompt_template);
+  const promptTemplate =
+    normalizeOptionalString(args.prompt_template) ??
+    (itemCount > 0 ? normalizeOptionalString(args.prompt) : undefined);
   if (items.length > 0 && promptTemplate === undefined) {
     throw new Error2(
       ErrorCodes.VALIDATION_FAILED,
@@ -285,11 +291,38 @@ async function createAgentSwarmSpecs(
       });
     });
   }
+  if (promptSpawns > 0) {
+    const prompt = args.prompt!.trim();
+    const previousIndex = seenPrompts.get(prompt);
+    if (previousIndex !== undefined) {
+      throw new Error2(
+        ErrorCodes.VALIDATION_FAILED,
+        `Duplicate subagent prompt from prompt and item ${String(previousIndex)}. AgentSwarm requires distinct subagents.`,
+        { details: { previousIndex } },
+      );
+    }
+    specs.push({
+      kind: 'spawn',
+      index: specs.length + 1,
+      prompt,
+    });
+  }
   return specs;
 }
 
-function hasMinimumAgentSwarmInputs(itemCount: number, resumeCount: number): boolean {
-  return resumeCount > 0 || itemCount >= 2;
+function promptSpawnCount(args: AgentSwarmToolInput): number {
+  if (args.prompt === undefined) return 0;
+  if ((args.items?.length ?? 0) > 0) return 0;
+  if (Object.keys(args.resume_agent_ids ?? {}).length > 0) return 0;
+  return 1;
+}
+
+function hasMinimumAgentSwarmInputs(
+  itemCount: number,
+  resumeCount: number,
+  promptSpawns: number,
+): boolean {
+  return resumeCount > 0 || itemCount >= 2 || promptSpawns > 0;
 }
 
 function childDescription(swarmDescription: string, index: number, profileName: string): string {

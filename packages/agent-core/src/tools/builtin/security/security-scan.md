@@ -1,6 +1,6 @@
 Use this tool to run a security vulnerability scan over the codebase.
 
-It executes a built-in OWASP Top 10 / CWE rule engine with 200+ patterns covering: SQL injection, XSS, command injection, path traversal, SSRF, unsafe deserialization, cryptographic weaknesses, authentication/session flaws, XXE, plus language-specific packs for Node.js, Python, Java, Go, and PHP.
+It executes a built-in OWASP Top 10 / CWE rule engine with 116 patterns covering: SQL injection, XSS, command injection, path traversal, SSRF, unsafe deserialization, cryptographic weaknesses, authentication/session flaws, XXE, plus language-specific packs for Node.js, Python, Java, Go, and PHP.
 
 When to use:
 - The user asks for a security audit, vulnerability scan, or code review with a security focus

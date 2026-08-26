@@ -63,7 +63,7 @@ import { DeviceCodeBoxComponent } from './components/chrome/device-code-box';
 import { GutterContainer } from './components/chrome/gutter-container';
 import { MoonLoader, type SpinnerStyle } from './components/chrome/moon-loader';
 import { WelcomeComponent } from './components/chrome/welcome';
-import { pickRandomWorkingTip } from './components/chrome/working-tips';
+import { pickRandomWorkingWit } from './components/chrome/working-tips';
 import {
   ApprovalPanelComponent,
   type ApprovalPanelResponse,
@@ -173,6 +173,7 @@ import { REPLAY_FETCH_TURN_LIMIT } from './utils/message-replay';
 import { hasPatchChanges } from './utils/object-patch';
 import { beginScreenTakeover, endScreenTakeover, type ScreenTakeover } from './utils/screen-takeover';
 import { sessionRowsForPicker } from './utils/session-picker-rows';
+import { createEmptySessionStats } from './utils/session-stats';
 import { formatStepRetryDetail, formatStepRetryLabel } from './utils/step-retry';
 import { formatBashOutputForDisplay } from './utils/shell-output';
 import { thinkingEffortFromConfig } from './utils/thinking-config';
@@ -264,6 +265,7 @@ function createInitialAppState(input: NighthawkTUIStartupInput): AppState {
     contextUsage: 0,
     contextTokens: 0,
     maxContextTokens: 0,
+    sessionStats: createEmptySessionStats(),
     isCompacting: false,
     isReplaying: false,
     streamingPhase: 'idle',
@@ -2467,6 +2469,7 @@ export class NighthawkTUI {
       const page = await this.harness.listSessionsPage({
         workDir: scope === 'all' ? undefined : this.state.appState.workDir,
         limit: SESSION_LIST_PAGE_SIZE,
+        includeArchived: true,
       });
       this.state.sessionsNextCursor = page.nextCursor;
       this.state.sessions = sessionRowsForPicker(
@@ -2519,6 +2522,7 @@ export class NighthawkTUI {
       const page = await this.harness.listSessionsPage({
         workDir: this.state.sessionsScope === 'all' ? undefined : this.state.appState.workDir,
         limit: SESSION_LIST_PAGE_SIZE,
+        includeArchived: true,
         before: cursor,
       });
       if (requestToken !== this.sessionPickerScopeRequestToken) return false;
@@ -3287,7 +3291,7 @@ export class NighthawkTUI {
       const previousTip = this.currentLoadingTip?.tip;
       this.currentLoadingTip = {
         kind: tipKind,
-        tip: pickRandomWorkingTip(previousTip)?.text,
+        tip: pickRandomWorkingWit(previousTip)?.text,
       };
     }
     this.syncTerminalProgress(this.shouldShowTerminalProgress(effectiveMode));
@@ -3321,14 +3325,18 @@ export class NighthawkTUI {
         return;
       case 'waiting': {
         const stepRetry = this.state.appState.stepRetry;
-        const spinner = this.ensureActivitySpinner('moon', waitingSpinnerLabel(stepRetry));
+        const waitingLabel =
+          stepRetry === null
+            ? (this.currentLoadingTip?.tip ?? '')
+            : waitingSpinnerLabel(stepRetry);
+        const spinner = this.ensureActivitySpinner('moon', waitingLabel);
+        spinner.setFlowColors(stepRetry === null);
         this.syncAgentSwarmActivitySpinner(placeSpinnerInAgentSwarm ? spinner : undefined);
         if (placeSpinnerInAgentSwarm) break;
         this.state.activityContainer.addChild(
           new ActivityPaneComponent({
             mode: 'waiting',
             spinner,
-            tip: stepRetry === null ? this.currentLoadingTip?.tip : undefined,
             detail: stepRetry === null ? undefined : formatStepRetryDetail(stepRetry),
           }),
         );
@@ -3340,28 +3348,26 @@ export class NighthawkTUI {
         break;
       }
       case 'composing': {
-        const spinner = this.ensureActivitySpinner('braille', 'working...', (s) =>
-          currentTheme.fg('primary', s),
-        );
+        const spinner = this.ensureActivitySpinner('braille', this.currentLoadingTip?.tip ?? '');
+        spinner.setFlowColors(true);
         this.syncAgentSwarmActivitySpinner(undefined);
         this.state.activityContainer.addChild(
           new ActivityPaneComponent({
             mode: 'composing',
             spinner,
-            tip: this.currentLoadingTip?.tip,
           }),
         );
         break;
       }
       case 'tool': {
-        const spinner = this.ensureActivitySpinner('moon');
+        const spinner = this.ensureActivitySpinner('moon', this.currentLoadingTip?.tip ?? '');
+        spinner.setFlowColors(true);
         this.syncAgentSwarmActivitySpinner(placeSpinnerInAgentSwarm ? spinner : undefined);
         if (placeSpinnerInAgentSwarm) break;
         this.state.activityContainer.addChild(
           new ActivityPaneComponent({
             mode: 'tool',
             spinner,
-            tip: this.currentLoadingTip?.tip,
           }),
         );
         break;

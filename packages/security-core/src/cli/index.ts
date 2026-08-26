@@ -25,7 +25,7 @@ import { buildRagContext } from '../core/rag/index.js';
 const program = new Command();
 program
   .name('sca')
-  .description('Security Coding Agent — NightHawk superset with 200+ security rules')
+  .description('Security Coding Agent — NightHawk superset with 116 security rules')
   .version(VERSION)
   .option('-p, --prompt <text>', 'one-shot prompt (headless)')
   .option('--scan [path]', 'headless security scan')

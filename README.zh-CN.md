@@ -2,7 +2,7 @@
 
 **安全为先的终端 AI Agent —— 渗透测试、代码审计与高强度编程，同一个闭环。**
 
-NightHawk 的核心命题：进攻性安全与严肃工程属于同一个 Agent。它将现代化编程 Agent 内核（Plan/Act/Observe/Reflect 循环、子 Agent、MCP、Skills、持久记忆）与原生安全引擎结合 —— 200+ 条映射到 OWASP Top 10 与 CWE 的漏洞规则、基于 Shannon 熵的密钥检测、文件级污点分析、依赖审计 —— 全部作为一等工具暴露给 Agent，可在会话中随时调用。
+NightHawk 的核心命题：进攻性安全与严肃工程属于同一个 Agent。它将现代化编程 Agent 内核（Plan/Act/Observe/Reflect 循环、子 Agent、MCP、Skills、持久记忆）与原生安全引擎结合 —— 116 条映射到 OWASP Top 10 与 CWE 的漏洞规则、基于 Shannon 熵的密钥检测、变量级污点追踪、依赖审计 —— 全部作为一等工具暴露给 Agent，可在会话中随时调用。
 
 [English](README.md)
 
@@ -22,10 +22,10 @@ NightHawk 的核心命题：进攻性安全与严肃工程属于同一个 Agent�
 
 | 工具 | 功能 |
 | --- | --- |
-| `SecurityScan` | 规则引擎，200+ 模式覆盖 SQL 注入、XSS、命令注入、路径穿越、SSRF、反序列化、弱加密、认证缺陷、XXE 及分语言风险（Node/Python/Java/Go/PHP）。每个发现携带 CWE/OWASP 编号、严重度和修复建议 —— 中英双语。 |
-| `SecretScan` | 检测硬编码凭据 —— AWS/GCP/Azure 密钥、token、私钥 —— 已知模式与 Shannon 熵评分、基于路径的敏感度启发式相结合。 |
-| `TaintTrace` | 文件级数据流分析：追踪用户可控源（HTTP 参数、环境变量、stdin）经赋值流入危险汇点（exec、eval、innerHTML、SQL）。 |
-| `DepAudit` | 标记高风险依赖模式：易被 typosquatting 的包名、postinstall 脚本、未锁定版本、已知风险配置。 |
+| `SecurityScan` | 规则引擎，116 模式覆盖 SQL 注入、XSS、命令注入、路径穿越、SSRF、反序列化、弱加密、认证缺陷、XXE 及分语言风险（Node/Python/Java/Go/PHP）。每个发现携带 CWE/OWASP 编号、严重度和修复建议 —— 中英双语。 |
+| `SecretScan` | 检测硬编码凭据 —— AWS/GCP/Azure 密钥、token、私钥 —— 已知模式与 Shannon 熵评分相结合。 |
+| `TaintTrace` | 变量级污点追踪：识别用户可控源（HTTP 参数、环境变量、stdin），沿赋值链（最多 3 轮）追踪到危险汇点（exec、eval、innerHTML、SQL）。 |
+| `DepAudit` | 标记高风险依赖模式：postinstall 脚本、未锁定版本、已知风险配置。 |
 
 工具间形成合力：规则命中为污点追踪提供种子，污点流确认可利用性，确认后的发现驱动修复建议。
 
@@ -75,7 +75,7 @@ node scripts/smoke-security.ts             # 安全引擎端到端
 | --- | --- |
 | `apps/nighthawk` | CLI/TUI 应用（`nighthawk` 二进制）。 |
 | `packages/agent-core` | Agent 引擎：循环、工具、profile、Skills、MCP、会话、记录、安全工具。 |
-| `packages/security-core` | 独立安全引擎源码（规则、扫描器、密钥检测、污点分析）。 |
+| `packages/security-core` | 独立安全引擎源码（规则、扫描器、密钥检测、污点分析）。**已弃用** —— 生产版安全引擎位于 `packages/agent-core/src/tools/builtin/security/`。 |
 | `packages/kosong` | LLM/供应商抽象 —— OpenAI、Anthropic、Google 及兼容协议。 |
 | `packages/kaos` | 执行环境：本地或远程主机上的文件/进程抽象。 |
 | `packages/node-sdk` | 公开 TypeScript SDK 与 harness。 |

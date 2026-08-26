@@ -48,6 +48,14 @@ export const AgentSwarmToolInputSchema = z
       .describe(
         'Map of existing subagent agent_id to the prompt used to resume that subagent. These resumed subagents are launched before new item-based subagents.',
       ),
+    prompt: z
+      .string()
+      .trim()
+      .min(1)
+      .optional()
+      .describe(
+        `Full task prompt for a single subagent. Without items or resume_agent_ids it launches exactly one subagent with this prompt. When items are present and prompt_template is omitted, it is used as the template instead and must contain ${PROMPT_TEMPLATE_PLACEHOLDER}.`,
+      ),
     model: z
       .string()
       .optional()

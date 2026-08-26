@@ -106,6 +106,14 @@ const config = withMermaid(defineConfig({
               ],
             },
           ],
+          '/zh/architecture/': [
+            {
+              text: '架构设计',
+              items: [
+                { text: '插件与扩展体系', link: '/zh/architecture/plugin-and-extension-design' },
+              ],
+            },
+          ],
         },
       },
     },

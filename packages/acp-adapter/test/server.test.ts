@@ -17,7 +17,6 @@ import {
 import type { NighthawkHarness } from '@nighthawk/nighthawk-sdk';
 
 import { AcpServer } from '../src/server';
-import { TERMINAL_AUTH_METHOD } from '../src';
 
 /** Minimal Client that throws on every callback so tests fail loudly. */
 class StubClient implements Client {
@@ -72,7 +71,7 @@ describe('AcpServer + AgentSideConnection', () => {
     const response = await client.initialize(request);
 
     expect(response.protocolVersion).toBe(1);
-    expect(response.authMethods).toEqual([TERMINAL_AUTH_METHOD]);
+    expect(response.authMethods).toEqual([]);
     expect(response.agentCapabilities?.loadSession).toBe(true);
     expect(response.agentCapabilities?.promptCapabilities?.image).toBe(true);
     expect(response.agentCapabilities?.promptCapabilities?.audio).toBe(false);
@@ -83,7 +82,7 @@ describe('AcpServer + AgentSideConnection', () => {
     expect(response.agentCapabilities?.sessionCapabilities?.resume).toEqual({});
   });
 
-  it('initialize advertises terminal-auth with id, type, args, name', async () => {
+  it('initialize advertises no auth methods', async () => {
     const harness = {} as NighthawkHarness;
     const { agentStream, clientStream } = makeInMemoryStreamPair();
 
@@ -98,14 +97,7 @@ describe('AcpServer + AgentSideConnection', () => {
       },
     });
 
-    expect(response.authMethods).toHaveLength(1);
-    const method = response.authMethods?.[0];
-    expect(method).toMatchObject({
-      id: 'login',
-      type: 'terminal',
-      name: expect.any(String),
-      args: ['--login'],
-    });
+    expect(response.authMethods).toEqual([]);
   });
 
   it('honors version negotiation: client v99 still negotiates to v1', async () => {
@@ -140,65 +132,5 @@ describe('AcpServer + AgentSideConnection', () => {
 
     const response = await client.initialize({ protocolVersion: 1 });
     expect(response.agentInfo).toBeUndefined();
-  });
-
-  it('initialize forwards terminalAuthEnv into authMethods[0].env', async () => {
-    const harness = {} as NighthawkHarness;
-    const { agentStream, clientStream } = makeInMemoryStreamPair();
-    const terminalAuthEnv = { NIGHTHAWK_HOME: '/tmp/nighthawk-debug' };
-    new AgentSideConnection(
-      (c) => new AcpServer(harness, c, { terminalAuthEnv }),
-      agentStream,
-    );
-    const client = new ClientSideConnection((_a) => new StubClient(), clientStream);
-
-    const response = await client.initialize({ protocolVersion: 1 });
-    expect(response.authMethods).toHaveLength(1);
-    const method = response.authMethods?.[0] as { env?: Record<string, string> };
-    expect(method.env).toEqual({ NIGHTHAWK_HOME: '/tmp/nighthawk-debug' });
-  });
-
-  it('initialize emits legacy _meta["terminal-auth"] when terminalAuthLegacyCommand is set', async () => {
-    const harness = {} as NighthawkHarness;
-    const { agentStream, clientStream } = makeInMemoryStreamPair();
-    new AgentSideConnection(
-      (c) =>
-        new AcpServer(harness, c, {
-          terminalAuthLegacyCommand: '/abs/path/to/nighthawk',
-          terminalAuthEnv: { NIGHTHAWK_HOME: '/tmp/nighthawk-debug' },
-        }),
-      agentStream,
-    );
-    const client = new ClientSideConnection((_a) => new StubClient(), clientStream);
-
-    const response = await client.initialize({ protocolVersion: 1 });
-    const method = response.authMethods?.[0] as {
-      args?: string[];
-      env?: Record<string, string>;
-      _meta?: { 'terminal-auth'?: Record<string, unknown> };
-    };
-    // First-class path still uses '--login' for the appended-args form.
-    expect(method.args).toEqual(['--login']);
-    // Legacy _meta fallback uses absolute command + 'login' subcommand.
-    expect(method._meta?.['terminal-auth']).toEqual({
-      type: 'terminal',
-      label: 'Login with NightHawk account',
-      command: '/abs/path/to/nighthawk',
-      args: ['login'],
-      env: { NIGHTHAWK_HOME: '/tmp/nighthawk-debug' },
-    });
-  });
-
-  it('initialize omits _meta["terminal-auth"] when terminalAuthLegacyCommand is unset', async () => {
-    const harness = {} as NighthawkHarness;
-    const { agentStream, clientStream } = makeInMemoryStreamPair();
-    new AgentSideConnection((c) => new AcpServer(harness, c), agentStream);
-    const client = new ClientSideConnection((_a) => new StubClient(), clientStream);
-
-    const response = await client.initialize({ protocolVersion: 1 });
-    const method = response.authMethods?.[0] as {
-      _meta?: { 'terminal-auth'?: unknown } | null;
-    };
-    expect(method._meta?.['terminal-auth']).toBeUndefined();
   });
 });

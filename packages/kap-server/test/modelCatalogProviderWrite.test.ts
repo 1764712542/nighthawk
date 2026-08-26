@@ -252,13 +252,14 @@ describe('server-v2 /api/v1 provider write endpoints', () => {
         model: 'my-openai/gpt-4.1',
         display_name: 'GPT-4.1',
         max_context_size: 1047576,
-        capabilities: ['vision'],
+        capabilities: ['image_in', 'tool_use', 'vision'],
       },
       {
         provider: 'my-openai',
         model: 'my-openai/gpt-4o-mini',
         display_name: 'gpt-4o-mini',
         max_context_size: 128000,
+        capabilities: ['image_in', 'tool_use'],
       },
     ]);
   });

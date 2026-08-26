@@ -2,8 +2,7 @@
  * ACP `AgentSideConnection` wrapper.
  *
  * Phase 3 implements `initialize`, `session/new`, and `session/cancel`
- * against {@link NighthawkHarness}. `prompt` is wired in step 3.4. `initialize`
- * advertises the terminal-auth method (see {@link TERMINAL_AUTH_METHOD}).
+ * against {@link NighthawkHarness}. `prompt` is wired in step 3.4.
  */
 
 import { Readable, Writable } from 'node:stream';
@@ -55,7 +54,6 @@ import type {
 import { log } from '@nighthawk/nighthawk-sdk';
 import { LocalKaos, type Kaos } from '@nighthawk/kaos';
 
-import { TERMINAL_AUTH_METHOD, buildTerminalAuthMethod } from './auth-methods';
 import { redirectConsoleToStderr } from './log-guard';
 import { AcpKaos } from './kaos-acp';
 import { AcpSession, type TelemetryTrackFn } from './session';
@@ -223,8 +221,6 @@ export class AcpServer implements Agent {
   private clientCapabilities: ClientCapabilities | undefined;
   private readonly sessions = new Map<string, AcpSession>();
   private readonly agentInfo: Implementation | undefined;
-  private readonly terminalAuthEnv: Readonly<Record<string, string>> | undefined;
-  private readonly terminalAuthLegacyCommand: string | undefined;
   private readonly resolveSlashCommands: (
     session: Session,
   ) => Promise<ResolvedSlashCommands>;
@@ -241,22 +237,6 @@ export class AcpServer implements Agent {
     private readonly conn?: AgentSideConnection | undefined,
     opts?: {
       agentInfo?: Implementation;
-      /**
-       * Env vars to advertise in `authMethods[0].env` so the `nighthawk login`
-       * subprocess the client spawns (via `terminal-auth`) lands its
-       * token under the same data root the ACP server uses. Intended for
-       * sandboxed test setups (e.g. `{ NIGHTHAWK_HOME: '/tmp/...' }`);
-       * leave undefined in production so the advertised env stays empty.
-       */
-      terminalAuthEnv?: Readonly<Record<string, string>>;
-      /**
-       * Absolute binary path advertised in `_meta['terminal-auth'].command`
-       * for clients that don't yet honor the first-class
-       * `AuthMethodTerminal` (Zed without `AcpBetaFeatureFlag`, JetBrains
-       * plugin). Clients on this legacy path spawn `<command> login`
-       * directly. Defaults to undefined (the `_meta` fallback is omitted).
-       */
-      terminalAuthLegacyCommand?: string;
       /**
        * Slash commands to advertise in the one-shot
        * `available_commands_update` pushed immediately after each
@@ -278,8 +258,6 @@ export class AcpServer implements Agent {
     },
   ) {
     this.agentInfo = opts?.agentInfo;
-    this.terminalAuthEnv = opts?.terminalAuthEnv;
-    this.terminalAuthLegacyCommand = opts?.terminalAuthLegacyCommand;
     const slash = opts?.slashCommands;
     this.resolveSlashCommands =
       typeof slash === 'function'
@@ -326,14 +304,7 @@ export class AcpServer implements Agent {
     return {
       protocolVersion: this.negotiated.protocolVersion,
       agentCapabilities,
-      authMethods: [
-        this.terminalAuthEnv !== undefined || this.terminalAuthLegacyCommand !== undefined
-          ? buildTerminalAuthMethod({
-              env: this.terminalAuthEnv,
-              legacyCommand: this.terminalAuthLegacyCommand,
-            })
-          : TERMINAL_AUTH_METHOD,
-      ],
+      authMethods: [],
       ...(this.agentInfo ? { agentInfo: this.agentInfo } : {}),
     };
   }
@@ -648,14 +619,10 @@ export class AcpServer implements Agent {
   }
 
   /**
-   * Re-check whether the on-disk token is usable; does NOT trigger an
+   * Re-check whether the on-disk credentials are usable; does NOT trigger an
    * actual OAuth flow. The stdio JSON-RPC channel has no TTY to render
-   * the device-code prompt — clients are expected to spawn
-   * `nighthawk login` themselves via the terminal-auth method advertised in
-   * `initialize.authMethods` (`args:['login']`, see {@link TERMINAL_AUTH_METHOD})
-   * and then re-invoke `authenticate('login')` to confirm the token
-   * landed on disk. Mirrors legacy-cli `acp/server.py:374-398` semantics
-   * (plan G3, lines 68-104).
+   * the device-code prompt. Mirrors legacy-cli `acp/server.py:374-398`
+   * semantics (plan G3, lines 68-104).
    */
   async authenticate(params: AuthenticateRequest): Promise<AuthenticateResponse | void> {
     if (params.methodId !== 'login') {
@@ -1050,8 +1017,6 @@ export async function runAcpServerWithStream(
   stream: Stream,
   opts?: {
     agentInfo?: Implementation;
-    terminalAuthEnv?: Readonly<Record<string, string>>;
-    terminalAuthLegacyCommand?: string;
     slashCommands?: SlashCommandsResolver;
   },
 ): Promise<void> {
@@ -1091,17 +1056,6 @@ export async function runAcpServer(
      * `null`, matching the legacy-cli reference implementation.
      */
     agentInfo?: Implementation;
-    /**
-     * Env vars to forward to the `nighthawk login` subprocess clients spawn
-     * via `terminal-auth`. See {@link AcpServer} ctor for the use case.
-     */
-    terminalAuthEnv?: Readonly<Record<string, string>>;
-    /**
-     * Absolute path to the agent binary, advertised in the legacy
-     * `_meta['terminal-auth'].command` fallback. See {@link AcpServer}
-     * ctor for compatibility rationale.
-     */
-    terminalAuthLegacyCommand?: string;
     /**
      * Slash commands to advertise to ACP clients so their slash-command
      * palette is populated. See {@link AcpServer} ctor for details.
@@ -1160,8 +1114,6 @@ export async function runAcpServer(
     // a signal handler closed the underlying stream.
     await runAcpServerWithStream(harness, stream, {
       agentInfo: opts?.agentInfo,
-      terminalAuthEnv: opts?.terminalAuthEnv,
-      terminalAuthLegacyCommand: opts?.terminalAuthLegacyCommand,
       slashCommands: opts?.slashCommands,
     });
   } finally {

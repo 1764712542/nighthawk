@@ -2,7 +2,7 @@
 
 **A security-first AI agent for the terminal — penetration testing, code audit, and full-strength coding in one loop.**
 
-NightHawk is built around a simple thesis: offensive security and serious engineering belong in the same agent. It pairs a modern coding agent core (Plan/Act/Observe/Reflect loop, sub-agents, MCP, skills, persistent memory) with a native security engine — 200+ vulnerability rules mapped to OWASP Top 10 and CWE, Shannon-entropy secret detection, file-level taint analysis, and dependency auditing — all exposed as first-class tools the agent can invoke mid-session.
+NightHawk is built around a simple thesis: offensive security and serious engineering belong in the same agent. It pairs a modern coding agent core (Plan/Act/Observe/Reflect loop, sub-agents, MCP, skills, persistent memory) with a native security engine — 116 vulnerability rules mapped to OWASP Top 10 and CWE, Shannon-entropy secret detection, variable-level taint analysis, and dependency auditing — all exposed as first-class tools the agent can invoke mid-session.
 
 [中文文档](README.zh-CN.md)
 
@@ -22,10 +22,10 @@ Most AI coding agents help you write code faster. NightHawk helps you **break it
 
 | Tool | What it does |
 | --- | --- |
-| `SecurityScan` | Rule engine with 200+ patterns across SQLi, XSS, command injection, path traversal, SSRF, deserialization, weak crypto, auth flaws, XXE, and per-language risks (Node/Python/Java/Go/PHP). Every finding carries CWE/OWASP IDs, severity, and a fix suggestion — bilingual (EN/中文). |
-| `SecretScan` | Detects hardcoded credentials — AWS/GCP/Azure keys, tokens, private keys — combining known patterns with Shannon-entropy scoring and path-based sensitivity heuristics. |
-| `TaintTrace` | File-level data-flow analysis: tracks user-controlled sources (HTTP params, env, stdin) through assignments into dangerous sinks (exec, eval, innerHTML, SQL). |
-| `DepAudit` | Flags risky dependency patterns: typosquatting-prone names, postinstall scripts, unpinned versions, known-risk config. |
+| `SecurityScan` | Rule engine with 116 patterns across SQLi, XSS, command injection, path traversal, SSRF, deserialization, weak crypto, auth flaws, XXE, and per-language risks (Node/Python/Java/Go/PHP). Every finding carries CWE/OWASP IDs, severity, and a fix suggestion — bilingual (EN/中文). |
+| `SecretScan` | Detects hardcoded credentials — AWS/GCP/Azure keys, tokens, private keys — combining known patterns with Shannon-entropy scoring. |
+| `TaintTrace` | Variable-level taint tracking: identifies user-controlled sources (HTTP params, env, stdin) and traces assignment chains (up to 3 passes) to dangerous sinks (exec, eval, innerHTML, SQL). |
+| `DepAudit` | Flags risky dependency patterns: postinstall scripts, unpinned versions, known-risk config. |
 
 The tools compound: rule hits seed taint traces, taint flows confirm exploitability, and confirmed findings feed the fix proposal.
 
@@ -75,7 +75,7 @@ The design takes the strongest ideas from the current generation of agent harnes
 | --- | --- |
 | `apps/nighthawk` | The CLI/TUI application (`nighthawk` binary). |
 | `packages/agent-core` | Agent engine: loop, tools, profiles, skills, MCP, sessions, records, security tools. |
-| `packages/security-core` | Standalone security engine sources (rules, scanner, secrets, taint). |
+| `packages/security-core` | Standalone security engine sources (rules, scanner, secrets, taint). **Deprecated** — production security engine is in `packages/agent-core/src/tools/builtin/security/`. |
 | `packages/kosong` | LLM/provider abstraction — OpenAI, Anthropic, Google, and compatible protocols. |
 | `packages/kaos` | Execution environment: file/process abstractions over local or remote hosts. |
 | `packages/node-sdk` | Public TypeScript SDK and harness. |

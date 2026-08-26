@@ -112,10 +112,35 @@ export function toProtocolModel(
     model: model.id,
     display_name: model.displayName ?? model.name ?? model.id,
     max_context_size: model.maxContextSize,
-    capabilities: effectiveModelConfig(record, providerType ?? model.providerType).capabilities,
+    capabilities: mergedCapabilityNames(model, record, providerType),
     support_efforts: model.supportEfforts === undefined ? undefined : [...model.supportEfforts],
     default_effort: model.defaultEffort,
   };
+}
+
+function mergedCapabilityNames(
+  model: Model,
+  record: ModelRecord,
+  providerType?: string,
+): string[] | undefined {
+  const names = new Set<string>();
+  const capability = model.capabilities;
+  if (capability.image_in) names.add('image_in');
+  if (capability.video_in) names.add('video_in');
+  if (capability.audio_in) names.add('audio_in');
+  if (capability.thinking) names.add('thinking');
+  if (capability.tool_use) names.add('tool_use');
+  if (capability.dynamically_loaded_tools === true) names.add('dynamically_loaded_tools');
+  if (model.alwaysThinking) {
+    names.add('thinking');
+    names.add('always_thinking');
+  }
+  const declared = effectiveModelConfig(record, providerType ?? model.providerType).capabilities;
+  for (const name of declared ?? []) {
+    const trimmed = name.trim().toLowerCase();
+    if (trimmed.length > 0) names.add(trimmed);
+  }
+  return names.size > 0 ? [...names] : undefined;
 }
 
 export function toProtocolModelFallback(

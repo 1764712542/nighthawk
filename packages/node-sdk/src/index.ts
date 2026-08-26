@@ -1,4 +1,5 @@
-export { NighthawkHarness } from '#/nighthawk-harness';
+export {
+  NighthawkHarness } from '#/nighthawk-harness';
 export type { NighthawkHarnessRuntimeOptions } from '#/nighthawk-harness';
 export { Session } from '#/session';
 export { NighthawkAuthFacade } from '#/auth';
@@ -149,6 +150,26 @@ export type {
   DaemonFileRef,
   MediaKind,
 } from '@nighthawk/agent-core-v2/agent/media/mediaRef';
+
+// Plugin marketplace constants and types — re-exported for CLI usage.
+// These are deep-path imports from agent-core-v2 because they are not
+// exposed through the SDK's public API.
+export {
+  NIGHTHAWK_PLUGIN_MARKETPLACE_URL_ENV,
+  PLUGIN_MARKETPLACE_TIERS,
+  computeUpdateStatus,
+  parsePluginMarketplace,
+  readPluginMarketplace,
+  withBuiltInEntries,
+  withLatestVersions,
+} from '@nighthawk/agent-core-v2/app/plugin/marketplace';
+export type {
+  MarketplaceLocation,
+  MarketplaceUpdateStatus,
+  PluginMarketplace,
+  PluginMarketplaceEntry,
+  PluginMarketplaceTier,
+} from '@nighthawk/agent-core-v2/app/plugin/marketplace';
 
 export type {
   NighthawkAuthCompleteFeedbackUploadInput,

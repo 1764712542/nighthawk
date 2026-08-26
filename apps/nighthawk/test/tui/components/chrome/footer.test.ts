@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { FooterComponent } from '#/tui/components/chrome/footer';
 import { setRainbowDance, type RainbowDanceController } from '#/tui/easter-eggs/dance';
 import { currentTheme, darkColors, lightColors } from '#/tui/theme';
+import { createEmptySessionStats } from '#/tui/utils/session-stats';
 import type { ModelAlias } from '@nighthawk/nighthawk-sdk';
 import type { AppState } from '#/tui/types';
 
@@ -44,6 +45,7 @@ const appState: AppState = {
   contextUsage: 0,
   contextTokens: 0,
   maxContextTokens: 0,
+  sessionStats: createEmptySessionStats(),
   isCompacting: false,
   isReplaying: false,
   streamingPhase: 'idle',
@@ -230,5 +232,74 @@ describe('FooterComponent line-2 hints', () => {
     footer.setWarningHint(null);
 
     expect(stripAnsi(footer.render(120)[1] ?? '')).not.toContain('Goal objective is too long');
+  });
+});
+
+describe('FooterComponent session stats', () => {
+  function stripAnsi(text: string): string {
+    return text.replaceAll(/\[[0-9;]*m/g, '');
+  }
+
+  const statsState: AppState = {
+    ...appState,
+    contextUsage: 0.23,
+    contextTokens: 28200,
+    maxContextTokens: 128000,
+    sessionStats: {
+      turns: 4,
+      steps: 228,
+      llmDurationMs: (72 * 60 + 10) * 1000,
+      toolDurationMs: (66 * 60 + 25) * 1000,
+      firstTokenSamples: 228,
+      firstTokenTotalMs: 15_500 * 228,
+      streamDurationMs: 57_200,
+      inputOtherTokens: 200_000,
+      inputCacheReadTokens: 16_200_000,
+      inputCacheCreationTokens: 150_000,
+      outputTokens: 57_200,
+    },
+  };
+
+  it('renders the full stats readout on line 2 next to the context', () => {
+    const footer = new FooterComponent(statsState);
+    const line2 = stripAnsi(footer.render(200)[1] ?? '');
+
+    expect(line2).toContain('4 轮 · 228 步');
+    expect(line2).toContain('LLM 72m10s · 工具调用 66m25s');
+    expect(line2).toContain('首 token 平均 15.5s');
+    expect(line2).toContain('tok/s');
+    expect(line2).toContain('缓存命中');
+    expect(line2).toContain('输入');
+    expect(line2).toContain('输出');
+    expect(line2).toContain('context: 23%');
+  });
+
+  it('renders no stats readout before any turn is observed', () => {
+    const footer = new FooterComponent(appState);
+    const line2 = stripAnsi(footer.render(120)[1] ?? '');
+
+    expect(line2).toContain('context:');
+    expect(line2).not.toContain('轮');
+    expect(line2).not.toContain('tok/s');
+  });
+
+  it('keeps the hint in front of the stats while a hint is set', () => {
+    const footer = new FooterComponent(statsState);
+    footer.setTransientHint('Press Ctrl+C again to exit');
+    const line2 = stripAnsi(footer.render(200)[1] ?? '');
+
+    expect(line2).toContain('Press Ctrl+C again to exit');
+    expect(line2).not.toContain('4 轮');
+  });
+
+  it('drops trailing stats segments that do not fit the width instead of truncating mid-segment', () => {
+    const footer = new FooterComponent(statsState);
+    const line2 = stripAnsi(footer.render(60)[1] ?? '');
+
+    expect(line2).toContain('4 轮 · 228 步');
+    expect(line2).toContain('context:');
+    // The token IO segment (~30 visible columns) cannot fit alongside the
+    // earlier segments on a 60-column line.
+    expect(line2).not.toContain('输入');
   });
 });

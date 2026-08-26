@@ -26,6 +26,13 @@
 import { parse as parseToml } from 'smol-toml';
 import { z } from 'zod';
 
+// ARCHITECTURE NOTE:
+// This file imports directly from agent-core-v2 because it needs access to
+// the engine's internal ConfigRegistry and config utilities for v2 config
+// validation. These capabilities are not exposed through the SDK because
+// they are engine-internal operations that should not be part of the public API.
+// The SDK provides higher-level abstractions (NighthawkConfigRpcClient) for
+// typical config validation use cases.
 import {
   ConfigRegistry,
   type AnyEnvBindings,

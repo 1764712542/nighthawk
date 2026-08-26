@@ -16,5 +16,6 @@ export function sessionRowsForPicker(
       work_dir: session.workDir,
       updated_at: session.updatedAt ?? session.createdAt ?? 0,
       metadata: session.metadata,
+      archived: session.archived ?? false,
     }));
 }

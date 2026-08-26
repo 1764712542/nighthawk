@@ -32,6 +32,7 @@ import {
   usagePercent,
   usagePercentFromRatio,
 } from '#/utils/usage/usage-format';
+import { formatSessionStats } from '#/tui/utils/session-stats';
 
 const DEFAULT_STATUS_LINE_ITEMS = ['mode', 'goal', 'model', 'tasks', 'cwd', 'git'] as const;
 
@@ -337,7 +338,7 @@ export class FooterComponent implements Component {
       }
     }
 
-    // ── Line 2: hint (bottom-left) + context (right) ──
+    // ── Line 2: hint/stats (bottom-left) + context (right) ──
     const contextText = formatContextStatus(
       state.contextUsage,
       state.contextTokens,
@@ -346,7 +347,7 @@ export class FooterComponent implements Component {
     const contextWidth = visibleWidth(contextText);
     let line2: string;
     const hint = this.transientHint ?? this.warningHint;
-    if (hint) {
+    if (hint !== null && hint !== undefined) {
       const maxHintWidth = Math.max(0, width - contextWidth - 1);
       const shownHint =
         visibleWidth(hint) <= maxHintWidth ? hint : truncateToWidth(hint, maxHintWidth, '…');
@@ -357,8 +358,21 @@ export class FooterComponent implements Component {
         ' '.repeat(pad) +
         chalk.hex(colors.text)(contextText);
     } else {
-      const leftPad = Math.max(0, width - contextWidth);
-      line2 = ' '.repeat(leftPad) + chalk.hex(colors.text)(contextText);
+      const statsText = formatSessionStats(
+        state.sessionStats,
+        Math.max(0, width - contextWidth - 1),
+      );
+      if (statsText.length > 0) {
+        const statsWidth = visibleWidth(statsText);
+        const pad = Math.max(1, width - statsWidth - contextWidth);
+        line2 =
+          chalk.hex(colors.textDim)(statsText) +
+          ' '.repeat(pad) +
+          chalk.hex(colors.text)(contextText);
+      } else {
+        const leftPad = Math.max(0, width - contextWidth);
+        line2 = ' '.repeat(leftPad) + chalk.hex(colors.text)(contextText);
+      }
     }
 
     return [truncateToWidth(line1, width), truncateToWidth(line2, width)];

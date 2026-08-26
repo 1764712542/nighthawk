@@ -4,6 +4,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { TuiAltScreen, TuiMainScreen } from '@nighthawk/pi-tui';
 
 import { createTUIState, type NighthawkTUIOptions } from '#/tui/nighthawk-tui';
+import { createEmptySessionStats } from '#/tui/utils/session-stats';
 import type { AppState } from '#/tui/types';
 
 function fakeInitialAppState(): AppState {
@@ -21,6 +22,7 @@ function fakeInitialAppState(): AppState {
     contextUsage: 0,
     contextTokens: 0,
     maxContextTokens: 0,
+    sessionStats: createEmptySessionStats(),
     isCompacting: false,
     isReplaying: false,
     streamingPhase: 'idle',

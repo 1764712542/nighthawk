@@ -25,7 +25,6 @@ interface ManifestCandidate {
   readonly spec: 'nighthawk' | 'legacy' | 'generic';
 }
 
-/** The native manifest spec id; non-native specs log an info diagnostic. */
 const NATIVE_MANIFEST_SPEC = 'nighthawk' as const;
 
 const MANIFEST_CANDIDATES: readonly ManifestCandidate[] = [

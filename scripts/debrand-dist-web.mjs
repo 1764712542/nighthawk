@@ -161,6 +161,13 @@ const REPLACEMENTS = [
   // the external desktop host that sets them is not part of this repo).
   ['kimi_origin', 'nighthawk_origin'],
   ['kimi-desktop-server-origin', 'nighthawk-desktop-server-origin'],
+  // Appearance settings: replace moon-phase naming with white-hat/black-hat.
+  ['light:"月之亮面",dark:"月之暗面"', 'light:"白帽子",dark:"黑帽子"'],
+  ['light:"Moon bright",dark:"Moon dark"', 'light:"White Hat",dark:"Black Hat"'],
+  // Favicon cache busting: browsers cache favicon.ico aggressively and ignore
+  // Cache-Control, so users upgrading from the kimi build keep seeing the old
+  // moon icon until the URL changes. The query param forces a refetch.
+  ['<link rel="icon" href="/favicon.ico" sizes="64x64" />', '<link rel="icon" href="/favicon.ico?v=nighthawk" sizes="64x64" />'],
 ];
 
 const TEXT_EXTENSIONS = new Set(['.js', '.css', '.html', '.json']);

@@ -11,6 +11,7 @@ import {
   StatusLineCommandRunner,
   type StatusLinePayload,
 } from '#/tui/utils/status-line-command';
+import { createEmptySessionStats } from '#/tui/utils/session-stats';
 import type { AppState } from '#/tui/types';
 
 const baseState: AppState = {
@@ -25,6 +26,7 @@ const baseState: AppState = {
   contextUsage: 0,
   contextTokens: 0,
   maxContextTokens: 0,
+  sessionStats: createEmptySessionStats(),
   isCompacting: false,
   isReplaying: false,
   streamingPhase: 'idle',

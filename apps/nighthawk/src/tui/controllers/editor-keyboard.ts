@@ -430,10 +430,15 @@ export class EditorKeyboardController {
     };
 
     editor.onCtrlB = (): boolean => {
-      // Shell command execution is treated as a streaming phase ('shell'), so
-      // this gate already covers it; only idle + not-compacting falls through.
+      // While a foreground task runs, Ctrl+B detaches it to the background
+      // (the card hint advertises this). When idle there is nothing to
+      // detach, so Ctrl+B falls back to expanding/collapsing the tool-call
+      // trajectory — same toggle as Ctrl+O, on the key users reach for
+      // after reading the hint.
       if (host.state.appState.streamingPhase === 'idle' || host.state.appState.isCompacting) {
-        return false;
+        host.track('shortcut_expand');
+        host.toggleToolOutputExpansion();
+        return true;
       }
       host.track('shortcut_background_task');
       host.detachCurrentForegroundTask();

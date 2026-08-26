@@ -142,6 +142,7 @@ describe('server-v2 /api/v1 model/provider catalog', () => {
         model: 'gpt4o',
         display_name: 'gpt-4o',
         max_context_size: 128000,
+        capabilities: ['image_in', 'tool_use'],
       },
     ]);
   });
