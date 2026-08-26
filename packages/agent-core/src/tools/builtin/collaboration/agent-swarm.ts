@@ -15,7 +15,7 @@ import AGENT_SWARM_DESCRIPTION from './agent-swarm.md?raw';
 
 const DEFAULT_SUBAGENT_TYPE = 'coder';
 const PROMPT_TEMPLATE_PLACEHOLDER = '{{item}}';
-const MAX_AGENT_SWARM_SUBAGENTS = 128;
+const MAX_AGENT_SWARM_SUBAGENTS = 2000;
 
 export const AgentSwarmToolInputSchema = z
   .object({

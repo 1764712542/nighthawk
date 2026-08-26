@@ -1,7 +1,7 @@
 import type { Kaos } from '@nighthawk/kaos';
 import { describe, expect, it, vi } from 'vitest';
 
-import { ReadTool } from '../../src/tools/builtin/file/read';
+import { normalizeReadInput, ReadTool } from '../../src/tools/builtin/file/read';
 import { createFakeKaos, PERMISSIVE_WORKSPACE } from './fixtures/fake-kaos';
 import { executeTool } from './fixtures/execute-tool';
 
@@ -67,5 +67,58 @@ describe('ReadTool — total-lines message channel', () => {
     expect(result.isError).toBeFalsy();
     expect(result.output).toContain('3\tc');
     expect(result.note).toContain('Total lines in file: 5.');
+  });
+});
+
+describe('normalizeReadInput', () => {
+  it('maps alias keys onto canonical schema fields', () => {
+    expect(normalizeReadInput({ path: 'a.txt', offset: 5, count: '10' })).toEqual({
+      path: 'a.txt',
+      line_offset: 5,
+      n_lines: 10,
+    });
+    expect(normalizeReadInput({ path: 'a.txt', start_line: '3', limit: 20 })).toEqual({
+      path: 'a.txt',
+      line_offset: 3,
+      n_lines: 20,
+    });
+  });
+
+  it('coerces numeric strings for canonical keys', () => {
+    expect(normalizeReadInput({ path: 'a.txt', line_offset: '-7', n_lines: '100' })).toEqual({
+      path: 'a.txt',
+      line_offset: -7,
+      n_lines: 100,
+    });
+  });
+
+  it('keeps canonical values when both canonical and alias keys exist', () => {
+    expect(normalizeReadInput({ path: 'a.txt', line_offset: 2, offset: 99 })).toEqual({
+      path: 'a.txt',
+      line_offset: 2,
+    });
+  });
+
+  it('preserves uncoercible values so schema validation reports them', () => {
+    expect(normalizeReadInput({ path: 'a.txt', line_offset: 'abc' })).toEqual({
+      path: 'a.txt',
+      line_offset: 'abc',
+    });
+    expect(normalizeReadInput({ path: 'a.txt', n_lines: 3.5 })).toEqual({
+      path: 'a.txt',
+      n_lines: 3.5,
+    });
+  });
+
+  it('drops null values and unknown keys', () => {
+    expect(normalizeReadInput({ path: 'a.txt', offset: null, extra: true })).toEqual({
+      path: 'a.txt',
+    });
+  });
+
+  it('passes through non-object args untouched', () => {
+    expect(normalizeReadInput('oops')).toBe('oops');
+    expect(normalizeReadInput(null)).toBe(null);
+    expect(normalizeReadInput([1, 2])).toEqual([1, 2]);
   });
 });

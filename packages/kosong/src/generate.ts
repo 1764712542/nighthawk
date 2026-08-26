@@ -1,4 +1,4 @@
-import { APIEmptyResponseError } from './errors';
+import { APIEmptyResponseError, APITimeoutError } from './errors';
 import {
   isContentPart,
   isToolCall,
@@ -58,6 +58,82 @@ export interface GenerateCallbacks {
    * would dispatch a tool with half-parsed arguments and trigger toolParseError.
    */
   onToolCall?: (toolCall: ToolCall) => void | Promise<void>;
+}
+
+const DEFAULT_STREAM_STALL_TIMEOUT_MS = 300_000;
+const STREAM_STALL_TIMEOUT_ENV = 'NIGHTHAWK_STREAM_STALL_TIMEOUT_MS';
+
+/**
+ * Resolve the stream-stall watchdog timeout from `NIGHTHAWK_STREAM_STALL_TIMEOUT_MS`.
+ *
+ * The watchdog arms after the first streamed part and aborts generation with a
+ * retryable {@link APITimeoutError} when no further part arrives within the
+ * window, preventing a silently-dead SSE stream from hanging until an external
+ * timeout. Defaults to 5 minutes; `0` disables the watchdog. The window before
+ * the first part is intentionally unguarded — time-to-first-token can
+ * legitimately take minutes on long prompts or queued requests.
+ */
+export function resolveStreamStallTimeoutMs(
+  env: Readonly<Record<string, string | undefined>> = process.env,
+): number {
+  const raw = env[STREAM_STALL_TIMEOUT_ENV];
+  if (raw === undefined || raw.trim() === '') return DEFAULT_STREAM_STALL_TIMEOUT_MS;
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value < 0) {
+    throw new Error(
+      `${STREAM_STALL_TIMEOUT_ENV} must be a non-negative integer of milliseconds (0 disables), got ${JSON.stringify(raw)}.`,
+    );
+  }
+  return value;
+}
+
+/**
+ * Iterate `stream`, guarding inter-part gaps with the stall watchdog.
+ *
+ * The pre-first-part window is not guarded (see {@link resolveStreamStallTimeoutMs});
+ * once a first part has arrived, any gap longer than the configured timeout is
+ * treated as a dead stream: it is cancelled and an {@link APITimeoutError} is
+ * thrown so the caller's retry layer can re-issue the request.
+ */
+async function* streamWithStallGuard(
+  stream: StreamedMessage,
+  providerName: string,
+  modelName: string,
+): AsyncGenerator<StreamedMessagePart> {
+  const timeoutMs = resolveStreamStallTimeoutMs();
+  if (!(timeoutMs > 0)) {
+    yield* stream;
+    return;
+  }
+  const iterator = stream[Symbol.asyncIterator]();
+  let guardArmed = false;
+  for (;;) {
+    let rejectStall: ((error: Error) => void) | undefined;
+    const stalled = new Promise<never>((_, reject) => {
+      rejectStall = reject;
+    });
+    const timer =
+      guardArmed
+        ? setTimeout(() => {
+            rejectStall?.(
+              new APITimeoutError(
+                `Provider stream stalled: no events received for ${String(timeoutMs)}ms after the first streamed part. Provider: ${providerName}, model: ${modelName}`,
+              ),
+            );
+          }, timeoutMs)
+        : undefined;
+    try {
+      const step = await Promise.race([iterator.next(), stalled]);
+      if (step.done === true) return;
+      guardArmed = true;
+      yield step.value;
+    } catch (error) {
+      await cancelStream(stream);
+      throw error;
+    } finally {
+      if (timer !== undefined) clearTimeout(timer);
+    }
+  }
 }
 
 /**
@@ -142,7 +218,7 @@ export async function generate(
   let firstPartAt: number | undefined;
   let lastResumeAt = 0;
 
-  for await (const part of stream) {
+  for await (const part of streamWithStallGuard(stream, provider.name, provider.modelName)) {
     const arrivedAt = Date.now();
     if (firstPartAt === undefined) {
       firstPartAt = arrivedAt;

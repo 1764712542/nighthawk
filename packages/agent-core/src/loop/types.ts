@@ -155,6 +155,12 @@ export interface RunnableToolExecution {
 export type ToolExecution = RunnableToolExecution | ExecutableToolErrorResult;
 
 export interface ExecutableTool<Input = unknown> extends Tool {
+  /**
+   * Optional pre-validation normalizer for raw model-supplied arguments.
+   * Runs before schema validation and may repair known aliases or scalar
+   * shapes (e.g. numeric strings). Must stay side-effect free.
+   */
+  normalizeInput?(args: unknown): unknown;
   resolveExecution(input: Input): ToolExecution | Promise<ToolExecution>;
 }
 

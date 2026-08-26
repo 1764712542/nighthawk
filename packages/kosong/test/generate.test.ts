@@ -1,5 +1,9 @@
-import { APIEmptyResponseError, isRetryableGenerateError } from '#/errors';
-import { generate } from '#/generate';
+import {
+  APIEmptyResponseError,
+  APITimeoutError,
+  isRetryableGenerateError,
+} from '#/errors';
+import { generate, resolveStreamStallTimeoutMs } from '#/generate';
 import type { Message, StreamedMessagePart, ToolCall } from '#/message';
 import type { ChatProvider, StreamedMessage, ThinkingEffort } from '#/provider';
 import type { Tool } from '#/tool';
@@ -1055,6 +1059,93 @@ describe('generate()', () => {
       expect(stats).toBeDefined();
       expect(stats!.serverDecodeMs).toBeGreaterThan(stats!.clientConsumeMs);
       expect(stats!.serverDecodeMs).toBeGreaterThanOrEqual(40);
+    });
+  });
+
+  describe('stream stall watchdog', () => {
+    const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
+
+    function createHangingStream(parts: StreamedMessagePart[]): StreamedMessage {
+      return {
+        get id(): string | null {
+          return null;
+        },
+        get usage(): TokenUsage | null {
+          return null;
+        },
+        finishReason: null,
+        rawFinishReason: null,
+        async *[Symbol.asyncIterator](): AsyncIterator<StreamedMessagePart> {
+          for (const part of parts) {
+            yield part;
+          }
+          await new Promise<never>(() => {});
+        },
+      };
+    }
+
+    it('rejects with a retryable timeout when the stream stalls after the first part', async () => {
+      vi.stubEnv('NIGHTHAWK_STREAM_STALL_TIMEOUT_MS', '50');
+      try {
+        const provider = createMockProvider(
+          createHangingStream([{ type: 'text', text: 'partial' }]),
+        );
+
+        const error = await generate(provider, '', [], []).catch((error: unknown) => error);
+
+        expect(error).toBeInstanceOf(APITimeoutError);
+        expect(isRetryableGenerateError(error)).toBe(true);
+      } finally {
+        vi.unstubAllEnvs();
+      }
+    });
+
+    it('does not arm the guard before the first part arrives', async () => {
+      vi.stubEnv('NIGHTHAWK_STREAM_STALL_TIMEOUT_MS', '50');
+      try {
+        const stream = createMockStream(
+          [
+            { type: 'text', text: 'slow first token' },
+            { type: 'text', text: ' fast tail' },
+          ],
+          { finishReason: 'stop' },
+        );
+        const iterator = stream[Symbol.asyncIterator]();
+        const originalNext = iterator.next.bind(iterator);
+        let firstNext = true;
+        Object.defineProperty(stream, Symbol.asyncIterator, {
+          value: () => ({
+            next: async () => {
+              if (firstNext) {
+                firstNext = false;
+                await sleep(120);
+              }
+              return originalNext();
+            },
+          }),
+        });
+
+        const result = await generate(createMockProvider(stream), '', [], []);
+
+        expect(result.message.content).toEqual([
+          { type: 'text', text: 'slow first token fast tail' },
+        ]);
+      } finally {
+        vi.unstubAllEnvs();
+      }
+    });
+
+    it('resolves NIGHTHAWK_STREAM_STALL_TIMEOUT_MS', () => {
+      expect(resolveStreamStallTimeoutMs({})).toBe(300_000);
+      expect(resolveStreamStallTimeoutMs({ NIGHTHAWK_STREAM_STALL_TIMEOUT_MS: '' })).toBe(300_000);
+      expect(resolveStreamStallTimeoutMs({ NIGHTHAWK_STREAM_STALL_TIMEOUT_MS: '1500' })).toBe(1500);
+      expect(resolveStreamStallTimeoutMs({ NIGHTHAWK_STREAM_STALL_TIMEOUT_MS: '0' })).toBe(0);
+      expect(() =>
+        resolveStreamStallTimeoutMs({ NIGHTHAWK_STREAM_STALL_TIMEOUT_MS: '-5' }),
+      ).toThrow(/non-negative integer/);
+      expect(() =>
+        resolveStreamStallTimeoutMs({ NIGHTHAWK_STREAM_STALL_TIMEOUT_MS: 'abc' }),
+      ).toThrow(/non-negative integer/);
     });
   });
 });

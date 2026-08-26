@@ -67,6 +67,82 @@ describe('SubagentBatch scheduling contract', () => {
     }
   });
 
+  it('accelerates the normal ramp proportionally for batches larger than 128 tasks', async () => {
+    vi.useFakeTimers();
+    try {
+      const { runBatch, attempts } = createMockBatchRunner();
+      const running = runBatch(
+        Array.from({ length: 200 }, (_, index) => queuedTask(index + 1)),
+        { signal },
+      );
+
+      await vi.advanceTimersByTimeAsync(0);
+      expect(attempts).toHaveLength(10);
+
+      await vi.advanceTimersByTimeAsync(349);
+      expect(attempts).toHaveLength(10);
+
+      await vi.advanceTimersByTimeAsync(1);
+      expect(attempts).toHaveLength(11);
+
+      await vi.advanceTimersByTimeAsync(350 * 189);
+      expect(attempts).toHaveLength(200);
+
+      attempts.forEach((attempt, index) => {
+        attempt.outcome.resolve({
+          task: attempt.task,
+          agentId: `agent-${String(index + 1)}`,
+          status: 'completed',
+          result: `result ${String(index + 1)}`,
+        });
+      });
+      const results = await running;
+
+      expect(results).toHaveLength(200);
+      expect(results.every((result) => result.status === 'completed')).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('caps ramp acceleration at 10x for very large batches', async () => {
+    vi.useFakeTimers();
+    try {
+      const { runBatch, attempts } = createMockBatchRunner();
+      const running = runBatch(
+        Array.from({ length: 2000 }, (_, index) => queuedTask(index + 1)),
+        { signal },
+      );
+
+      await vi.advanceTimersByTimeAsync(0);
+      expect(attempts).toHaveLength(50);
+
+      await vi.advanceTimersByTimeAsync(69);
+      expect(attempts).toHaveLength(50);
+
+      await vi.advanceTimersByTimeAsync(1);
+      expect(attempts).toHaveLength(51);
+
+      await vi.advanceTimersByTimeAsync(70 * 1949);
+      expect(attempts).toHaveLength(2000);
+
+      attempts.forEach((attempt, index) => {
+        attempt.outcome.resolve({
+          task: attempt.task,
+          agentId: `agent-${String(index + 1)}`,
+          status: 'completed',
+          result: `result ${String(index + 1)}`,
+        });
+      });
+      const results = await running;
+
+      expect(results).toHaveLength(2000);
+      expect(results.every((result) => result.status === 'completed')).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('rate-limit phase starts when the first provider rate limit stops the normal ramp', async () => {
     vi.useFakeTimers();
     try {

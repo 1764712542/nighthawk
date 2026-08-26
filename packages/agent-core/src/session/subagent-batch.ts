@@ -13,7 +13,7 @@ import { isUserCancellation } from '../utils/abort';
 Subagent batch scheduling contract:
 Normal phase:
 - Return results in input order; empty input returns an empty list.
-- Start up to 5 tasks immediately, then 1 more every 700 ms while queued work remains. By default active tasks do not cap this ramp; when NIGHTHAWK_AGENT_SWARM_MAX_CONCURRENCY is set to a positive integer, the ramp additionally stops while active tasks reach that cap, and resumes as tasks complete.
+- Start up to 5 tasks immediately, then 1 more every 700 ms while queued work remains. Batches larger than 128 tasks accelerate the ramp proportionally, up to 10x (50 immediate launches, then one every 70 ms), so very large swarms do not spend many minutes merely launching. By default active tasks do not cap this ramp; when NIGHTHAWK_AGENT_SWARM_MAX_CONCURRENCY is set to a positive integer, the ramp additionally stops while active tasks reach that cap, and resumes as tasks complete.
 - Launch priority: previous agent id saved after a rate limit, explicit resume, then new spawn.
 - Readiness can be reported while the attempt is active. Ready normal launches seed the first rate-limit capacity.
 - The first provider rate limit stops the ramp and enters rate-limit phase.
@@ -32,6 +32,8 @@ Results and cancellation:
 
 const INITIAL_LAUNCH_LIMIT = 5;
 const INITIAL_LAUNCH_INTERVAL_MS = 700;
+const RAMP_ACCELERATION_THRESHOLD = 128;
+const MAX_RAMP_SCALE = 10;
 const RATE_LIMIT_RETRY_BASE_MS = 3000;
 const RATE_LIMIT_RETRY_FACTOR = 2;
 const RATE_LIMIT_CAPACITY_SHRINK_INTERVAL_MS = 2000;
@@ -215,9 +217,22 @@ export class SubagentBatch<T> {
     }
   }
 
+  private normalLaunchPacing(): { limit: number; intervalMs: number } {
+    const total = this.states.length;
+    if (total <= RAMP_ACCELERATION_THRESHOLD) {
+      return { limit: INITIAL_LAUNCH_LIMIT, intervalMs: INITIAL_LAUNCH_INTERVAL_MS };
+    }
+    const scale = Math.min(MAX_RAMP_SCALE, Math.ceil(total / RAMP_ACCELERATION_THRESHOLD));
+    return {
+      limit: INITIAL_LAUNCH_LIMIT * scale,
+      intervalMs: INITIAL_LAUNCH_INTERVAL_MS / scale,
+    };
+  }
+
   private scheduleNormalLaunch(): void {
+    const { limit } = this.normalLaunchPacing();
     while (
-      this.normalLaunchCount < INITIAL_LAUNCH_LIMIT &&
+      this.normalLaunchCount < limit &&
       this.pending.length > 0 &&
       !this.rateLimitMode &&
       !this.isAtConcurrencyLimit()
@@ -242,7 +257,7 @@ export class SubagentBatch<T> {
       this.startAttempt(this.pending.shift()!);
       this.normalLaunchCount += 1;
       this.schedule();
-    }, INITIAL_LAUNCH_INTERVAL_MS);
+    }, this.normalLaunchPacing().intervalMs);
   }
 
   private isAtConcurrencyLimit(): boolean {

@@ -262,17 +262,20 @@ function preflightToolCall(
     });
   }
 
-  const validationError = validateExecutableToolArgs(tool, parsedArgs.data);
+  const args =
+    tool.normalizeInput !== undefined ? tool.normalizeInput(parsedArgs.data) : parsedArgs.data;
+
+  const validationError = validateExecutableToolArgs(tool, args);
   if (validationError !== null) {
     return {
       kind: 'rejected',
       toolCall,
       toolName,
-      args: parsedArgs.data,
+      args,
       output: `Invalid args for tool "${toolName}": ${validationError}`,
     };
   }
-  return { kind: 'runnable', toolCall, toolName, tool, args: parsedArgs.data };
+  return { kind: 'runnable', toolCall, toolName, tool, args };
 }
 
 function validateExecutableToolArgs(tool: ExecutableTool, args: unknown): string | null {
