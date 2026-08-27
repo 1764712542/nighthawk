@@ -154,6 +154,17 @@ describe('server-v2 /api/v1 tools + mcp', () => {
       expect(listToolsResponseSchema.parse(body.data).tools.length).toBeGreaterThan(0);
     });
 
+    it('exposes the four security tools as builtin tools', async () => {
+      const id = await createSession();
+      await ensureMainAgent(id);
+      const { body } = await getJson<{ tools: ToolWire[] }>('/api/v1/tools');
+      expect(body.code).toBe(0);
+      const tools = listToolsResponseSchema.parse(body.data).tools;
+      for (const name of ['SecurityScan', 'SecretScan', 'TaintTrace', 'DepAudit']) {
+        expect(tools.find((t) => t.name === name), `expected ${name} in tools list`).toMatchObject({ source: 'builtin' });
+      }
+    });
+
     it('projects registered tools with source mapping and mcp server id', async () => {
       const id = await createSession();
       const agent = await ensureMainAgent(id);
