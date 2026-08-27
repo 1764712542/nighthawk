@@ -12,9 +12,9 @@
 
 | 命令 | 别名 | 说明 | 随时可用 |
 | --- | --- | --- | --- |
-| `/connect` | `/login` | 连接模型供应商：主流供应商与自定义端点通过 API 密钥接入，OAuth 托管服务可选 | 否 |
-| `/logout` | — | 清除当前所选账号的凭据 | 否 |
 | `/provider` | — | 打开交互式供应商管理器，查看、添加和删除已配置的供应商。详见[平台与模型 — `/provider` 与供应商管理](../configuration/providers.md#provider-—-交互式供应商管理) | 是 |
+| `/connect` | — | 通过 API 密钥接入模型供应商：主流供应商与自定义端点 | 否 |
+| `/logout` | — | 移除已配置的供应商，或清除当前账户的 OAuth 凭证 | 否 |
 | `/model` | — | 切换当前会话使用的 LLM 模型 | 是 |
 | `/secondary-model` | `/subagent-model` | 选择 subagent 的默认模型（写入 `[secondary_model] default_model`，详见[subagent 模型池](../configuration/config-files.md#subagent-模型池)）。在 subagent 模型池实验功能启用时可见 | 是 |
 | `/settings` | `/config` | 打开 TUI 内的设置面板 | 是 |
@@ -40,7 +40,6 @@
 | `/export-debug-zip` | — | 将当前会话导出为调试用 ZIP 压缩包（与 [`nighthawk export`](./nighthawk-command.md#nighthawk-export) 行为一致） | 否 |
 | `/copy` | — | 将最后一条 AI 回复复制到剪贴板 | 否 |
 | `/add-dir [<path>]` | — | 为当前会话添加额外的工作目录。不带路径（或传入 `list`）运行时列出已配置的目录。添加时可选择是否将目录记入项目的 `.nighthawk/local.toml` | 否 |
-| `/web` | — | 在 web UI 中打开当前会话：选择一个运行中的实例进行连接，或在 TUI 退出后新开一个前台服务器。参见 [`nighthawk web`](./nighthawk-command.md#nighthawk-web) | 是 |
 
 ## 模式与运行控制
 

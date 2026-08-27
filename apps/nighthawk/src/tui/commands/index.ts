@@ -31,7 +31,6 @@ export { handleGoalCommand, parseGoalCommand, goalObjectiveLengthWarning } from 
 export { goalArgumentCompletions } from './registry';
 export { handleForkCommand, handleInitCommand, handleTitleCommand } from './session';
 export { handleUndoCommand } from './undo';
-export { handleWebCommand } from './web';
 export {
   promptApiKey,
   promptCatalogProviderSelection,

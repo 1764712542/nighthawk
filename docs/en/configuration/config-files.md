@@ -222,7 +222,7 @@ Constraints between the fields:
 
 In the interactive TUI, the [`/secondary-model`](../reference/slash-commands.md) command (alias `/subagent-model`) opens a model selector: the choice is written to `default_model` (when a models table exists and the picked alias is not in it, an entry with an empty description is added), and newly spawned subagents pick up the new default immediately — no session restart needed.
 
-A configured pool — an explicit `models` table or a lone `default_model` — enables model selection: the `Agent` / `AgentSwarm` tools gain a `model` parameter, and the tool description lists the pool (the default marked `[default]`) so the main agent can choose per spawn. Pool keys can only reference configured [`[models]`](#models) entries — the `nighthawk/*` aliases below are provisioned by `/login`:
+A configured pool — an explicit `models` table or a lone `default_model` — enables model selection: the `Agent` / `AgentSwarm` tools gain a `model` parameter, and the tool description lists the pool (the default marked `[default]`) so the main agent can choose per spawn. Pool keys can only reference configured [`[models]`](#models) entries — the `nighthawk/*` aliases below are provisioned by the managed service:
 
 ```toml
 [secondary_model]
@@ -264,7 +264,7 @@ Binding a pool alias lands the subagent on the bound model's default effort. You
 2. List both the original alias and the variant alias in the pool.
 
 ```toml
-# "nighthawk/k3" is provisioned by /login (default: high); this registers
+# "nighthawk/k3" is provisioned by the managed service (default: high); this registers
 # a max-effort variant of the same model
 [models.k3-max]
 provider = "managed:nighthawk"
@@ -409,7 +409,7 @@ A name that contains no ASCII letters or digits (for example a purely Chinese na
 
 The identity is resolved once at startup and holds for the life of the process — it is announced to MCP servers and providers when connections are made, so it cannot change midway. Edits to this section take effect on the next start, for new sessions: a resumed session keeps the system prompt it was recorded with, since its past turns already speak under that identity. Likewise, an MCP OAuth authorization keeps the client registration it was granted under; reset that server's authentication to register under the new identity.
 
-This section is read by the default `agent-core-v2` engine. It is ignored by the legacy `nighthawk` / `nighthawk -p` path selected with `NIGHTHAWK_LEGACY_FLAG=1`; `nighthawk web` always uses `agent-core-v2`.
+This section is read by the default `agent-core-v2` engine. It is ignored by the legacy `nighthawk` / `nighthawk -p` path selected with `NIGHTHAWK_LEGACY_FLAG=1`.
 
 ## `tools`
 

@@ -1342,7 +1342,7 @@ describe('refreshProviderModelsForPicker', () => {
     });
   });
 
-  it('routes OAuth providers back to /connect without fetching', async () => {
+  it('skips OAuth providers without fetching', async () => {
     const ctx = makePickerHost({
       providers: {
         [NIGHTHAWK_PROVIDER_NAME]: {

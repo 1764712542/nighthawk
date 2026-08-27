@@ -147,7 +147,8 @@ export const nighthawkOpenAITrait: ProtocolTrait = {
       out['max_completion_tokens'] = resolvedMaxCompletionTokens;
     }
     if (extraBody !== undefined && extraBody !== null) {
-      const { thinking, ...restExtra } = extraBody;
+      const typedExtraBody = extraBody as ExtraBody;
+      const { thinking, ...restExtra } = typedExtraBody;
       Object.assign(out, restExtra);
       if (thinking !== undefined && thinking !== null) {
         const { effort, keep, ...restThinking } = thinking as NighthawkThinkingConfig;

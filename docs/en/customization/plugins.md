@@ -103,7 +103,7 @@ NightHawk Datasource is the official NightHawk data plugin, letting you query fi
 
 Sources include authoritative institutions and leading databases such as the World Bank, IMF, OECD, FRED, WHO, FAO, the National Bureau of Statistics of China, Wind, S&P Capital IQ, SEC EDGAR, Caixin, Xinhua Finance, and Hundsun Juyuan — all traceable to their original publishers.
 
-You must first complete OAuth login with a NightHawk account via `/login`; data queries consume your NightHawk plan quota.
+You must have a NightHawk account configured; data queries consume your NightHawk plan quota.
 
 #### How to use
 
@@ -299,7 +299,7 @@ Use `systemPrompt` for a short inline instruction, or `systemPromptPath` to keep
 }
 ```
 
-System-prompt contributions take effect on both agent engines. The interactive TUI, `nighthawk -p`, and `nighthawk web` use the v2 engine by default; setting `NIGHTHAWK_LEGACY_FLAG=1` routes the local CLI surfaces to the legacy engine.
+System-prompt contributions take effect on both agent engines. The interactive TUI and `nighthawk -p` use the v2 engine by default; setting `NIGHTHAWK_LEGACY_FLAG=1` routes the local CLI surfaces to the legacy engine.
 
 Each field — the inline `systemPrompt` and the `systemPromptPath` file — is limited to 32 KB (UTF-8 bytes): oversized content is ignored and reported in the plugin diagnostics. Across all enabled plugins, one prompt build injects at most 64 KB of instructions; contributions beyond the budget are skipped with a warning, including a single plugin whose inline text and file together exceed that budget.
 

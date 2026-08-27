@@ -113,8 +113,8 @@ $NIGHTHAWK_HOME  （默认 ~/.nighthawk）
 | 清理输入历史 | 删除 `~/.nighthawk/user-history/` |
 | 重置更新状态 | 删除 `~/.nighthawk/updates/latest.json` |
 | 强制重新下载托管 `rg` 和 `fd` | 删除 `~/.nighthawk/bin/` |
-| 清除供应商 OAuth 登录态 | 运行 `/logout`，或删除对应的 `credentials/<name>.json` |
-| 清除 MCP server OAuth 登录态 | 删除 `credentials/mcp/`（`/logout` 不会清理 MCP 凭据） |
+| 清除供应商 OAuth 登录态 | 删除对应的 `credentials/<name>.json` |
+| 清除 MCP server OAuth 登录态 | 删除 `credentials/mcp/` |
 | 移除用户级 MCP 声明 | 删除 `$NIGHTHAWK_HOME/mcp.json`（默认为 `~/.nighthawk/mcp.json`） |
 | 清理全局 NightHawk 专属 Agent 指令 | 删除 `$NIGHTHAWK_HOME/AGENTS.md`（默认为 `~/.nighthawk/AGENTS.md`） |
 | 清理 plugin 安装记录 | 删除 `$NIGHTHAWK_HOME/plugins/`（本地 plugin 源码不受影响） |

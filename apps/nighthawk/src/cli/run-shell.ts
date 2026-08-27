@@ -27,7 +27,6 @@ import { CHROME_GUTTER } from '#/tui/constant/rendering';
 import { NighthawkTUI } from '#/tui/index';
 import { startupTrace } from '#/utils/startup-trace';
 import { currentTheme, getColorPalette } from '#/tui/theme';
-import { toTerminalHyperlink } from '#/utils/terminal-hyperlink';
 import { restoreTerminalModes } from '#/utils/terminal-restore';
 import { resolveCommandPath } from '#/utils/process/resolve-command';
 
@@ -239,21 +238,11 @@ export async function runShell(
     if (sessionId !== '' && hasContent) {
       hints.push(`${gutter}To resume this session: nighthawk -r ${sessionId}`);
     }
-    if (tui.exitOpenUrl !== undefined) {
-      hints.push(`${gutter}open ${toTerminalHyperlink(tui.exitOpenUrl, tui.exitOpenUrl)}`);
-    }
     if (hints.length > 0) {
       process.stderr.write(`\n${hints.join('\n')}\n`);
     }
     removeCrashHandlers();
     restoreStty();
-    if (tui.exitForegroundTask !== undefined) {
-      // `/web` starting a new server: the TUI has shut down cleanly; hand the
-      // terminal to the foreground server instead of exiting. The task runs
-      // until the server stops (Ctrl+C), then this process exits.
-      await tui.exitForegroundTask(exitCode);
-      return;
-    }
     process.exit(exitCode);
   };
   try {

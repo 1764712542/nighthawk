@@ -33,7 +33,6 @@ import {
   getMediaFallbackModel,
   getModelThinkingMode,
   groupModelsByProvider,
-  requiresManagedProviderLogin,
   useSettingsStore,
 } from "../webview-ui/src/stores/settings.store";
 import { useChatStore } from "../webview-ui/src/stores/chat.store";
@@ -155,7 +154,7 @@ describe("Webview model metadata", () => {
       models: group.models.map((model) => model.id),
     }))).toEqual([
       { provider: "company-proxy", label: "company-proxy", models: ["proxy/shared"] },
-      { provider: "managed:nighthawk", label: "NightHawk", models: ["nighthawk/shared"] },
+      { provider: "managed:nighthawk", label: "nighthawk", models: ["nighthawk/shared"] },
     ]);
   });
 
@@ -184,17 +183,6 @@ describe("Webview model metadata", () => {
     expect(fallback?.id).toBe("openai/vision");
   });
 
-  it("does not require NightHawk login when the default model uses a custom provider", () => {
-    expect(requiresManagedProviderLogin([
-      { id: "local/model", name: "Local", provider: "local", capabilities: [] },
-    ], "local/model", false)).toBe(false);
-  });
-
-  it("requires NightHawk login when the default model uses the managed provider", () => {
-    expect(requiresManagedProviderLogin([
-      { id: "nighthawk/model", name: "NightHawk", provider: "managed:nighthawk", capabilities: [] },
-    ], "nighthawk/model", false)).toBe(true);
-  });
 });
 
 describe("Webview MCP update bridge", () => {

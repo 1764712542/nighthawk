@@ -12,7 +12,6 @@ import { createNighthawkUserAgent } from '#/cli/version';
 
 import type { SkillListSession } from '../commands';
 
-import { OAUTH_LOGIN_REQUIRED_STARTUP_NOTICE } from '../constant/nighthawk-tui';
 import {
   refreshAllProviderModels,
   type RefreshProviderHost,
@@ -58,21 +57,6 @@ export class AuthFlowController {
       availableModels: config.models ?? {},
       availableProviders: config.providers ?? {},
     });
-  }
-
-  enterLoginRequiredStartupState(): void {
-    this.host.resetSessionRuntime();
-    this.host.setAppState({
-      sessionId: '',
-      model: '',
-      thinkingEffort: 'off',
-      contextTokens: 0,
-      maxContextTokens: 0,
-      contextUsage: 0,
-      sessionTitle: null,
-    });
-    this.host.appendStartupNotice(OAUTH_LOGIN_REQUIRED_STARTUP_NOTICE);
-    this.host.setStartupReady();
   }
 
   async activateModelAfterLogin(model: string, effort?: string): Promise<void> {

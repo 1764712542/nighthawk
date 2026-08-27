@@ -133,17 +133,7 @@ In `stream-json` mode, regular replies produce an Assistant message; when the mo
 
 ## Subcommands
 
-`nighthawk` provides the following subcommands: `login` (non-interactive login), `acp` (ACP IDE mode), `web` (run the local REST/WebSocket/web service in the foreground and open the web UI), `doctor` (validate configuration files), `export` (export a session), `migrate` (migrate legacy data), `upgrade` (check for updates), and `provider` (manage providers).
-
-### `nighthawk login`
-
-Log in to NightHawk OAuth via the RFC 8628 device-code flow, without entering the TUI. The command issues a device authorization request, prints the verification URL and user code to stderr, then polls until the browser-side authorization is complete. The generated token is written to the same local location as TUI `/login` and is loaded automatically the next time `nighthawk` starts.
-
-```sh
-nighthawk login
-```
-
-This subcommand has no flags. Press `Ctrl-C` at any time during polling to cancel; the exit code is `1` on cancellation or failure, and `0` on success.
+`nighthawk` provides the following subcommands: `acp` (ACP IDE mode), `doctor` (validate configuration files), `export` (export a session), `migrate` (migrate legacy data), `upgrade` (check for updates), `vis` (launch the session visualizer in the browser), and `provider` (manage providers).
 
 ### `nighthawk acp`
 
@@ -152,49 +142,6 @@ Switch NightHawk CLI to ACP (Agent Client Protocol) mode, communicating with an 
 ```sh
 nighthawk acp
 ```
-
-### `nighthawk web`
-
-Run the local NightHawk server in the foreground of the current terminal — a single process that exposes the REST + WebSocket API and serves the web UI from the same origin — and open the web UI in the default browser once it is ready. The command stays attached to the terminal and shuts down cleanly on `SIGINT` / `SIGTERM` (e.g. `Ctrl-C`).
-
-When the server is running, `GET /openapi.json` returns the REST OpenAPI document and `GET /asyncapi.json` returns the local WebSocket AsyncAPI document. For an end-to-end walkthrough of driving sessions over the API, see [Local server and API](../guides/server.md); for the protocol details, see the [Server API](./server-api.md) reference.
-
-```sh
-nighthawk web                 # run the server in the foreground and open the browser
-nighthawk web --no-open       # don't open the browser
-nighthawk web --port 58628    # pick a specific bind port
-```
-
-Multiple instances can share one home directory: each registers itself under `~/.nighthawk/server/instances/`, and a busy port is retried with `port + 1` (58628, 58629, …).
-
-| Option | Description |
-| --- | --- |
-| `--port <port>` | Bind port; defaults to `58627`; a busy port is retried with `+1` |
-| `--host [host]` | Bind host; omit for `127.0.0.1` (this machine only), pass a bare `--host` for `0.0.0.0` (all interfaces) |
-| `--allowed-host <host...>` | Extra Host header values allowed through the DNS-rebinding check; repeatable or comma-separated |
-| `--log-level <level>` | Enable server logs at the selected level; omitted by default |
-| `--debug-endpoints` | Mount `/api/v1/debug/*` routes (off by default) |
-| `--dangerous-bypass-auth` | Disable bearer-token auth on all REST and WebSocket routes so the web UI connects without a token; only for trusted networks or behind an authenticating proxy |
-| `--web-title <title>` | Custom browser tab title for the web UI; defaults to the workspace directory name |
-| `--no-open` | Do not open the browser once the server is ready |
-
-`nighthawk web` binds to local loopback only by default and prints the bearer token in the startup banner; the web UI authenticates automatically via the `#token=` URL fragment.
-
-::: info
-The `nighthawk server` command tree is deprecated: any `nighthawk server …` invocation (including all legacy subcommands) only prints a deprecation notice and exits with code 1 — use `nighthawk web` instead. The one exception is `nighthawk server kill`, which stays functional for stopping servers started by a version before 0.28.0. The notice will be removed in the next major version of NightHawk.
-:::
-
-::: danger
-`--dangerous-bypass-auth` disables authentication entirely. Anyone who can reach the port gets full access to your sessions, filesystem, and shell. Only use it on a trusted network or behind your own authenticating reverse proxy, and stop the server with `Ctrl+C` when you are done.
-:::
-
-#### `nighthawk server kill`
-
-Deprecated — only stops a server started by a version before 0.28.0. Those versions could leave a background server behind, recorded in the legacy single-instance lock at `~/.nighthawk/server/lock`; the command first tries `POST /api/v1/shutdown` for a graceful exit, then signals the recorded pid with SIGTERM, escalating to SIGKILL when needed, and removes the lock file once the process is confirmed dead. Servers started by `nighthawk web` run in the foreground — stop them with `Ctrl+C` instead.
-
-#### `nighthawk web rotate-token`
-
-Generate a new persistent bearer token (written to `~/.nighthawk/server.token`); the previous token stops working immediately. The token is shared by the whole home directory, so every running instance picks the new one up on its next auth check — no restart needed.
 
 ### `nighthawk doctor`
 

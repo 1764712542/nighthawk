@@ -113,8 +113,8 @@ Deleting the data root directory (`~/.nighthawk/` or the path set by `NIGHTHAWK_
 | Clear input history | Delete `~/.nighthawk/user-history/` |
 | Reset update state | Delete `~/.nighthawk/updates/latest.json` |
 | Force re-download of managed `rg` and `fd` | Delete `~/.nighthawk/bin/` |
-| Clear provider OAuth login state | Run `/logout`, or delete the corresponding `credentials/<name>.json` |
-| Clear MCP server OAuth login state | Delete `credentials/mcp/` (`/logout` does not clear MCP credentials) |
+| Clear provider OAuth login state | Delete the corresponding `credentials/<name>.json` |
+| Clear MCP server OAuth login state | Delete `credentials/mcp/` |
 | Remove user-level MCP declarations | Delete `$NIGHTHAWK_HOME/mcp.json` (default `~/.nighthawk/mcp.json`) |
 | Clear global NightHawk-specific agent instructions | Delete `$NIGHTHAWK_HOME/AGENTS.md` (default `~/.nighthawk/AGENTS.md`) |
 | Clear plugin install records | Delete `$NIGHTHAWK_HOME/plugins/` (local plugin source directories are not affected) |

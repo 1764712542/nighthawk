@@ -3,7 +3,6 @@ import { writeFileSync } from 'node:fs';
 import { unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import type { DeviceAuthorization } from '@nighthawk/nighthawk-oauth';
 import { effectiveModelAlias, log } from '@nighthawk/nighthawk-sdk';
 import type {
   ApprovalRequest,
@@ -37,7 +36,6 @@ import type { CLIOptions } from '#/cli/options';
 import { MigrationScreenComponent, type MigrationScreenResult } from '#/migration/index';
 import { copyTextToClipboard } from '#/utils/clipboard/clipboard-text';
 import { appendInputHistory, loadInputHistory } from '#/utils/history/input-history';
-import { openUrl } from '#/utils/open-url';
 import { getInputHistoryFile } from '#/utils/paths';
 import { detectFdPath, ensureFdPath } from '#/utils/process/fd-detect';
 import { quoteShellArg } from '#/utils/shell-quote';
@@ -59,7 +57,6 @@ import {
 import * as slashCommands from './commands/dispatch';
 import { CacheHintController } from './controllers/cache-hint-controller';
 import { BannerComponent } from './components/chrome/banner';
-import { DeviceCodeBoxComponent } from './components/chrome/device-code-box';
 import { GutterContainer } from './components/chrome/gutter-container';
 import { MoonLoader, type SpinnerStyle } from './components/chrome/moon-loader';
 import { WelcomeComponent } from './components/chrome/welcome';
@@ -177,7 +174,7 @@ import { createEmptySessionStats } from './utils/session-stats';
 import { formatStepRetryDetail, formatStepRetryLabel } from './utils/step-retry';
 import { formatBashOutputForDisplay } from './utils/shell-output';
 import { thinkingEffortFromConfig } from './utils/thinking-config';
-import { combineStartupNotice, isOAuthLoginRequiredError } from './utils/startup';
+import { combineStartupNotice } from './utils/startup';
 import { installTerminalFocusTracking } from './utils/terminal-focus';
 import { notifyTerminalOnce } from './utils/terminal-notification';
 import { installTerminalThemeTracking } from './utils/terminal-theme';
@@ -383,16 +380,6 @@ export class NighthawkTUI {
     | undefined;
 
   public onExit?: (exitCode?: number) => Promise<void>;
-
-  /** URL opened in the browser just before exit (e.g. by `/web`); printed by onExit. */
-  public exitOpenUrl: string | undefined;
-
-  /**
-   * Task that takes over the process after the TUI shuts down, instead of
-   * exiting (`/web` starting a new server: the server keeps this terminal
-   * attached until Ctrl+C). Set via {@link setExitForegroundTask}.
-   */
-  public exitForegroundTask: ((exitCode: number) => Promise<void>) | undefined;
 
   track(event: string, properties?: Parameters<NighthawkHarness['track']>[1]): void {
     this.harness.track(event, properties);
@@ -866,82 +853,76 @@ export class NighthawkTUI {
       createSessionOptions.additionalDirs = [...this.state.appState.additionalDirs];
     }
 
-    try {
-      if (isResumeStartup) {
-        if (startup.sessionFlag === '') {
-          this.state.startupState = 'picker';
-          return false;
-        }
+    if (isResumeStartup) {
+      if (startup.sessionFlag === '') {
+        this.state.startupState = 'picker';
+        return false;
+      }
 
-        if (startup.sessionFlag !== undefined) {
-          const sessions = await this.harness.listSessions({
-            sessionId: startup.sessionFlag,
-            workDir,
-          });
-          const target = sessions[0];
-          if (target === undefined) {
-            throw new Error(`Session "${startup.sessionFlag}" not found.`);
-          }
-          if (resolve(target.workDir) !== resolve(workDir)) {
-            this.state.ui.stop();
-            process.stderr.write(
-              `${currentTheme.fg(
-                'warning',
-                `Session "${startup.sessionFlag}" was created under a different directory.\n` +
-                  `  cd "${target.workDir}" && nighthawk -r ${startup.sessionFlag}`,
-              )}\n\n`,
-            );
-            throw new Error(
-              `Session "${startup.sessionFlag}" was created under a different directory.`,
-            );
-          }
+      if (startup.sessionFlag !== undefined) {
+        const sessions = await this.harness.listSessions({
+          sessionId: startup.sessionFlag,
+          workDir,
+        });
+        const target = sessions[0];
+        if (target === undefined) {
+          throw new Error(`Session "${startup.sessionFlag}" not found.`);
+        }
+        if (resolve(target.workDir) !== resolve(workDir)) {
+          this.state.ui.stop();
+          process.stderr.write(
+            `${currentTheme.fg(
+              'warning',
+              `Session "${startup.sessionFlag}" was created under a different directory.\n` +
+                `  cd "${target.workDir}" && nighthawk -r ${startup.sessionFlag}`,
+            )}\n\n`,
+          );
+          throw new Error(
+            `Session "${startup.sessionFlag}" was created under a different directory.`,
+          );
+        }
+        session = await this.harness.resumeSession({
+          id: startup.sessionFlag,
+          additionalDirs: createSessionOptions.additionalDirs,
+          replayTurnLimit: REPLAY_FETCH_TURN_LIMIT,
+        });
+        shouldReplayHistory = true;
+      } else {
+        // Only the most recent session matters here — fetch a one-item page
+        // instead of materializing the whole listing.
+        const page = await this.harness.listSessionsPage({ workDir, limit: 1 });
+        const target = page.items[0];
+        if (target !== undefined) {
           session = await this.harness.resumeSession({
-            id: startup.sessionFlag,
+            id: target.id,
             additionalDirs: createSessionOptions.additionalDirs,
             replayTurnLimit: REPLAY_FETCH_TURN_LIMIT,
           });
           shouldReplayHistory = true;
         } else {
-          // Only the most recent session matters here — fetch a one-item page
-          // instead of materializing the whole listing.
-          const page = await this.harness.listSessionsPage({ workDir, limit: 1 });
-          const target = page.items[0];
-          if (target !== undefined) {
-            session = await this.harness.resumeSession({
-              id: target.id,
-              additionalDirs: createSessionOptions.additionalDirs,
-              replayTurnLimit: REPLAY_FETCH_TURN_LIMIT,
-            });
-            shouldReplayHistory = true;
-          } else {
-            session = await this.harness.createSession(createSessionOptions);
-            this.startupNotice = combineStartupNotice(
-              this.startupNotice,
-              `No sessions to continue under "${workDir}"; starting a fresh session.`,
-            );
-          }
-        }
-      } else if (this.engineV2) {
-        // Lazy session creation (v2 engine): start session-less and create the
-        // session on the first message. Startup flags are carried in appState
-        // and applied when that session is created; until then the footer
-        // shows the config defaults the engine would apply at createSession
-        // time (model, permission, plan mode, thinking effort, context cap).
-        await this.hydrateLazyConfigDefaults();
-        this.appendStartupNotice(SESSIONLESS_STARTUP_NOTICE);
-      } else {
-        session = await this.harness.createSession(createSessionOptions);
-      }
-      if (session !== undefined && shouldReplayHistory) {
-        await this.applyStartupModesToResumedSession(session);
-        if (startup.model !== undefined) {
-          await session.setModel(startup.model);
+          session = await this.harness.createSession(createSessionOptions);
+          this.startupNotice = combineStartupNotice(
+            this.startupNotice,
+            `No sessions to continue under "${workDir}"; starting a fresh session.`,
+          );
         }
       }
-    } catch (error) {
-      if (!isOAuthLoginRequiredError(error)) throw error;
-      this.authFlow.enterLoginRequiredStartupState();
-      return false;
+    } else if (this.engineV2) {
+      // Lazy session creation (v2 engine): start session-less and create the
+      // session on the first message. Startup flags are carried in appState
+      // and applied when that session is created; until then the footer
+      // shows the config defaults the engine would apply at createSession
+      // time (model, permission, plan mode, thinking effort, context cap).
+      await this.hydrateLazyConfigDefaults();
+      this.appendStartupNotice(SESSIONLESS_STARTUP_NOTICE);
+    } else {
+      session = await this.harness.createSession(createSessionOptions);
+    }
+    if (session !== undefined && shouldReplayHistory) {
+      await this.applyStartupModesToResumedSession(session);
+      if (startup.model !== undefined) {
+        await session.setModel(startup.model);
+      }
     }
 
     if (!this.engineV2 && session === undefined) {
@@ -2100,14 +2081,6 @@ export class NighthawkTUI {
     return this.state.transcriptEntries.length > 0;
   }
 
-  setExitOpenUrl(url: string): void {
-    this.exitOpenUrl = url;
-  }
-
-  setExitForegroundTask(task: (exitCode: number) => Promise<void>): void {
-    this.exitForegroundTask = task;
-  }
-
   async getStartupMcpMs(): Promise<number> {
     const session = this.session;
     if (session === undefined) return 0;
@@ -3255,20 +3228,6 @@ export class NighthawkTUI {
         spinner.setLabel(nextLabel);
       },
     };
-  }
-
-  showLoginAuthorizationPrompt(auth: DeviceAuthorization): LoginProgressSpinnerHandle {
-    openUrl(auth.verificationUriComplete);
-    this.state.transcriptContainer.addChild(
-      new DeviceCodeBoxComponent({
-        title: 'Sign in to NightHawk',
-        url: auth.verificationUriComplete,
-        code: auth.userCode,
-        hint: 'Press Ctrl-C to cancel',
-      }),
-    );
-    this.state.ui.requestRender();
-    return this.showLoginProgressSpinner('Waiting for authorization…');
   }
 
   // =========================================================================

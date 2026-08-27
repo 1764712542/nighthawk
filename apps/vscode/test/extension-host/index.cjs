@@ -9,7 +9,6 @@ const EXPECTED_COMMANDS = [
   "nighthawk.clearAllState",
   "nighthawk.focusInput",
   "nighthawk.insertMention",
-  "nighthawk.logout",
   "nighthawk.migrateLegacyData",
   "nighthawk.newConversation",
   "nighthawk.openInSideBar",

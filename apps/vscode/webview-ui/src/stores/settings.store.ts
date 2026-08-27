@@ -47,7 +47,6 @@ export function getModelThinkingMode(model: ModelConfig): ThinkingMode {
 }
 
 export function providerDisplayName(provider: string): string {
-  if (provider === MANAGED_NIGHTHAWK_PROVIDER) return "NightHawk";
   if (provider.startsWith("managed:")) return provider.slice("managed:".length);
   return provider;
 }
@@ -75,16 +74,6 @@ export function groupModelsByProvider(models: ModelConfig[]): ModelProviderGroup
       models: providerModels.toSorted((left, right) => left.name.localeCompare(right.name)),
     }))
     .toSorted((left, right) => left.label.localeCompare(right.label));
-}
-
-export function requiresManagedProviderLogin(
-  models: ModelConfig[],
-  defaultModel: string | null,
-  loggedIn: boolean,
-): boolean {
-  if (loggedIn) return false;
-  const activeModel = getModelById(models, defaultModel ?? "") ?? models[0];
-  return activeModel?.provider === MANAGED_NIGHTHAWK_PROVIDER;
 }
 
 function defaultEffortForModel(model: ModelConfig, defaultThinking: boolean, configuredEffort?: string): string {
@@ -155,7 +144,6 @@ interface SettingsState {
   modelsLoaded: boolean;
   wireSlashCommands: SlashCommandInfo[];
   slashCommands: SlashCommandInfo[];
-  isLoggedIn: boolean;
 
   setCurrentModel: (model: string) => void;
   setThinkingEffort: (effort: string) => void;
@@ -170,7 +158,6 @@ interface SettingsState {
   setWorkspaceRoot: (root: string | null) => void;
   initModels: (models: ModelConfig[], defaultModel: string | null, defaultThinking: boolean, defaultThinkingEffort?: string) => void;
   setWireSlashCommands: (commands: SlashCommandInfo[]) => void;
-  setIsLoggedIn: (loggedIn: boolean) => void;
   getCurrentThinkingMode: () => ThinkingMode;
 }
 
@@ -189,7 +176,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   modelsLoaded: false,
   wireSlashCommands: [],
   slashCommands: [],
-  isLoggedIn: false,
 
   setCurrentModel: (currentModel) => set({ currentModel }),
 
@@ -309,8 +295,6 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       slashCommands: commands,
     });
   },
-
-  setIsLoggedIn: (isLoggedIn) => set({ isLoggedIn }),
 
   getCurrentThinkingMode: () => {
     const { models, currentModel } = get();

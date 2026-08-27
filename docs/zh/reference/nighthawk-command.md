@@ -133,17 +133,7 @@ nighthawk -p "List changed files" --output-format stream-json
 
 ## 子命令
 
-`nighthawk` 提供以下子命令：`login`（非交互式登录）、`acp`（ACP IDE 模式）、`web`（前台运行本地 REST/WebSocket/web 服务并打开 web UI）、`doctor`（校验配置文件）、`export`（导出会话）、`migrate`（迁移旧版数据）、`upgrade`（检查更新）、`provider`（管理供应商）。
-
-### `nighthawk login`
-
-通过 RFC 8628 device-code 流程登录 NightHawk OAuth，无需进入 TUI。命令会发起一次 device authorization 请求，将验证地址和用户码打印到 stderr，然后轮询直到浏览器侧完成授权。生成的 token 写入与 TUI `/login` 相同的本地位置，下次启动 `nighthawk` 时会自动加载。
-
-```sh
-nighthawk login
-```
-
-该子命令没有任何 flag。在轮询期间随时按 `Ctrl-C` 可取消登录；取消或失败时退出码为 `1`，成功为 `0`。
+`nighthawk` 提供以下子命令：`acp`（ACP IDE 模式）、`doctor`（校验配置文件）、`export`（导出会话）、`migrate`（迁移旧版数据）、`upgrade`（检查更新）、`vis`（在浏览器中启动会话可视化工具）、`provider`（管理供应商）。
 
 ### `nighthawk acp`
 
@@ -152,49 +142,6 @@ nighthawk login
 ```sh
 nighthawk acp
 ```
-
-### `nighthawk web`
-
-在当前终端前台运行本地 NightHawk 服务 —— 同一个进程同时挂载 REST + WebSocket API 与 web UI —— 并在服务就绪后用默认浏览器打开 web UI。命令会一直挂在终端，直到收到 `SIGINT` / `SIGTERM`（如 `Ctrl-C`）时干净退出。
-
-服务运行时，`GET /openapi.json` 会返回 REST OpenAPI 文档，`GET /asyncapi.json` 会返回本地 WebSocket 协议的 AsyncAPI 文档。用 API 驱动会话的完整流程见[本地服务与 API](../guides/server.md)，协议细节见[服务 API](./server-api.md)。
-
-```sh
-nighthawk web                 # 前台运行服务并打开浏览器
-nighthawk web --no-open       # 不打开浏览器
-nighthawk web --port 58628    # 指定绑定端口
-```
-
-同一 home 目录下可以同时运行多个实例：每个实例注册到 `~/.nighthawk/server/instances/`，端口被占用时自动 +1 重试（58628、58629……）。
-
-| 选项 | 说明 |
-| --- | --- |
-| `--port <port>` | 绑定端口；默认 `58627`；被占用时自动 +1 重试 |
-| `--host [host]` | 绑定地址；缺省 `127.0.0.1`（仅本机），裸 `--host` 绑 `0.0.0.0`（所有网卡） |
-| `--allowed-host <host...>` | DNS 重绑定检查额外允许的 Host 头，可重复或逗号分隔 |
-| `--log-level <level>` | 按所选级别开启服务日志；默认不输出 |
-| `--debug-endpoints` | 挂载 `/api/v1/debug/*` 调试路由（默认关闭） |
-| `--dangerous-bypass-auth` | 关闭所有 REST 与 WebSocket 路由的 bearer token 鉴权，使 web UI 无需 token 即可连接；仅用于可信网络或自有鉴权代理之后 |
-| `--web-title <title>` | 自定义 web UI 的浏览器标签页标题；默认为工作区目录名 |
-| `--no-open` | 就绪后不自动打开浏览器 |
-
-`nighthawk web` 默认只绑定本机 loopback 地址，并在启动横幅中打印 bearer token；web UI 通过 URL 的 `#token=` 片段自动完成鉴权。
-
-::: info 提示
-`nighthawk server` 命令树已废弃：任何 `nighthawk server …` 调用（含全部旧子命令）只会打印弃用提示并以退出码 1 结束，请改用 `nighthawk web`。唯一的例外是 `nighthawk server kill`，它仍然可用，仅用于停止 0.28.0 之前版本启动的服务。该提示将在 NightHawk 下个大版本移除。
-:::
-
-::: danger 警告
-`--dangerous-bypass-auth` 会彻底关闭鉴权。任何能访问该端口的人都能完全控制你的会话、文件系统和 shell。请仅在可信网络或自有鉴权反向代理之后使用，用完后按 `Ctrl+C` 停止服务。
-:::
-
-#### `nighthawk server kill`
-
-已废弃——仅用于停止 0.28.0 之前的 NightHawk 版本启动的服务。那些版本可能在后台遗留服务进程，记录在 legacy 单实例锁文件 `~/.nighthawk/server/lock` 中；该命令先请求 `POST /api/v1/shutdown` 优雅退出，再对锁中记录的 pid 发 SIGTERM、必要时升级为 SIGKILL，并在确认进程退出后删除锁文件。`nighthawk web` 启动的服务在前台运行，直接用 `Ctrl+C` 停止即可。
-
-#### `nighthawk web rotate-token`
-
-生成新的持久化 bearer token（写入 `~/.nighthawk/server.token`），旧 token 立即失效。token 是整个 home 目录共享的，所有运行中的实例会在下一次鉴权校验时自动换用新 token，无需重启。
 
 ### `nighthawk doctor`
 

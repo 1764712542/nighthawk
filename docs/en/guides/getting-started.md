@@ -104,18 +104,16 @@ To resume the previous session, add `-c`:
 nighthawk -c
 ```
 
-On first launch you need to configure an API source. In the interactive UI, enter `/connect` to begin the provider setup flow:
+On first launch you need to configure an API source. In the interactive UI, enter `/provider` to open the provider manager:
 
 ```
-/connect
+/provider
 ```
 
-`/connect` opens a platform selector supporting two options:
+`/provider` lets you add a provider interactively:
 
 - **NightHawk (OAuth)** — device-code flow; open the link on any device, sign in, and enter the code to authorize
 - **NightHawk Platform API key** — enter an API key from `platform.kimi.com` or `platform.kimi.ai`
-
-To sign out, enter `/logout` to clear the current credentials.
 
 ::: tip Using other AI providers
 If you want to connect Anthropic, OpenAI, Google, or other providers, edit `~/.nighthawk/config.toml` directly to configure the API key. See [Providers and models](../configuration/providers.md) for details. For the full reference of all config options, see [Configuration files](../configuration/config-files.md), [Environment variables](../configuration/env-vars.md), and [Configuration overrides](../configuration/overrides.md).

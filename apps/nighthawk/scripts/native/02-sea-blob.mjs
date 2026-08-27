@@ -16,7 +16,6 @@ import {
   nativeSeaConfigPath,
   targetTriple,
 } from './paths.mjs';
-import { collectWebAssets, webAssetManifestKey } from './web-assets.mjs';
 
 async function ensureBundleExists() {
   try {
@@ -32,19 +31,13 @@ async function writeSeaConfig(target) {
     appRoot,
     target,
   });
-  const web = await collectWebAssets({ appRoot, target });
   const manifestPath = resolve(nativeManifestDir(target), 'manifest.json');
-  const webManifestPath = resolve(nativeIntermediatesDir(), 'web-assets', target, 'manifest.json');
   await mkdir(dirname(manifestPath), { recursive: true });
-  await mkdir(dirname(webManifestPath), { recursive: true });
   await writeFile(manifestPath, manifestJson);
-  await writeFile(webManifestPath, web.manifestJson);
 
   const seaAssets = {
     [nativeAssetManifestKey(target)]: manifestPath,
-    [webAssetManifestKey(target)]: webManifestPath,
     ...assets,
-    ...web.assets,
   };
   const config = {
     main: nativeJsBundlePath(),
@@ -62,9 +55,6 @@ async function writeSeaConfig(target) {
   for (const line of nativeAssetSummary(manifest)) {
     console.log(`- ${line}`);
   }
-  console.log(
-    `Collected web assets for ${web.manifest.target}: ${web.manifest.files.length} files`,
-  );
 }
 
 export async function runSeaBlobStep() {

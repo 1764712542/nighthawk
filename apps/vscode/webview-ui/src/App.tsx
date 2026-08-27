@@ -1,12 +1,11 @@
 // node/vscode_extension/webview-ui/src/App.tsx
-import { useEffect, useState, useCallback } from "react";
+import { useEffect } from "react";
 import { Header } from "./components/Header";
 import { ChatArea } from "./components/ChatArea";
 import { InputArea } from "./components/inputarea/InputArea";
 import { MCPServersModal } from "./components/MCPServersModal";
 import { WorkDirModal } from "./components/WorkDirModal";
 import { ConfigErrorScreen } from "./components/ConfigErrorScreen";
-import { LoginScreen } from "./components/LoginScreen";
 import { Toaster, toast } from "./components/ui/sonner";
 import { useChatStore, useSettingsStore } from "./stores";
 import { bridge, Events } from "./services";
@@ -15,7 +14,7 @@ import { isPreflightError } from "shared/errors";
 import type { UIStreamEvent, StreamError, ExtensionConfig } from "shared/types";
 import "./styles/index.css";
 
-function MainContent({ onAuthAction }: { onAuthAction: () => void }) {
+function MainContent() {
   const { processEvent, startNewConversation, sessionId } = useChatStore();
   const { setMCPServers, setExtensionConfig, extensionConfig } = useSettingsStore();
 
@@ -70,7 +69,7 @@ function MainContent({ onAuthAction }: { onAuthAction: () => void }) {
         <ChatArea />
       </div>
       <div className="shrink-0 max-h-[80vh] flex flex-col min-h-0">
-        <InputArea onAuthAction={onAuthAction} />
+        <InputArea />
       </div>
       <MCPServersModal />
       <WorkDirModal />
@@ -80,45 +79,10 @@ function MainContent({ onAuthAction }: { onAuthAction: () => void }) {
 
 export default function App() {
   const { status, errorMessage, modelsCount, refresh } = useAppInit();
-  const [skippedLogin, setSkippedLogin] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
 
-  const handleLoginSuccess = useCallback(() => {
-    setShowLogin(false);
-    setSkippedLogin(false);
-    refresh();
-  }, [refresh]);
+  const resolution = resolveAppView({ status, modelsCount });
 
-  const handleSkip = useCallback(() => {
-    setShowLogin(false);
-    setSkippedLogin(true);
-  }, []);
-
-  const handleShowLogin = useCallback(() => {
-    setSkippedLogin(false);
-    setShowLogin(true);
-  }, []);
-
-  const handleAuthAction = useCallback(() => {
-    setSkippedLogin(false);
-    setShowLogin(false);
-    refresh();
-  }, [refresh]);
-
-  const resolution = resolveAppView({ status, modelsCount, skippedLogin, showLogin });
-
-  // 登录界面：未登录且未跳过，或用户从其他界面主动选择登录
-  if (resolution.view === "login") {
-    return (
-      <div className="flex flex-col h-screen text-foreground overflow-hidden">
-        <Header />
-        <LoginScreen onLoginSuccess={handleLoginSuccess} onSkip={handleSkip} />
-        <Toaster position="top-center" />
-      </div>
-    );
-  }
-
-  // 错误与设置状态界面；no-models 必须保留回到登录界面的入口
+  // 错误与设置状态界面
   if (resolution.view === "status") {
     return (
       <div className="flex flex-col h-screen text-foreground overflow-hidden">
@@ -127,7 +91,6 @@ export default function App() {
           type={resolution.status}
           errorMessage={errorMessage}
           onRefresh={refresh}
-          onBackToLogin={resolution.canGoToLogin ? handleShowLogin : undefined}
         />
         <Toaster position="top-center" />
       </div>
@@ -138,7 +101,7 @@ export default function App() {
   return (
     <div className="flex flex-col h-screen text-foreground overflow-hidden">
       <Header />
-      <MainContent onAuthAction={handleAuthAction} />
+      <MainContent />
       <Toaster position="top-center" />
     </div>
   );

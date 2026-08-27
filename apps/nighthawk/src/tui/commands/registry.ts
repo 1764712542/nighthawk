@@ -408,7 +408,7 @@ export const BUILTIN_SLASH_COMMANDS = [
   },
   {
     name: 'connect',
-    aliases: ['login'],
+    aliases: [],
     description: 'Connect a model provider via API key · 通过 API 密钥接入模型供应商',
     priority: 40,
   },
@@ -429,13 +429,6 @@ export const BUILTIN_SLASH_COMMANDS = [
     aliases: [],
     description: 'Copy the last assistant message to the clipboard · 复制上一条回复到剪贴板',
     priority: 40,
-  },
-  {
-    name: 'web',
-    aliases: [],
-    description: 'Open the current session in the Web UI · 在浏览器中打开当前会话',
-    priority: 40,
-    availability: 'always',
   },
   {
     name: 'exit',

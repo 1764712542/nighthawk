@@ -104,18 +104,16 @@ nighthawk -p "帮我看一下这个项目的目录结构"
 nighthawk -c
 ```
 
-首次启动时需要配置 API 来源。在交互界面中输入 `/connect` 进入供应商连接流程：
+首次启动时需要配置 API 来源。在交互界面中输入 `/provider` 打开供应商管理器：
 
 ```
-/connect
+/provider
 ```
 
-`/connect` 会弹出平台选择器，支持两种方式：
+`/provider` 支持以下方式添加供应商：
 
 - **NightHawk（OAuth）** — 验证码流程，在任意设备打开链接、登录并输入验证码即可授权
 - **NightHawk Platform API 密钥** — 输入来自 `platform.kimi.com` 或 `platform.kimi.ai` 的 API 密钥
-
-需要退出登录时，输入 `/logout` 清除当前凭证。
 
 ::: tip 使用其他 AI 供应商
 如果你想接入 Anthropic、OpenAI、Google 等其他供应商，需要直接编辑 `~/.nighthawk/config.toml` 配置 API 密钥，详见[平台与模型](../configuration/providers.md)。配置项完整说明见[配置文件](../configuration/config-files.md)、[环境变量](../configuration/env-vars.md)和[配置覆盖](../configuration/overrides.md)。

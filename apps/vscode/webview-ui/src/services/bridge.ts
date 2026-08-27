@@ -6,7 +6,6 @@ import type {
   SessionInfo,
   NighthawkConfig,
   MCPTestResult,
-  LoginResult,
   UpdateMCPServerRequest,
 } from "shared/legacy-sdk";
 import type {
@@ -14,7 +13,6 @@ import type {
   SessionConfig,
   ExtensionConfig,
   WorkspaceStatus,
-  LoginStatus,
   UIStreamEvent,
 } from "shared/types";
 
@@ -120,18 +118,6 @@ class Bridge {
 
   getSlashCommands() {
     return this.call<import("shared/legacy-sdk").SlashCommandInfo[]>(Methods.GetSlashCommands);
-  }
-
-  checkLoginStatus() {
-    return this.call<LoginStatus>(Methods.CheckLoginStatus);
-  }
-
-  login() {
-    return this.call<LoginResult>(Methods.Login, undefined, OAUTH_REQUEST_TIMEOUT_MS);
-  }
-
-  logout() {
-    return this.call<LoginResult>(Methods.Logout);
   }
 
   saveConfig(sessionConfig: SessionConfig) {

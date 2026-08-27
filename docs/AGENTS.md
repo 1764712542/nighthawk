@@ -307,7 +307,7 @@ Before shipping, verify these values match the rest of the docs:
 - **Base URL**: matches the [Kimi platform rules](#kimi-platform-rules) table above
 - **Upgrade command**: matches `guides/getting-started.md`
 - **Model ID**: use `nighthawk`, not a versioned model name
-- **Login command**: `/login`, not `/setup`
+- **Provider command**: use `/provider`
 - **Product full name**: **NightHawk CLI** or **NightHawk for VS Code** — always use the full name
 - **Platform URLs**: `api.kimi.com/coding/…` for NightHawk platform; `api.moonshot.cn/v1` for Open Platform — never mix the two
 

@@ -222,7 +222,7 @@ default_model = "nighthawk/nighthawk-highspeed"
 
 在交互式 TUI 中，也可以用 [`/secondary-model`](../reference/slash-commands.md) 命令（别名 `/subagent-model`）打开模型选择器：选择后写入 `default_model`（已有 models 表而所选别名不在其中时，会一并补一条空描述条目），之后派生的 subagent 立即按新默认值绑定，无需重启会话。
 
-配置了模型池（显式的 `models` 表或隐式的单条目池）即启用模型选择：`Agent` / `AgentSwarm` 工具会获得 `model` 参数，工具描述中列出模型池（默认模型标注 `[default]`），main agent 可按次派生选择模型。池 key 只能引用已配置的 [`[models]`](#models) 条目——下面的 `nighthawk/*` 别名由 `/login` 自动提供：
+配置了模型池（显式的 `models` 表或隐式的单条目池）即启用模型选择：`Agent` / `AgentSwarm` 工具会获得 `model` 参数，工具描述中列出模型池（默认模型标注 `[default]`），main agent 可按次派生选择模型。池 key 只能引用已配置的 [`[models]`](#models) 条目——下面的 `nighthawk/*` 别名由托管服务自动提供：
 
 ```toml
 [secondary_model]
@@ -264,7 +264,7 @@ force = true
 2. 把原别名和变体别名都放进模型池。
 
 ```toml
-# "nighthawk/k3" 由 /login 提供（默认 high 档）；这里为同一模型注册一个 max 档位变体
+# "nighthawk/k3" 由托管服务提供（默认 high 档）；这里为同一模型注册一个 max 档位变体
 [models.k3-max]
 provider = "managed:nighthawk"
 model = "k3"
@@ -408,7 +408,7 @@ slug = "acme-dev"        # 可选
 
 身份在启动时解析一次，进程生命周期内保持不变——建立连接时它已宣告给 MCP 服务器和 provider，中途无法更换。修改本节配置在下次启动时对新会话生效；resume 的会话保留录制时的系统提示词，因为其历史轮次本就以原身份自称。同理，已完成的 MCP OAuth 授权保留其授予时的客户端注册；重置该服务器的认证即可在新身份下重新注册。
 
-本节由默认的 `agent-core-v2` 引擎读取。设置 `NIGHTHAWK_LEGACY_FLAG=1` 后，旧版 `nighthawk` / `nighthawk -p` 路径会忽略此配置；`nighthawk web` 始终使用 `agent-core-v2`。
+本节由默认的 `agent-core-v2` 引擎读取。设置 `NIGHTHAWK_LEGACY_FLAG=1` 后，旧版 `nighthawk` / `nighthawk -p` 路径会忽略此配置。
 
 ## `tools`
 

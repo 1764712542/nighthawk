@@ -1,16 +1,14 @@
 import { useState } from "react";
-import { IconSettings, IconServer, IconLogout, IconLogin, IconLoader2, IconRefresh, IconFileText, IconFolder } from "@tabler/icons-react";
+import { IconSettings, IconServer, IconRefresh, IconFileText, IconFolder } from "@tabler/icons-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useSettingsStore } from "@/stores";
 import { bridge } from "@/services";
-import { toast } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 
 interface ActionMenuProps {
   className?: string;
-  onAuthAction?: () => void;
 }
 
 function MenuSection({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) {
@@ -41,10 +39,9 @@ function MenuItem({ onClick, disabled, danger, children }: { onClick: () => void
   );
 }
 
-export function ActionMenu({ className, onAuthAction }: ActionMenuProps) {
+export function ActionMenu({ className }: ActionMenuProps) {
   const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const { setMCPModalOpen, isLoggedIn, setIsLoggedIn, extensionConfig } = useSettingsStore();
+  const { setMCPModalOpen, extensionConfig } = useSettingsStore();
 
   const handleOpenSettings = () => {
     void bridge.openSettings();
@@ -69,27 +66,6 @@ export function ActionMenu({ className, onAuthAction }: ActionMenuProps) {
   const handleShowLogs = () => {
     void bridge.showLogs();
     setOpen(false);
-  };
-
-  const handleAuthAction = async () => {
-    setLoading(true);
-    try {
-      if (isLoggedIn) {
-        await bridge.logout();
-        setIsLoggedIn(false);
-      } else {
-        const result = await bridge.login();
-        if (result.success) {
-          setIsLoggedIn(true);
-        } else {
-          toast.error(result.error ?? "Sign-in failed. Check the logs for details.");
-        }
-      }
-    } finally {
-      setLoading(false);
-      setOpen(false);
-    }
-    onAuthAction?.();
   };
 
   return (
@@ -126,21 +102,6 @@ export function ActionMenu({ className, onAuthAction }: ActionMenuProps) {
           <MenuItem onClick={handleReset}>
             <IconRefresh className="size-4 text-muted-foreground" />
             <span className="flex-1">Reset NightHawk</span>
-          </MenuItem>
-        </MenuSection>
-
-        <Separator className="my-px" />
-
-        <MenuSection title="Account">
-          <MenuItem
-            onClick={() => {
-              void handleAuthAction();
-            }}
-            disabled={loading}
-            danger={isLoggedIn}
-          >
-            {loading ? <IconLoader2 className="size-4 animate-spin" /> : isLoggedIn ? <IconLogout className="size-4" /> : <IconLogin className="size-4 text-muted-foreground" />}
-            <span className="flex-1">{loading ? "Processing..." : isLoggedIn ? "Sign out" : "Sign in"}</span>
           </MenuItem>
         </MenuSection>
       </PopoverContent>

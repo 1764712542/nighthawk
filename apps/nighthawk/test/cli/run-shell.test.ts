@@ -900,55 +900,6 @@ describe('runShell', () => {
     }
   });
 
-  it('prints the opened web URL from the TUI exit handler when set', async () => {
-    mocks.loadTuiConfig.mockResolvedValue({
-      theme: 'dark',
-      editorCommand: null,
-      notifications: { enabled: true, condition: 'unfocused' },
-    });
-    mocks.tuiStart.mockResolvedValue(undefined);
-    mocks.tuiGetCurrentSessionId.mockReturnValue('ses-1');
-    mocks.tuiHasSessionContent.mockReturnValue(true);
-
-    const stdout = captureProcessWrite('stdout');
-    const stderr = captureProcessWrite('stderr');
-    const exitSpy = mockProcessExit();
-
-    try {
-      await runShell(
-        {
-          session: undefined,
-          continue: false,
-          yolo: false,
-          auto: false,
-          plan: false,
-          model: undefined,
-          outputFormat: undefined,
-          prompt: undefined,
-          skillsDirs: [],
-          agent: undefined,
-          agentFiles: [],
-        },
-        '1.2.3-test',
-      );
-      const [tui] = mocks.nighthawkTuiConstructor.mock.calls[0]!;
-      const openedUrl = 'http://127.0.0.1:58627/sessions/ses-1#token=tok-1';
-      (tui as { exitOpenUrl?: string }).exitOpenUrl = openedUrl;
-
-      await expect((tui as { onExit: () => Promise<void> }).onExit()).rejects.toBeInstanceOf(
-        ExitCalled,
-      );
-
-      expect(stderr.text()).toContain(' To resume this session: nighthawk -r ses-1');
-      expect(stderr.text()).toContain('open ');
-      expect(stderr.text()).toContain(openedUrl);
-    } finally {
-      exitSpy.mockRestore();
-      stdout.restore();
-      stderr.restore();
-    }
-  });
-
   it('surfaces an invalid target config as an error for nighthawk migrate, not silently', async () => {
     mocks.loadTuiConfig.mockResolvedValue({
       theme: 'dark',

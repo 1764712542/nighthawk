@@ -31,7 +31,7 @@ You can choose whether to migrate chat sessions as well. If you don't need the h
 
 **What gets migrated**: configuration (`config.toml`), MCP server configuration, input history, and whichever chat sessions you chose to migrate.
 
-**What does not get migrated**: OAuth login credentials and MCP service authorizations are not copied, so you will need to run `/login` again and re-authorize MCP servers after migrating. legacy-cli plugins are also out of scope.
+**What does not get migrated**: OAuth credentials and MCP service authorizations are not copied, so you will need to re-authorize MCP servers after migrating. legacy-cli plugins are also out of scope.
 
 ::: tip
 Migration **never modifies or deletes** any of the old data under `~/.kimi/`. legacy-cli keeps working as before, and the two do not interfere with each other. Migration can also be run repeatedly — sessions that have already been migrated are not imported again.

@@ -1,5 +1,4 @@
 import type { Component, Focusable } from '@nighthawk/pi-tui';
-import type { DeviceAuthorization } from '@nighthawk/nighthawk-oauth';
 import type { NighthawkHarness, Session } from '@nighthawk/nighthawk-sdk';
 
 import type { ColorToken, ThemeName } from '#/tui/theme';
@@ -71,7 +70,6 @@ import {
 import { handleSwarmCommand } from './swarm';
 import { handleTowerCommand } from './tower';
 import { handleUndoCommand } from './undo';
-import { handleWebCommand } from './web';
 
 // ---------------------------------------------------------------------------
 // Re-exports — keep existing consumers working
@@ -110,7 +108,6 @@ export {
   handleTitleCommand,
 } from './session';
 export { handleUndoCommand } from './undo';
-export { handleWebCommand } from './web';
 
 // ---------------------------------------------------------------------------
 // Host interface
@@ -177,7 +174,6 @@ export interface SlashCommandHost {
 
   // UI
   showLoginProgressSpinner(label: string): LoginProgressSpinnerHandle;
-  showLoginAuthorizationPrompt(auth: DeviceAuthorization): LoginProgressSpinnerHandle;
   showProgressSpinner(label: string): LoginProgressSpinnerHandle;
 
   // Theme
@@ -186,14 +182,6 @@ export interface SlashCommandHost {
 
   // Dispatch
   stop(exitCode?: number): Promise<void>;
-  setExitOpenUrl(url: string): void;
-  /**
-   * Register a task that takes over the process after the TUI has shut down
-   * (instead of exiting): the runner awaits it and only exits when it returns.
-   * Used by `/web` to keep a freshly started server attached to this terminal
-   * until Ctrl+C.
-   */
-  setExitForegroundTask(task: (exitCode: number) => Promise<void>): void;
   showHelpPanel(): void;
   createNewSession(): Promise<void>;
   showSessionPicker(initialScope?: 'cwd' | 'all'): Promise<void>;
@@ -430,7 +418,6 @@ const SESSION_REQUIRING_COMMANDS: ReadonlySet<BuiltinSlashCommandName> = new Set
   'plan',
   'swarm',
   'undo',
-  'web',
 ]);
 
 async function handleBuiltInSlashCommand(
@@ -614,9 +601,6 @@ async function handleBuiltInSlashCommand(
       return;
     case 'undo':
       await handleUndoCommand(host, args);
-      return;
-    case 'web':
-      await handleWebCommand(host);
       return;
     default:
       host.showError(`Unknown slash command: /${String(name)}`);

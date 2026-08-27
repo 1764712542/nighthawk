@@ -64,8 +64,4 @@ export type UIStreamEvent =
   | (StreamError & { _sessionId?: string })
   | (StreamEvent & { _sessionId?: string });
 
-export interface LoginStatus {
-  loggedIn: boolean;
-}
-
 export type { QuestionRequest, QuestionItem, QuestionOption, QuestionResponse } from "./legacy-sdk";

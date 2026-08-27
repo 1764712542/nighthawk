@@ -103,7 +103,7 @@ NightHawk Datasource 是 NightHawk 官方数据插件，让你用自然语言直
 
 数据来源包括世界银行、IMF、OECD、FRED、WHO、FAO、国家统计局、Wind、S&P Capital IQ、SEC EDGAR、财新、新华财经、恒生聚源等权威机构与知名数据库，信源可溯源。
 
-使用前需先通过 `/login` 完成 NightHawk 账号 OAuth 登录，数据查询会消耗你的 NightHawk 套餐额度。
+使用前需先配置 NightHawk 账号，数据查询会消耗你的 NightHawk 套餐额度。
 
 #### 使用方式
 
@@ -299,7 +299,7 @@ Plugin 是一个带 manifest 的目录或 zip 文件。Manifest 可以放在以�
 }
 ```
 
-系统提示词贡献在两个 Agent 引擎上都生效。交互式 TUI、`nighthawk -p` 和 `nighthawk web` 默认使用 v2 引擎；设置 `NIGHTHAWK_LEGACY_FLAG=1` 后，本地 CLI 界面会改用旧版引擎。
+系统提示词贡献在两个 Agent 引擎上都生效。交互式 TUI 和 `nighthawk -p` 默认使用 v2 引擎；设置 `NIGHTHAWK_LEGACY_FLAG=1` 后，本地 CLI 界面会改用旧版引擎。
 
 `systemPrompt` 字段与 `systemPromptPath` 文件各限制为 32 KB（UTF-8 字节）：超限内容会被忽略，并显示在 plugin 的 diagnostics 中。一次提示词构建最多注入所有已启用 plugin 合计 64 KB 的指令；超出预算的贡献会被跳过并给出警告——单个 plugin 的内联文本与文件合计超过该预算时同样整体跳过。
 

@@ -8,8 +8,6 @@ import {
   type LegacyMigrationDiscovery,
   type LegacyMigrationRunResult,
 } from "./migration";
-import { updateLoginContext } from "./utils/context";
-
 let outputChannel: vscode.OutputChannel | undefined;
 let provider: NighthawkWebviewProvider | undefined;
 
@@ -28,13 +26,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     (message) => log(message),
   );
   context.subscriptions.push(provider, outputChannel);
-
-  let isLoggedIn = false;
-  try {
-    isLoggedIn = await updateLoginContext(provider.harness);
-  } catch (error) {
-    logError("Unable to determine login status", error);
-  }
 
   context.subscriptions.push(
     vscode.workspace.registerTextDocumentContentProvider("nighthawk-baseline", {
@@ -119,10 +110,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     },
     "nighthawk.showLogs": () => outputChannel?.show(),
     "nighthawk.reset": () => provider?.resetAllWebviews(),
-    "nighthawk.logout": async () => {
-      await vscode.commands.executeCommand("nighthawk.webview.focus");
-      await vscode.window.showInformationMessage("Use the logout button in NightHawk settings.");
-    },
     "nighthawk.migrateLegacyData": () => runMigration(true),
   };
 
@@ -134,7 +121,6 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     migrationManager,
     () => runMigration(false),
     context.globalState,
-    isLoggedIn,
   ).catch((error) => {
     logError("Unable to check for legacy NightHawk data", error);
   });
@@ -160,11 +146,10 @@ async function offerLegacyMigration(
   manager: LegacyMigrationManager,
   migrate: () => Promise<void>,
   globalState: vscode.Memento,
-  isLoggedIn: boolean,
 ): Promise<void> {
   const discovery = await manager.discover();
   logMigrationDiscovery(discovery);
-  const reauthNotice = legacyReauthNotice(discovery, isLoggedIn);
+  const reauthNotice = legacyReauthNotice(discovery);
   const warningNotice =
     discovery.warnings.length === 0
       ? null
@@ -199,19 +184,10 @@ async function offerLegacyMigration(
   if (action === "Migrate Now") await migrate();
 }
 
-function legacyReauthNotice(
-  discovery: LegacyMigrationDiscovery,
-  isLoggedIn: boolean,
-): string | null {
-  const nighthawkLogins = isLoggedIn ? 0 : discovery.notices.oauthLoginsRequiringRelogin.length;
-  const mcpLogins = discovery.notices.mcpOauthServersRequiringReauth.length;
-  if (nighthawkLogins === 0 && mcpLogins === 0) return null;
-  if (nighthawkLogins > 0 && mcpLogins > 0) {
-    return "Legacy OAuth credentials are not copied. Sign in to NightHawk Code and authorize your MCP servers again.";
-  }
-  return nighthawkLogins > 0
-    ? "Legacy OAuth credentials are not copied. Sign in to NightHawk Code again."
-    : "Legacy MCP OAuth credentials are not copied. Authorize those MCP servers again.";
+function legacyReauthNotice(discovery: LegacyMigrationDiscovery): string | null {
+  return discovery.notices.mcpOauthServersRequiringReauth.length > 0
+    ? "Legacy MCP OAuth credentials are not copied. Authorize those MCP servers again."
+    : null;
 }
 
 async function performMigration(
@@ -231,9 +207,7 @@ async function performMigration(
     }
   }
 
-  const reauthCount =
-    result.notices.oauthLoginsRequiringRelogin.length +
-    result.notices.mcpOauthServersRequiringReauth.length;
+  const reauthCount = result.notices.mcpOauthServersRequiringReauth.length;
   const reauthNotice =
     reauthCount === 0
       ? ""

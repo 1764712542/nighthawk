@@ -1,6 +1,6 @@
 # Server API
 
-The local server started by `nighthawk web` exposes two programmatic surfaces: a REST API (`/api/v1`, plus `/api/v2/sessions` and `/api/v2/mcp`) and a WebSocket event stream (`/api/v1/ws`). This page is the protocol reference for both. For how to start the server and its command-line options, see the [nighthawk command](./nighthawk-command.md#nighthawk-web) reference; for an end-to-end walkthrough, see [Local server and API](../guides/server.md).
+The local server previously started by `nighthawk web` is no longer shipped with NightHawk CLI. This page is the protocol reference for the two programmatic surfaces that server exposed: a REST API (`/api/v1`, plus `/api/v2/sessions` and `/api/v2/mcp`) and a WebSocket event stream (`/api/v1/ws`); the protocol remains available for compatible implementations. For the removal details, see [Local server and API](../guides/server.md).
 
 This page is a curated, human-readable reference: it documents every endpoint's parameters, request bodies, and response shapes below. The precise machine-readable schema of every endpoint is owned by the server's live specification documents: `GET /openapi.json` (OpenAPI) and `GET /asyncapi.json` (AsyncAPI), both generated from the same validation schemas the server enforces at runtime. Both require authentication; when this page and the live spec ever disagree, the live spec wins.
 
@@ -2319,4 +2319,3 @@ Error semantics differ as well: `GET /api/v1/files/{file_id}` answers lookup and
 ## Next steps
 
 - [Local server and API](../guides/server.md) — startup, authentication, and the end-to-end calling flow
-- [nighthawk command](./nighthawk-command.md#nighthawk-web) — all `nighthawk web` command-line options

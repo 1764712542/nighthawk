@@ -218,11 +218,6 @@ export interface MCPTestResult {
   output: string;
 }
 
-export interface LoginResult {
-  success: boolean;
-  error?: string;
-}
-
 export function formatContentOutput(output: string | ContentPart[]): string {
   if (typeof output === 'string') return output;
   if (!Array.isArray(output)) return JSON.stringify(output);

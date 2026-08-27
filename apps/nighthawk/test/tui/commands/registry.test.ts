@@ -170,7 +170,6 @@ describe('built-in slash command registry', () => {
         'auto',
         'btw',
         'compact',
-        'connect',
         'copy',
         'editor',
         'effort',
@@ -183,7 +182,6 @@ describe('built-in slash command registry', () => {
         'goal',
         'help',
         'init',
-        'logout',
         'mcp',
         'model',
         'new',
@@ -204,7 +202,6 @@ describe('built-in slash command registry', () => {
         'undo',
         'usage',
         'version',
-        'web',
         'yolo',
       ]),
     );

@@ -141,11 +141,6 @@
         "icon": "$(refresh)"
       },
       {
-        "command": "nighthawk.logout",
-        "title": "NightHawk: Logout",
-        "icon": "$(sign-out)"
-      },
-      {
         "command": "nighthawk.migrateLegacyData",
         "title": "NightHawk: Migrate Legacy Data"
       }
@@ -226,10 +221,6 @@
         {
           "command": "nighthawk.reset",
           "when": "true"
-        },
-        {
-          "command": "nighthawk.logout",
-          "when": "nighthawk.isLoggedIn"
         },
         {
           "command": "nighthawk.migrateLegacyData",
