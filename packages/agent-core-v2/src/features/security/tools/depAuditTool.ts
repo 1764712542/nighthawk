@@ -1,6 +1,7 @@
 import { IAgentRuntimeService, inspectAgentRuntime } from '#/agent/runtimeBinding/agentRuntime';
 import type { IHostFileSystem } from '#/os/interface/hostFileSystem';
 import type { IHostProcessService } from '#/os/interface/hostProcess';
+import { resolveCommandPath } from '#/_base/utils/resolve-command';
 import { RuntimeWorkspaceView } from '#/runtime/runtimeWorkspaceView';
 import { ISessionWorkspaceContext } from '#/session/workspaceContext/workspaceContext';
 import { toInputJsonSchema } from '#/tool/input-schema';
@@ -166,9 +167,13 @@ export class DepAuditTool implements IDepAuditTool {
     const lockInfo = await detectPackageManager(fs, root);
     if (!lockInfo) return { findings: [], toolName: '' };
     try {
-      const command = lockInfo.ecosystem === 'npm' ? lockInfo.packageManager : 'pip-audit';
+      const commandName = lockInfo.ecosystem === 'npm' ? lockInfo.packageManager : 'pip-audit';
       const args = lockInfo.ecosystem === 'npm' ? ['audit', '--json'] : ['--format', 'json'];
-      const proc = await processService.spawn(command, args, { cwd: root });
+      const commandPath = resolveCommandPath(commandName, root);
+      if (commandPath === undefined) {
+        return { findings: [], toolName: lockInfo.packageManager };
+      }
+      const proc = await processService.spawn(commandPath, args, { cwd: root });
       const stdout = await collectStream(proc.stdout);
       await proc.wait();
       try {

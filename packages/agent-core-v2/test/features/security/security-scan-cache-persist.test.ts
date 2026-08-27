@@ -89,6 +89,157 @@ describe('PersistentScanCache', () => {
     cache.clear();
     expect(cache.size).toBe(0);
   });
+
+  it('should evict oldest persistent index entries after exceeding capacity', async () => {
+    const memfs = new MemoryHostFileSystem();
+    const cache = await createScanCache(memfs, '/workspace');
+
+    const overflow = 12;
+    for (let i = 0; i < 10_000 + overflow; i++) {
+      const key = mkKey(`overflow${String(i)}.ts`, '1', `hash${String(i)}`);
+      cache.set(key, mkEntry(key));
+    }
+
+    expect(cache.size).toBe(10_000);
+    await cache.persist();
+
+    const raw = await memfs.readText(CACHE_PATH);
+    const parsed = JSON.parse(raw) as Record<string, ScanCacheEntry>;
+    expect(Object.keys(parsed).length).toBe(10_000);
+    expect(parsed[`1::overflow0.ts::hash0`]).toBeUndefined();
+  });
+
+  it('should return undefined for base-evicted entries on get', async () => {
+    const memfs = new MemoryHostFileSystem();
+    const cache = await createScanCache(memfs, '/workspace');
+
+    for (let i = 0; i < 10_001; i++) {
+      const key = mkKey(`overflow${String(i)}.ts`, '1', `hash${String(i)}`);
+      cache.set(key, mkEntry(key));
+    }
+
+    const evictedKey = mkKey('overflow0.ts', '1', 'hash0');
+    expect(cache.get(evictedKey)).toBeUndefined();
+
+    await cache.persist();
+
+    const raw = await memfs.readText(CACHE_PATH);
+    const parsed = JSON.parse(raw) as Record<string, ScanCacheEntry>;
+    expect(parsed[`1::overflow0.ts::hash0`]).toBeUndefined();
+  });
+
+  it('should promote accessed entries in persistent index on get', async () => {
+    const memfs = new MemoryHostFileSystem();
+    const cache = await createScanCache(memfs, '/workspace');
+
+    const survivor = mkKey('early.ts', '1', 'h1');
+    const fillers: ScanCacheKey[] = [];
+    for (let i = 0; i < 9_999; i++) {
+      const key = mkKey(`fill${String(i)}.ts`, '1', `fh${String(i)}`);
+      fillers.push(key);
+      cache.set(key, mkEntry(key));
+    }
+
+    cache.set(survivor, mkEntry(survivor));
+    cache.get(survivor);
+
+    const overflow = mkKey('overflow.ts', '1', 'oh1');
+    cache.set(overflow, mkEntry(overflow));
+
+    expect(cache.get(survivor)).toBeDefined();
+
+    await cache.persist();
+
+    const raw = await memfs.readText(CACHE_PATH);
+    const parsed = JSON.parse(raw) as Record<string, ScanCacheEntry>;
+    expect(parsed[`1::early.ts::h1`]).toBeDefined();
+    expect(parsed[`1::fill0.ts::fh0`]).toBeUndefined();
+  });
+
+  it('should keep outIndex and base entries in sync', async () => {
+    const memfs = new MemoryHostFileSystem();
+    const cache = await createScanCache(memfs, '/workspace');
+
+    for (let i = 0; i < 10_000; i++) {
+      const key = mkKey(`item${String(i)}.ts`, '1', `h${String(i)}`);
+      cache.set(key, mkEntry(key));
+    }
+
+    const overflowKey = mkKey('overflow.ts', '1', 'oh');
+    cache.set(overflowKey, mkEntry(overflowKey));
+
+    const oldestKey = mkKey('item0.ts', '1', 'h0');
+    expect(cache.get(oldestKey)).toBeUndefined();
+
+    expect(cache.size).toBe(10_000);
+
+    await cache.persist();
+    const raw = await memfs.readText(CACHE_PATH);
+    const parsed = JSON.parse(raw) as Record<string, ScanCacheEntry>;
+    expect(Object.keys(parsed).length).toBe(10_000);
+    expect(parsed[`1::item0.ts::h0`]).toBeUndefined();
+    expect(parsed[`1::overflow.ts::oh`]).toBeDefined();
+  });
+
+  it('should not leak outIndex entries when inserting many items', async () => {
+    const memfs = new MemoryHostFileSystem();
+    const cache = await createScanCache(memfs, '/workspace');
+
+    for (let i = 0; i < 20_000; i++) {
+      const key = mkKey(`file${String(i)}.ts`, '1', `hash${String(i)}`);
+      cache.set(key, mkEntry(key));
+    }
+
+    const outIndexSize = (cache as any).outIndex.size;
+    const entriesSize = (cache as any).entries.size;
+
+    expect(outIndexSize).toBeLessThanOrEqual(10_000);
+    expect(entriesSize).toBeLessThanOrEqual(10_000);
+
+    await cache.persist();
+    const raw = await memfs.readText(CACHE_PATH);
+    const parsed = JSON.parse(raw) as Record<string, ScanCacheEntry>;
+    expect(Object.keys(parsed).length).toBeLessThanOrEqual(10_000);
+  });
+
+  it('should load persisted entries into persistent index', async () => {
+    const memfs = new MemoryHostFileSystem();
+    const first = await createScanCache(memfs, '/workspace');
+    const key = mkKey();
+    first.set(key, mkEntry(key));
+    await first.persist();
+
+    const second = await createScanCache(memfs, '/workspace');
+    expect(second.get(key)).toBeDefined();
+    expect(second.size).toBe(1);
+    await second.persist();
+
+    const raw = await memfs.readText(CACHE_PATH);
+    const parsed = JSON.parse(raw) as Record<string, ScanCacheEntry>;
+    expect(Object.keys(parsed).length).toBe(1);
+  });
+
+  it('should rebuild persistent index ordering after load', async () => {
+    const memfs = new MemoryHostFileSystem();
+    const first = await createScanCache(memfs, '/workspace');
+    for (let i = 0; i < 3; i++) {
+      const key = mkKey(`order${String(i)}.ts`, '1', `oh${String(i)}`);
+      first.set(key, mkEntry(key));
+    }
+    await first.persist();
+
+    const second = await createScanCache(memfs, '/workspace');
+    for (let i = 0; i < 10_000; i++) {
+      const key = mkKey(`grow${String(i)}.ts`, '1', `gh${String(i)}`);
+      second.set(key, mkEntry(key));
+    }
+
+    await second.persist();
+
+    const raw = await memfs.readText(CACHE_PATH);
+    const parsed = JSON.parse(raw) as Record<string, ScanCacheEntry>;
+    expect(Object.keys(parsed).length).toBe(10_000);
+  });
 });
 
 describe('createScanCache factory', () => {

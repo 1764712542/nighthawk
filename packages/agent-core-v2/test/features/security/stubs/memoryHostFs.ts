@@ -89,7 +89,11 @@ export class MemoryHostFileSystem implements IHostFileSystem {
     if (entry.isDirectory) {
       return { isFile: false, isDirectory: true, size: 0 };
     }
-    return { isFile: true, isDirectory: false, size: entry.content?.length ?? 0 };
+    return {
+      isFile: true,
+      isDirectory: false,
+      size: entry.content === undefined ? 0 : Buffer.byteLength(entry.content, 'utf8'),
+    };
   }
 
   async readdir(path: string): Promise<readonly HostDirEntry[]> {

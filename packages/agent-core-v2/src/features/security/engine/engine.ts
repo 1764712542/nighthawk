@@ -83,6 +83,7 @@ const SEVERITY_ORDER: Record<Severity, number> = { critical: 0, high: 1, medium:
 const MAX_SCAN_FILES = 5000;
 const MAX_RESULTS_PER_FILE = 200;
 const MAX_FILE_BYTES = 2_000_000;
+const MAX_TAINT_FILES = 5000;
 
 export interface ScanOptions {
   root: string;
@@ -108,9 +109,8 @@ const CONCURRENCY = 16;
 const DEFAULT_PERSIST_BATCH_SIZE = 100;
 
 function globMatch(name: string, pattern: string): boolean {
-  const re = new RegExp(
-    `^${pattern.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*').replace(/\?/g, '.')}$`,
-  );
+  const escaped = escapeRe(pattern).replace(/\\\*/g, '.*').replace(/\\\?/g, '.');
+  const re = new RegExp(`^${escaped}$`);
   return re.test(name);
 }
 
@@ -386,11 +386,15 @@ export class ScanCache {
     this.entries.clear();
   }
 
+  delete(key: ScanCacheKey): boolean {
+    return this.entries.delete(this.toIndex(key));
+  }
+
   get size(): number {
     return this.entries.size;
   }
 
-  private toIndex(key: ScanCacheKey): string {
+  protected toIndex(key: ScanCacheKey): string {
     return `${key.version}::${key.file}::${key.contentHash}`;
   }
 }
@@ -482,8 +486,8 @@ function shannonEntropy(s: string): number {
 }
 
 function mask(s: string): string {
-  if (s.length <= 12) return `${s.slice(0, 4)}****`;
-  return `${s.slice(0, 8)}...${s.slice(-4)}`;
+  if (s.length <= 6) return `${s[0]}****${s[s.length - 1]}`;
+  return `${s.slice(0, 4)}****${s.slice(-2)}`;
 }
 
 export function scanSecretsInContent(content: string, file: string): SecretFinding[] {
@@ -798,6 +802,7 @@ export async function taintAnalyzeModule(fs: IHostFileSystem, file: string): Pro
   const queue: string[] = [file];
 
   while (queue.length > 0) {
+    if (modules.size >= MAX_TAINT_FILES) break;
     const f = queue.shift()!;
     if (modules.has(f)) continue;
     let content: string;

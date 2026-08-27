@@ -6,6 +6,7 @@ import type { ScanCacheEntry, ScanCacheKey } from './engine';
 import { ScanCache } from './engine';
 
 const CACHE_FILE = 'scan-cache.json';
+const MAX_ENTRIES = 10_000;
 
 export class PersistentScanCache extends ScanCache {
   private outIndex = new Map<string, ScanCacheEntry>();
@@ -16,22 +17,34 @@ export class PersistentScanCache extends ScanCache {
     private readonly fs: IHostFileSystem,
     entries?: ScanCacheEntry[],
   ) {
-    super();
+    super(MAX_ENTRIES);
     if (entries !== undefined) {
       for (const entry of entries) {
         super.set(entry.key, entry);
+        this.outIndex.set(this.toIndex(entry.key), entry);
       }
+      this.evict();
     }
   }
 
   override get(key: ScanCacheKey): ScanCacheEntry | undefined {
-    return super.get(key);
+    const index = this.toIndex(key);
+    const hit = super.get(key);
+    if (hit !== undefined) {
+      this.outIndex.delete(index);
+      this.outIndex.set(index, hit);
+    }
+    return hit;
   }
 
   override set(key: ScanCacheKey, value: ScanCacheEntry): void {
     super.set(key, value);
-    const index = (this as any).toIndex(key) as string;
+    const index = this.toIndex(key);
+    this.outIndex.delete(index);
     this.outIndex.set(index, value);
+    if (this.outIndex.size > MAX_ENTRIES) {
+      this.evict();
+    }
   }
 
   override clear(): void {
@@ -61,6 +74,18 @@ export class PersistentScanCache extends ScanCache {
     } catch {
     }
     return new PersistentScanCache(cachePath, fs, entries);
+  }
+
+  private evict(): void {
+    while (this.outIndex.size > MAX_ENTRIES) {
+      const oldest = this.outIndex.keys().next().value;
+      if (oldest === undefined) break;
+      this.outIndex.delete(oldest);
+      const [version, file, contentHash] = oldest.split('::');
+      if (version !== undefined && file !== undefined && contentHash !== undefined) {
+        this.delete({ version, file, contentHash });
+      }
+    }
   }
 }
 

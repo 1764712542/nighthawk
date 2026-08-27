@@ -176,7 +176,7 @@ export function formatToSarif(
             artifactLocation: { uri: normalizeFileUri(f.file) },
             region: {
               startLine: f.startLine,
-              ...(f.endLine !== undefined ? { endLine: f.endLine } : {}),
+              endLine: f.endLine,
             },
           },
         },
