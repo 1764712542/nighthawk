@@ -14,10 +14,8 @@ import {
 } from './types';
 
 const NIGHTHAWK_PLUGIN_ROOT_PATH = 'nighthawk.plugin.json';
-const LEGACY_PLUGIN_ROOT_PATH = 'kimi.plugin.json';
 const GENERIC_PLUGIN_ROOT_PATH = 'plugin.json';
 const NIGHTHAWK_PLUGIN_DIR_PATH = '.nighthawk-plugin/plugin.json';
-const LEGACY_PLUGIN_DIR_PATH = '.kimi-plugin/plugin.json';
 
 interface ManifestCandidate {
   readonly relPath: string;
@@ -29,10 +27,8 @@ const NATIVE_MANIFEST_SPEC = 'nighthawk' as const;
 
 const MANIFEST_CANDIDATES: readonly ManifestCandidate[] = [
   { relPath: NIGHTHAWK_PLUGIN_ROOT_PATH, kind: 'nighthawk-plugin-root', spec: 'nighthawk' },
-  { relPath: LEGACY_PLUGIN_ROOT_PATH, kind: 'legacy-plugin-root', spec: 'legacy' },
   { relPath: GENERIC_PLUGIN_ROOT_PATH, kind: 'generic-plugin-root', spec: 'generic' },
   { relPath: NIGHTHAWK_PLUGIN_DIR_PATH, kind: 'nighthawk-plugin-dir', spec: 'nighthawk' },
-  { relPath: LEGACY_PLUGIN_DIR_PATH, kind: 'legacy-plugin-dir', spec: 'legacy' },
 ];
 
 /**

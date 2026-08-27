@@ -19,8 +19,8 @@ import path from 'node:path';
 import readline from 'node:readline';
 
 const VERSION = '3.4.0';
-const DEFAULT_NIGHTHAWK_OAUTH_HOST = 'https://auth.kimi.com';
-const DEFAULT_NIGHTHAWK_BASE_URL = 'https://api.kimi.com/coding/v1';
+const DEFAULT_NIGHTHAWK_OAUTH_HOST = 'https://auth.nighthawk.com';
+const DEFAULT_NIGHTHAWK_BASE_URL = 'https://api.nighthawk.com/v1';
 const API_URL = datasourceApiUrl();
 const REQUEST_TIMEOUT_MS = 30_000;
 const PROTOCOL_VERSION = '2025-06-18';

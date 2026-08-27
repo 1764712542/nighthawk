@@ -23,17 +23,17 @@ export interface OpenPlatformDefinition {
 export const OPEN_PLATFORMS: readonly OpenPlatformDefinition[] = [
   {
     id: 'nighthawk-cn',
-    name: 'OpenAI-compatible API · CN (api.moonshot.cn)',
-    baseUrl: 'https://api.moonshot.cn/v1',
-    consoleUrl: 'https://platform.kimi.com',
-    allowedPrefixes: ['kimi-k'],
+    name: 'OpenAI-compatible API · CN',
+    baseUrl: 'https://api.nighthawk.com/v1',
+    consoleUrl: 'https://github.com/1764712542/nighthawk',
+    allowedPrefixes: ['nighthawk-'],
   },
   {
     id: 'nighthawk-ai',
-    name: 'OpenAI-compatible API · Global (api.moonshot.ai)',
-    baseUrl: 'https://api.moonshot.ai/v1',
-    consoleUrl: 'https://platform.kimi.ai',
-    allowedPrefixes: ['kimi-k'],
+    name: 'OpenAI-compatible API · Global',
+    baseUrl: 'https://api.nighthawk.com/v1',
+    consoleUrl: 'https://github.com/1764712542/nighthawk',
+    allowedPrefixes: ['nighthawk-'],
   },
 ];
 

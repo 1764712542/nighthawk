@@ -26,7 +26,7 @@ import { isRecord } from './utils';
 
 const MANAGED_PREFIX = 'managed:';
 const NIGHTHAWK_PLATFORM_ID = 'nighthawk';
-export const DEFAULT_NIGHTHAWK_BASE_URL = 'https://api.kimi.com/coding/v1';
+export const DEFAULT_NIGHTHAWK_BASE_URL = 'https://api.nighthawk.com/v1';
 
 export function isManagedNighthawk(providerKey?: string | null): boolean {
   if (!providerKey) return false;

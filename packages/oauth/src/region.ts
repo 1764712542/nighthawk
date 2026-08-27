@@ -67,8 +67,8 @@ export const NIGHTHAWK_REGION_PROFILES: Record<NighthawkRegion, NighthawkRegionP
     siteBase: NIGHTHAWK_DEFAULT_SITE_BASE,
   },
   global: {
-    oauthHost: 'https://auth.kimi.ai',
-    baseUrl: 'https://api.kimi.ai/coding/v1',
+    oauthHost: 'https://auth.nighthawk.com',
+    baseUrl: 'https://api.nighthawk.com/v1',
     cdnBase: NIGHTHAWK_DEFAULT_CDN_BASE,
     siteBase: NIGHTHAWK_DEFAULT_SITE_BASE,
   },

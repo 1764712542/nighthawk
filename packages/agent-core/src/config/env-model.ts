@@ -16,7 +16,7 @@ export const ENV_MODEL_ALIAS_KEY = '__nighthawk_env_model__';
 const ALLOWED_TYPES: readonly ProviderType[] = ['nighthawk', 'anthropic', 'openai'];
 
 const DEFAULT_BASE_URL: Partial<Record<ProviderType, string>> = {
-  nighthawk: 'https://api.moonshot.ai/v1',
+  nighthawk: 'https://api.nighthawk.com/v1',
   openai: 'https://api.openai.com/v1',
   // anthropic: omitted -> let the Anthropic SDK pick its default
 };

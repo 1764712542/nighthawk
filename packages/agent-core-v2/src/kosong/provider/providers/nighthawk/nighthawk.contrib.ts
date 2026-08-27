@@ -14,7 +14,7 @@ import { normalizeNighthawkToolSchema } from './nighthawk-schema';
 
 export const NIGHTHAWK_API_KEY_ENV = 'NIGHTHAWK_API_KEY';
 export const NIGHTHAWK_BASE_URL_ENV = 'NIGHTHAWK_BASE_URL';
-export const NIGHTHAWK_DEFAULT_BASE_URL = 'https://api.moonshot.ai/v1';
+export const NIGHTHAWK_DEFAULT_BASE_URL = 'https://api.nighthawk.com/v1';
 
 const INTERLEAVED_THINKING_BETA = 'interleaved-thinking-2025-05-14';
 
@@ -109,9 +109,10 @@ export const nighthawkOpenAITrait: ProtocolTrait = {
     const thinking: NighthawkThinkingConfig =
       effort === 'off'
         ? { type: 'disabled' }
-        : effort === 'on'
-          ? { type: 'enabled' }
-          : { type: 'enabled', effort };
+        : { type: 'enabled' };
+    if (effort !== 'off' && effort !== 'on' && effort.length > 0) {
+      thinking.effort = effort;
+    }
     if (options.keep !== undefined) {
       thinking.keep = options.keep;
     }
@@ -129,7 +130,7 @@ export const nighthawkOpenAITrait: ProtocolTrait = {
   },
 
   withMaxCompletionTokens: (maxCompletionTokens) => ({
-    max_completion_tokens: maxCompletionTokens,
+    max_completion_tokens: Math.min(maxCompletionTokens, 131072),
   }),
 
   buildParams: (params) => {
@@ -140,12 +141,23 @@ export const nighthawkOpenAITrait: ProtocolTrait = {
       ...rest
     } = params;
     const out: Record<string, unknown> = { ...rest };
+    delete out['prompt_cache_key'];
     const resolvedMaxCompletionTokens = maxCompletionTokens ?? maxTokens;
     if (resolvedMaxCompletionTokens !== undefined) {
       out['max_completion_tokens'] = resolvedMaxCompletionTokens;
     }
     if (extraBody !== undefined && extraBody !== null) {
-      Object.assign(out, extraBody);
+      const { thinking, ...restExtra } = extraBody;
+      Object.assign(out, restExtra);
+      if (thinking !== undefined && thinking !== null) {
+        const { effort, keep, ...restThinking } = thinking as NighthawkThinkingConfig;
+        if (effort !== undefined) {
+          out['reasoning_effort'] = effort;
+        }
+        if (keep !== undefined) {
+          out['thinking'] = { ...restThinking, keep };
+        }
+      }
     }
     return out;
   },

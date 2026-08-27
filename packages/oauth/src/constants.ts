@@ -1,6 +1,6 @@
 import type { OAuthFlowConfig } from './types';
 
-export const DEFAULT_NIGHTHAWK_OAUTH_HOST = 'https://auth.kimi.com';
+export const DEFAULT_NIGHTHAWK_OAUTH_HOST = 'https://auth.nighthawk.com';
 
 /** Node-side env override lookup, resolved through `globalThis` so the module
     stays loadable — and typecheckable — in browser bundles that have no

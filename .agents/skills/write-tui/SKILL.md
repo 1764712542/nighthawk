@@ -13,7 +13,7 @@ For any list dialog, selector, input box, or status/toggle list, the interaction
 
 `NighthawkTUI` is a **coordinator** that wires state, layout, session, and dialogs together and delegates heavy logic to controllers.
 
-- `src/tui/kimi-tui.ts` — the `NighthawkTUI` coordinator. Holds `state`, owns startup/shutdown order, layout/editor wiring, user-input entry, sending/queueing, session lifecycle, and the slash-command handler dispatch. It should **not** accumulate event-routing or rendering logic — those live in controllers.
+- `src/tui/nighthawk-tui.ts` — the `NighthawkTUI` coordinator. Holds `state`, owns startup/shutdown order, layout/editor wiring, user-input entry, sending/queueing, session lifecycle, and the slash-command handler dispatch. It should **not** accumulate event-routing or rendering logic — those live in controllers.
 - `src/tui/tui-state.ts` — `TUIState`, `createTUIState`, `createInitialAppState`. The single global UI state shape. Before adding a new global field, decide whether it truly belongs here vs. local component state.
 - `src/tui/controllers/` — the independently-testable responsibilities. Each controller owns one slice:
   - `session-event-handler.ts` — routes SDK session events (`handleEvent` dispatch + the per-event `handleXxx`). Concrete event handling goes here, not in `NighthawkTUI`.

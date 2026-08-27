@@ -431,7 +431,7 @@ export class NighthawkChatProvider implements ChatProvider {
   constructor(options: NighthawkOptions) {
     const apiKey = options.apiKey ?? process.env['NIGHTHAWK_API_KEY'];
     this._apiKey = apiKey === undefined || apiKey.length === 0 ? undefined : apiKey;
-    this._baseUrl = options.baseUrl ?? process.env['NIGHTHAWK_BASE_URL'] ?? 'https://api.moonshot.ai/v1';
+    this._baseUrl = options.baseUrl ?? process.env['NIGHTHAWK_BASE_URL'] ?? 'https://api.nighthawk.com/v1';
     this._defaultHeaders = options.defaultHeaders;
     this._clientFactory = options.clientFactory;
     this._model = options.model;
