@@ -13,6 +13,7 @@ import {
 import { formatSessionLabel } from '#/migration/index';
 import { CURRENT_MARK, SELECT_POINTER } from '#/tui/constant/symbols';
 import { currentTheme } from '#/tui/theme';
+import { printableChar } from '#/tui/utils/printable-key';
 import { SearchableList } from '#/tui/utils/searchable-list';
 
 export interface SessionRow {
@@ -23,6 +24,12 @@ export interface SessionRow {
   readonly updated_at: number;
   readonly metadata?: Readonly<Record<string, unknown>> | undefined;
   readonly archived?: boolean;
+  /** Absolute path of the session directory on disk. */
+  readonly session_dir?: string | undefined;
+  /** Creation time in ms; used by the expanded detail view. */
+  readonly created_at?: number | undefined;
+  /** Terminal outcome of the latest main turn, when one ended. */
+  readonly last_turn_reason?: 'completed' | 'cancelled' | 'failed' | undefined;
 }
 
 const ELLIPSIS = '…';
@@ -39,6 +46,11 @@ function formatRelativeTime(ts: number): string {
   if (hours < 24) return `${String(hours)}h ago`;
   const days = Math.floor(hours / 24);
   return `${String(days)}d ago`;
+}
+
+function formatDateTime(ts: number): string {
+  if (!Number.isFinite(ts) || ts <= 0) return '';
+  return new Date(ts).toISOString().slice(0, 16).replace('T', ' ');
 }
 
 function homeAlias(path: string): string {
@@ -93,6 +105,10 @@ export class SessionPickerComponent extends Container implements Focusable {
   private hasMore: boolean;
   private loadingMore: boolean;
   private list: SearchableList<SessionRow>;
+  /** Session id whose detail card is expanded, if any. */
+  private expandedSessionId: string | null;
+  /** Session awaiting `[y/N]` confirmation before deletion. */
+  private confirmDelete: SessionRow | null;
 
   focused = false;
 
@@ -108,6 +124,7 @@ export class SessionPickerComponent extends Container implements Focusable {
     onCtrlC?: () => void;
     onCtrlD?: () => void;
     onToggleScope?: (selectedSessionId: string) => void;
+    onDelete?: (session: SessionRow) => void;
     maxVisibleSessions?: number;
     /** More pages exist on the backend (keyset paging). */
     hasMore?: boolean;
@@ -126,12 +143,15 @@ export class SessionPickerComponent extends Container implements Focusable {
     this.onSelect = opts.onSelect;
     this.onCancel = opts.onCancel;
     this.onToggleScope = opts.onToggleScope;
+    this.onDelete = opts.onDelete;
     this.maxVisibleSessions = opts.maxVisibleSessions ?? 4;
     this.pageSize = Math.max(1, opts.pageSize ?? 50);
     this.hasMore = opts.hasMore ?? false;
     this.loadingMore = opts.loadingMore ?? false;
     this.onLoadMore = opts.onLoadMore;
     this.onSearchDrain = opts.onSearchDrain;
+    this.expandedSessionId = null;
+    this.confirmDelete = null;
     const initialIndex = this.resolveInitialSelectedIndex(opts.initialSelectedSessionId);
     this.list = new SearchableList({
       items: this.sessions,
@@ -150,6 +170,7 @@ export class SessionPickerComponent extends Container implements Focusable {
   private readonly onCtrlD?: () => void;
   private readonly onLoadMore?: () => void;
   private readonly onSearchDrain?: () => void;
+  private readonly onDelete?: (session: SessionRow) => void;
 
   /** Appends a freshly fetched page, keeping the cursor and active query. */
   appendSessions(rows: SessionRow[]): void {
@@ -211,6 +232,11 @@ export class SessionPickerComponent extends Container implements Focusable {
   }
 
   handleInput(data: string): void {
+    if (this.confirmDelete !== null) {
+      this.handleConfirmDeleteInput(data);
+      return;
+    }
+
     if (matchesKey(data, Key.ctrl('c'))) {
       this.onCtrlC?.();
       return;
@@ -221,6 +247,14 @@ export class SessionPickerComponent extends Container implements Focusable {
     }
     if (matchesKey(data, Key.ctrl('a'))) {
       this.onToggleScope?.(this.list.selected()?.id ?? this.currentSessionId);
+      return;
+    }
+    if (matchesKey(data, Key.ctrl('e'))) {
+      this.toggleExpanded();
+      return;
+    }
+    if (matchesKey(data, Key.delete)) {
+      this.armDeleteConfirm();
       return;
     }
     if (matchesKey(data, Key.escape)) {
@@ -241,6 +275,39 @@ export class SessionPickerComponent extends Container implements Focusable {
     if (this.list.handleKey(data)) {
       this.syncVisibleCount(previousQuery);
     }
+  }
+
+  /** Toggles the expanded detail card for the currently selected session. */
+  private toggleExpanded(): void {
+    const session = this.list.selected();
+    if (session === undefined) return;
+    this.expandedSessionId = this.expandedSessionId === session.id ? null : session.id;
+    this.invalidate();
+  }
+
+  /** Enters the `[y/N]` confirm substate for the selected session. */
+  private armDeleteConfirm(): void {
+    const session = this.list.selected();
+    if (session === undefined) return;
+    this.confirmDelete = session;
+    this.invalidate();
+  }
+
+  private handleConfirmDeleteInput(data: string): void {
+    const k = printableChar(data);
+    if (matchesKey(data, Key.escape) || k === 'n' || k === 'N') {
+      this.confirmDelete = null;
+      this.invalidate();
+      return;
+    }
+    if (k === 'y' || k === 'Y') {
+      const session = this.confirmDelete;
+      this.confirmDelete = null;
+      this.invalidate();
+      if (session !== null && session !== undefined) this.onDelete?.(session);
+      return;
+    }
+    // Any other key while in the confirm substate is ignored.
   }
 
   override render(width: number): string[] {
@@ -295,6 +362,8 @@ export class SessionPickerComponent extends Container implements Focusable {
       ...(view.query.length > 0 ? ['Backspace clear'] : []),
       '↑↓ navigate',
       scopeHint,
+      'Ctrl+E expand',
+      'Delete delete',
       'Enter select',
       'Esc cancel',
     ].filter((item): item is string => item !== undefined);
@@ -332,6 +401,11 @@ export class SessionPickerComponent extends Container implements Focusable {
       const isCurrent = session.id === this.currentSessionId;
       const card = this.renderSessionCard(width, session, isSelected, isCurrent);
       lines.push(...card);
+      // The expanded card follows the cursor: it is shown only while its
+      // session stays selected, and reappears when the cursor returns.
+      if (isSelected && this.expandedSessionId === session.id) {
+        lines.push(...this.renderExpandedDetails(width, session));
+      }
       if (vi < visibleSessions.length - 1) lines.push('');
     }
 
@@ -362,8 +436,50 @@ export class SessionPickerComponent extends Container implements Focusable {
       lines.push(currentTheme.fg('textMuted', truncateToWidth(footer, width, ELLIPSIS)));
     }
 
+    lines.push('');
+    if (this.confirmDelete !== null) {
+      lines.push(this.renderConfirmLine(width));
+    }
+
     lines.push(currentTheme.fg('primary', '─'.repeat(width)));
     return lines;
+  }
+
+  /** Detail rows shown below a session card when expanded with Ctrl+E. */
+  private renderExpandedDetails(width: number, session: SessionRow): string[] {
+    const indent = '    ';
+    const labelWidth = Math.max(8, width - visibleWidth(indent));
+    const rows: Array<[string, string]> = [
+      ['dir', homeAlias(session.session_dir ?? session.work_dir)],
+      ['workdir', homeAlias(session.work_dir)],
+      ['updated', formatDateTime(session.updated_at)],
+    ];
+    if (session.created_at !== undefined && session.created_at > 0) {
+      rows.push(['created', formatDateTime(session.created_at)]);
+    }
+    if (session.last_turn_reason !== undefined) {
+      rows.push(['last turn', session.last_turn_reason]);
+    }
+    if (session.archived === true) {
+      rows.push(['status', 'archived']);
+    }
+    const lines: string[] = [];
+    for (const [key, value] of rows) {
+      const keyText = currentTheme.fg('textDim', `${key}: `);
+      const valueText = currentTheme.fg('textMuted', value);
+      const line =
+        indent + keyText + truncateToWidth(valueText, labelWidth - visibleWidth(`${key}: `), ELLIPSIS);
+      lines.push(line);
+    }
+    return lines;
+  }
+
+  private renderConfirmLine(width: number): string {
+    const session = this.confirmDelete;
+    if (session === null) return '';
+    const label = singleLine(session.title ?? session.id) || session.id;
+    const styled = currentTheme.boldFg('warning', `  Delete session "${label}"? [y/N]`);
+    return truncateToWidth(styled, width, '…');
   }
 
   private renderSessionCard(

@@ -3847,8 +3847,9 @@ export class NighthawkTUI {
   private sessionPickerComponent: SessionPickerComponent | undefined;
   private sessionsPageFetchInFlight: Promise<boolean> | undefined;
 
-  async showSessionPicker(): Promise<void> {
+  async showSessionPicker(initialScope?: 'cwd' | 'all'): Promise<void> {
     await this.openSessionPicker({
+      initialScope: initialScope ?? 'cwd',
       applyStartupModes: false,
       closeOnCancel: false,
       forwardEditorExit: false,
@@ -3864,12 +3865,13 @@ export class NighthawkTUI {
   }
 
   private async openSessionPicker(options: {
+    readonly initialScope?: 'cwd' | 'all';
     readonly applyStartupModes: boolean;
     readonly closeOnCancel: boolean;
     readonly forwardEditorExit: boolean;
   }): Promise<void> {
     this.sessionPickerOptions = options;
-    await this.fetchSessions('cwd');
+    await this.fetchSessions(options.initialScope ?? 'cwd');
     this.mountSessionPicker({
       applyStartupModes: options.applyStartupModes,
       onCancel: () => {
@@ -3960,6 +3962,9 @@ export class NighthawkTUI {
           },
         );
       },
+      onDelete: (session: SessionRow) => {
+        void this.handleSessionPickerDelete(session);
+      },
       onCancel: options.onCancel,
       onCtrlC: options.onCtrlC,
       onCtrlD: options.onCtrlD,
@@ -3988,6 +3993,42 @@ export class NighthawkTUI {
       this.applyStartupPermissionAndPlanToAppState();
     }
     this.hideSessionPicker();
+  }
+
+  private async handleSessionPickerDelete(session: SessionRow): Promise<void> {
+    if (session.id === this.state.appState.sessionId) {
+      this.showError('Cannot delete the current session.');
+      return;
+    }
+    try {
+      await this.harness.deleteSession(session.id);
+    } catch (error) {
+      this.showError(`Failed to delete session: ${formatErrorMessage(error)}`);
+      return;
+    }
+    if (this.state.activeDialog !== 'session-picker') return;
+    const selectedId = this.state.sessionsScope === 'cwd' ? session.id : undefined;
+    await this.fetchSessions(this.state.sessionsScope);
+    if (this.state.activeDialog !== 'session-picker') return;
+    this.mountSessionPicker({
+      initialSelectedSessionId: selectedId,
+      applyStartupModes: this.sessionPickerOptions.applyStartupModes,
+      onCancel: () => {
+        this.hideSessionPicker();
+        if (this.sessionPickerOptions.closeOnCancel) void this.stop();
+      },
+      onCtrlC: this.sessionPickerOptions.forwardEditorExit
+        ? () => {
+            this.state.editor.onCtrlC?.();
+          }
+        : undefined,
+      onCtrlD: this.sessionPickerOptions.forwardEditorExit
+        ? () => {
+            this.state.editor.onCtrlD?.();
+          }
+        : undefined,
+    });
+    this.showStatus('Session deleted.');
   }
 
   private showApprovalPanel(payload: ApprovalPanelData): void {

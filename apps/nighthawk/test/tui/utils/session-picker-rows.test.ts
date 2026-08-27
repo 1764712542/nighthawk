@@ -61,4 +61,30 @@ describe('sessionRowsForPicker', () => {
 
     expect(rows.map((row) => row.id)).toEqual(['ses_previous_empty']);
   });
+
+  it('maps session_dir, created_at and last_turn_reason onto the picker row', () => {
+    const rows = sessionRowsForPicker(
+      [
+        {
+          id: 'ses_full',
+          title: 'Full session',
+          workDir: '/tmp/project',
+          sessionDir: '/tmp/home/sessions/wd_project/ses_full',
+          createdAt: 111,
+          updatedAt: 222,
+          lastTurnReason: 'failed',
+        },
+      ],
+      'ses_other',
+      true,
+    );
+
+    expect(rows[0]).toMatchObject({
+      id: 'ses_full',
+      session_dir: '/tmp/home/sessions/wd_project/ses_full',
+      created_at: 111,
+      last_turn_reason: 'failed',
+      updated_at: 222,
+    });
+  });
 });

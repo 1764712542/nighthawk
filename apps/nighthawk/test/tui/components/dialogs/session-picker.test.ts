@@ -400,7 +400,9 @@ describe('SessionPickerComponent', () => {
     const output = renderPlain(component);
 
     expect(output).toContain('All sessions');
-    expect(output).toContain('↑↓ navigate · Ctrl+A current cwd · Enter select · Esc cancel');
+    expect(output).toContain(
+      '↑↓ navigate · Ctrl+A current cwd · Ctrl+E expand · Delete delete · Enter select · Esc cancel',
+    );
   });
 
   it('selects the full session row on Enter', () => {
@@ -868,5 +870,179 @@ describe('SessionPickerComponent', () => {
     component.handleInput('a');
 
     expect(renderPlain(component)).toContain('· searching all…');
+  });
+
+  it('expands and collapses session details with Ctrl+E', () => {
+    const now = new Date('2026-05-11T12:00:00.000Z').getTime();
+    vi.spyOn(Date, 'now').mockReturnValue(now);
+    const component = new SessionPickerComponent({
+      sessions: [
+        {
+          id: 'ses_details',
+          title: 'Detail session',
+          work_dir: '/tmp/project',
+          session_dir: '/tmp/home/sessions/wd_project/ses_details',
+          created_at: now - 3600 * 1000,
+          updated_at: now - 60 * 1000,
+          last_turn_reason: 'completed',
+        },
+      ],
+      loading: false,
+      currentSessionId: 'ses_other',
+      onSelect: vi.fn(),
+      onCancel: vi.fn(),
+    });
+
+    expect(renderPlain(component)).not.toContain('last turn');
+
+    component.handleInput('\u0005'); // Ctrl+E
+    const expanded = renderPlain(component);
+    expect(expanded).toContain('last turn: completed');
+    expect(expanded).toContain('created: 2026-05-11 11:00');
+    expect(expanded).toContain('/tmp/home/sessions/wd_project/ses_details');
+
+    component.handleInput('\u0005'); // Ctrl+E again collapses
+    expect(renderPlain(component)).not.toContain('last turn:');
+  });
+
+  it('keeps the detail card on the currently selected session after cursor moves', () => {
+    const component = new SessionPickerComponent({
+      sessions: [
+        { id: 'ses_a', title: 'Session A', work_dir: '/tmp/a', updated_at: 1 },
+        { id: 'ses_b', title: 'Session B', work_dir: '/tmp/b', updated_at: 2 },
+      ],
+      loading: false,
+      currentSessionId: '',
+      onSelect: vi.fn(),
+      onCancel: vi.fn(),
+    });
+
+    component.handleInput('\u001B[B'); // down to B
+    component.handleInput('\u0005'); // expand B
+    expect(renderPlain(component)).toContain('Session B');
+
+    component.handleInput('\u001B[A'); // up to A
+    const output = renderPlain(component);
+    expect(output).not.toContain('dir: /tmp/b');
+  });
+
+  it('deletes only after the [y/N] confirmation', () => {
+    const onDelete = vi.fn();
+    const target = { id: 'ses_gone', title: 'Doomed session', work_dir: '/tmp/p', updated_at: 1 };
+    const component = new SessionPickerComponent({
+      sessions: [target],
+      loading: false,
+      currentSessionId: 'ses_other',
+      onSelect: vi.fn(),
+      onCancel: vi.fn(),
+      onDelete,
+    });
+
+    component.handleInput('\u001B[3~'); // Delete
+    expect(onDelete).not.toHaveBeenCalled();
+    expect(renderPlain(component)).toContain('Delete session "Doomed session"? [y/N]');
+
+    component.handleInput('n');
+    expect(onDelete).not.toHaveBeenCalled();
+    expect(renderPlain(component)).not.toContain('[y/N]');
+
+    component.handleInput('\u001B[3~'); // Delete again
+    component.handleInput('y');
+    expect(onDelete).toHaveBeenCalledOnce();
+    expect(onDelete).toHaveBeenCalledWith(target);
+  });
+
+  it('cancels the delete confirmation with Esc', () => {
+    const onDelete = vi.fn();
+    const component = new SessionPickerComponent({
+      sessions: [{ id: 'ses_x', title: 'X session', work_dir: '/tmp/p', updated_at: 1 }],
+      loading: false,
+      currentSessionId: 'ses_other',
+      onSelect: vi.fn(),
+      onCancel: vi.fn(),
+      onDelete,
+    });
+
+    component.handleInput('\u001B[3~'); // Delete
+    expect(renderPlain(component)).toContain('[y/N]');
+
+    component.handleInput('\u001B'); // Esc
+    expect(onDelete).not.toHaveBeenCalled();
+    expect(renderPlain(component)).not.toContain('[y/N]');
+  });
+
+  it('ignores other keys while the delete confirmation is open', () => {
+    const onDelete = vi.fn();
+    const onCancel = vi.fn();
+    const component = new SessionPickerComponent({
+      sessions: [{ id: 'ses_x', title: 'X session', work_dir: '/tmp/p', updated_at: 1 }],
+      loading: false,
+      currentSessionId: 'ses_other',
+      onSelect: vi.fn(),
+      onCancel,
+      onDelete,
+    });
+
+    component.handleInput('\u001B[3~'); // Delete
+    component.handleInput('\u001B'); // Esc inside confirm — cancels confirm, not dialog
+    expect(onCancel).not.toHaveBeenCalled();
+    expect(renderPlain(component)).not.toContain('[y/N]');
+  });
+
+  it('does not arm the delete confirmation when no session is selected', () => {
+    const onDelete = vi.fn();
+    const component = new SessionPickerComponent({
+      sessions: [],
+      loading: false,
+      currentSessionId: 'ses_other',
+      onSelect: vi.fn(),
+      onCancel: vi.fn(),
+      onDelete,
+    });
+
+    component.handleInput('\u001B[3~');
+    expect(onDelete).not.toHaveBeenCalled();
+  });
+
+  it('keeps the delete confirmation pinned to the session that armed it', () => {
+    const onDelete = vi.fn();
+    const component = new SessionPickerComponent({
+      sessions: [
+        { id: 'ses_a', title: 'Alpha', work_dir: '/tmp/a', updated_at: 1 },
+        { id: 'ses_b', title: 'Beta', work_dir: '/tmp/b', updated_at: 2 },
+      ],
+      loading: false,
+      currentSessionId: 'ses_other',
+      onSelect: vi.fn(),
+      onCancel: vi.fn(),
+      onDelete,
+    });
+
+    component.handleInput('\u001B[B'); // select B
+    component.handleInput('\u001B[3~'); // Delete
+    expect(renderPlain(component)).toContain('Delete session "Beta"? [y/N]');
+
+    component.handleInput('y');
+    expect(onDelete).toHaveBeenCalledOnce();
+    expect(onDelete).toHaveBeenCalledWith({
+      id: 'ses_b',
+      title: 'Beta',
+      work_dir: '/tmp/b',
+      updated_at: 2,
+    });
+  });
+
+  it('renders the expand/delete keys in the hint', () => {
+    const component = new SessionPickerComponent({
+      sessions: [{ id: 'ses_a', title: 'Alpha', work_dir: '/tmp/a', updated_at: 1 }],
+      loading: false,
+      currentSessionId: 'ses_other',
+      onSelect: vi.fn(),
+      onCancel: vi.fn(),
+    });
+
+    const output = renderPlain(component);
+    expect(output).toContain('Ctrl+E expand');
+    expect(output).toContain('Delete delete');
   });
 });

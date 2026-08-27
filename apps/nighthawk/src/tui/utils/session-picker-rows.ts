@@ -17,5 +17,8 @@ export function sessionRowsForPicker(
       updated_at: session.updatedAt ?? session.createdAt ?? 0,
       metadata: session.metadata,
       archived: session.archived ?? false,
+      session_dir: session.sessionDir,
+      created_at: session.createdAt,
+      last_turn_reason: session.lastTurnReason,
     }));
 }

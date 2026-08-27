@@ -196,7 +196,7 @@ export interface SlashCommandHost {
   setExitForegroundTask(task: (exitCode: number) => Promise<void>): void;
   showHelpPanel(): void;
   createNewSession(): Promise<void>;
-  showSessionPicker(): Promise<void>;
+  showSessionPicker(initialScope?: 'cwd' | 'all'): Promise<void>;
   sendNormalUserInput(text: string): void;
   /**
    * Submit a prompt that explicitly activates one or more skills inline
@@ -497,6 +497,11 @@ async function handleBuiltInSlashCommand(
     }
     case 'sessions':
       void host.showSessionPicker();
+      return;
+    case 'session':
+      // /session opens the picker across all workspaces by default so every
+      // session can be inspected (Ctrl+E) and deleted (Delete) in one place.
+      void host.showSessionPicker('all');
       return;
     case 'tasks':
       void host.tasksBrowserController.show();

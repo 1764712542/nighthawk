@@ -259,6 +259,12 @@ export const BUILTIN_SLASH_COMMANDS = [
     priority: 80,
   },
   {
+    name: 'session',
+    aliases: [],
+    description: 'Browse all sessions across workspaces — expand and delete · 浏览全部工作区会话（展开/删除）',
+    priority: 80,
+  },
+  {
     name: 'tasks',
     aliases: ['task'],
     description: 'Browse background tasks · 浏览后台任务',
