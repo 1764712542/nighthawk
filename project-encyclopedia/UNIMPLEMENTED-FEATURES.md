@@ -128,3 +128,28 @@ grep -R "not implemented\|not yet implemented\|NotImplementedError\|no-op stub" 
 ```
 
 > 本文是快照式报告，基于当前 `HEAD` 与工作区源码。后续代码更新后应以实际源码为准。
+
+## 证据与代码位置
+
+- `packages/agent-core-v2/src/mcpCore/client-stdio.ts`
+- `packages/agent-core/src/mcp/client-stdio.ts`
+- `packages/kaos/src/ssh.ts`
+- `packages/minidb/src/cluster/index.ts`
+- `packages/minidb/src/cluster/coordinator.ts`
+- `packages/acp-adapter/src/server.ts`
+- `packages/acp-adapter/src/mcp.ts`
+- `packages/acp-server/src/convert.ts`
+- `packages/node-sdk/src/sdk-rpc-client-v2.ts`
+- `apps/nighthawk/src/tui/components/messages/agent-group.ts`
+- `apps/nighthawk/src/migration/migration-screen.ts`
+- `packages/acp-adapter/src/question.ts`
+- `packages/acp-adapter/src/events-map.ts`
+- `packages/agent-core/src/flags/registry.ts`
+- `packages/agent-core-v2/src/features/tower/flag.ts`
+- `packages/agent-core-v2/src/session/subagent/flag.ts`
+- `packages/agent-core-v2/src/session/sessionTitle/flag.ts`
+- `packages/kap-server/src/search/searchService.ts`
+- `packages/agent-core-v2/src/app/capability/entries/nighthawkWebbridge.ts`
+
+> 本文所有路径均相对仓库根目录；引用内容以仓库当前 `HEAD` 为准。
+
