@@ -393,7 +393,7 @@ const REQUEST_TOO_LARGE_MESSAGE_PATTERNS = [
 ] as const;
 
 const THINKING_EFFORT_CONFIG_DOCS_URL =
-  'https://AliceGoto.github.io/nighthawk/en/configuration/config-files.html#thinking';
+  'https://nighthawk-dev.github.io/nighthawk/en/configuration/config-files.html#thinking';
 
 const THINKING_EFFORT_STATUS_MESSAGE_PATTERNS = [
   /reasoning[_ .-]?effort/,

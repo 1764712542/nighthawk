@@ -110,7 +110,7 @@ node scripts/smoke-security.ts             # 安全引擎端到端
 环境要求：Node.js ≥ 24.15，pnpm 10.33。
 
 ```sh
-git clone https://github.com/AliceGoto/nighthawk && cd nighthawk
+git clone https://github.com/nighthawk-dev/nighthawk && cd nighthawk
 pnpm install
 pnpm run build:packages
 pnpm -C apps/nighthawk run build

@@ -2,7 +2,7 @@
 
 Agent Client Protocol adapter for nighthawk. Exposes the nighthawk agent over the [Agent Client Protocol](https://agentclientprotocol.com/) so that ACP-compatible clients (editors, IDEs, custom front-ends) can drive a nighthawk session over stdio.
 
-Part of the [NightHawk](https://github.com/AliceGoto/nighthawk) monorepo.
+Part of the [NightHawk](https://github.com/nighthawk-dev/nighthawk) monorepo.
 
 ## Minimum usage
 

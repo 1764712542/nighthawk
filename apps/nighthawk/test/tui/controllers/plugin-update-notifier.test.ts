@@ -28,7 +28,7 @@ function makePluginSummary(overrides: Partial<PluginSummary> = {}): PluginSummar
     commandCount: 0,
     hasErrors: false,
     source: 'zip-url',
-    originalSource: 'https://cdn.jsdelivr.net/gh/AliceGoto/nighthawk@main/plugins/cdn/official/nighthawk-datasource.zip',
+    originalSource: 'https://cdn.jsdelivr.net/gh/nighthawk-dev/nighthawk@main/plugins/cdn/official/nighthawk-datasource.zip',
     ...overrides,
   };
 }
@@ -41,7 +41,7 @@ function makeMarketplaceEntry(
   return {
     id,
     displayName,
-    source: `https://cdn.jsdelivr.net/gh/AliceGoto/nighthawk@main/plugins/cdn/official/${id}.zip`,
+    source: `https://cdn.jsdelivr.net/gh/nighthawk-dev/nighthawk@main/plugins/cdn/official/${id}.zip`,
     tier: 'official',
     version,
   };

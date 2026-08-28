@@ -11,7 +11,7 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'AliceGoto'
+    if: github.repository_owner == 'nighthawk-dev'
     outputs:
       packages_published: ${{ steps.changesets.outputs.published }}
       nighthawk_native_release: ${{ steps.nighthawk-release.outputs.should_publish }}
@@ -167,7 +167,7 @@ jobs:
         run: |
           VERSION="${RELEASE_TAG#*@}"
           VERSION="${VERSION#v}"
-          git clone --depth 1 "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/AliceGoto/homebrew-nighthawk.git" tap
+          git clone --depth 1 "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/nighthawk-dev/homebrew-nighthawk.git" tap
           cp nighthawk.rb "tap/nighthawk.rb"
           cd tap
           git config user.name "nighthawk-bot"

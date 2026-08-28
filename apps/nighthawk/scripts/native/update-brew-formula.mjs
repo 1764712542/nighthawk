@@ -2,7 +2,7 @@
  * Generates a Homebrew formula (nighthawk.rb) from a native release manifest.
  *
  * The formula lives in the `homebrew-nighthawk` tap repository so users can
- * install NightHawk with `brew install AliceGoto/nighthawk/nighthawk`.
+ * install NightHawk with `brew install nighthawk-dev/nighthawk/nighthawk`.
  * Homebrew requires a pinned sha256 per platform, so the formula must be
  * regenerated on every release from the freshly published manifest.json.
  *
@@ -54,26 +54,26 @@ const sha = {
 
 const formula = `class Nighthawk < Formula
   desc "Security-first AI coding agent for the terminal"
-  homepage "https://github.com/AliceGoto/nighthawk"
+  homepage "https://github.com/nighthawk-dev/nighthawk"
   version "${version}"
   license "MIT"
 
   on_macos do
     if Hardware::CPU.arm?
-      url "https://github.com/AliceGoto/nighthawk/releases/download/#{version}/nighthawk-darwin-arm64.zip"
+      url "https://github.com/nighthawk-dev/nighthawk/releases/download/#{version}/nighthawk-darwin-arm64.zip"
       sha256 "${sha.darwinArm64}"
     else
-      url "https://github.com/AliceGoto/nighthawk/releases/download/#{version}/nighthawk-darwin-x64.zip"
+      url "https://github.com/nighthawk-dev/nighthawk/releases/download/#{version}/nighthawk-darwin-x64.zip"
       sha256 "${sha.darwinX64}"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm?
-      url "https://github.com/AliceGoto/nighthawk/releases/download/#{version}/nighthawk-linux-arm64.zip"
+      url "https://github.com/nighthawk-dev/nighthawk/releases/download/#{version}/nighthawk-linux-arm64.zip"
       sha256 "${sha.linuxArm64}"
     else
-      url "https://github.com/AliceGoto/nighthawk/releases/download/#{version}/nighthawk-linux-x64.zip"
+      url "https://github.com/nighthawk-dev/nighthawk/releases/download/#{version}/nighthawk-linux-x64.zip"
       sha256 "${sha.linuxX64}"
     end
   end

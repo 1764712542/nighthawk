@@ -4,10 +4,10 @@
 # checksum published alongside it, and installs into %USERPROFILE%\.nighthawk\bin.
 #
 # Usage:
-#   irm https://cdn.jsdelivr.net/gh/AliceGoto/nighthawk@main/install.ps1 | iex
+#   irm https://cdn.jsdelivr.net/gh/nighthawk-dev/nighthawk@main/install.ps1 | iex
 #
 # Environment overrides:
-#   NIGHTHAWK_INSTALL_REPO     GitHub <owner>/<repo> hosting releases (default AliceGoto/nighthawk)
+#   NIGHTHAWK_INSTALL_REPO     GitHub <owner>/<repo> hosting releases (default nighthawk-dev/nighthawk)
 #   NIGHTHAWK_INSTALL_VERSION  Release tag to install (default: latest)
 #   NIGHTHAWK_INSTALL_DIR      Installation directory (default %USERPROFILE%\.nighthawk\bin)
 #Requires -Version 5.1
@@ -15,7 +15,7 @@
 $ErrorActionPreference = 'Stop'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-$Repo = if ($env:NIGHTHAWK_INSTALL_REPO) { $env:NIGHTHAWK_INSTALL_REPO } else { 'AliceGoto/nighthawk' }
+$Repo = if ($env:NIGHTHAWK_INSTALL_REPO) { $env:NIGHTHAWK_INSTALL_REPO } else { 'nighthawk-dev/nighthawk' }
 $Version = if ($env:NIGHTHAWK_INSTALL_VERSION) { $env:NIGHTHAWK_INSTALL_VERSION } else { 'latest' }
 $InstallDir = if ($env:NIGHTHAWK_INSTALL_DIR) { $env:NIGHTHAWK_INSTALL_DIR } else { Join-Path $env:USERPROFILE '.nighthawk\bin' }
 

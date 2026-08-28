@@ -5,14 +5,14 @@
 	"description": "Terminal User Interface library with differential rendering for efficient text-based applications",
 	"license": "MIT",
 	"author": "NightHawk Contributors",
-	"homepage": "https://github.com/AliceGoto/nighthawk/tree/main/packages/pi-tui#readme",
+	"homepage": "https://github.com/nighthawk-dev/nighthawk/tree/main/packages/pi-tui#readme",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/AliceGoto/nighthawk.git",
+		"url": "git+https://github.com/nighthawk-dev/nighthawk.git",
 		"directory": "packages/pi-tui"
 	},
 	"bugs": {
-		"url": "https://github.com/AliceGoto/nighthawk/issues"
+		"url": "https://github.com/nighthawk-dev/nighthawk/issues"
 	},
 	"keywords": [
 		"tui",

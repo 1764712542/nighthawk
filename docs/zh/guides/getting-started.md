@@ -26,13 +26,13 @@ NightHawk CLI 为全交互式 TUI 应用，推荐在支持真彩色与连字的�
 - **macOS / Linux**：
 
 ```sh
-curl -fsSL https://cdn.jsdelivr.net/gh/AliceGoto/nighthawk@main/install.sh | bash
+curl -fsSL https://cdn.jsdelivr.net/gh/nighthawk-dev/nighthawk@main/install.sh | bash
 ```
 
 - **Windows（PowerShell）**：
 
 ```powershell
-irm https://cdn.jsdelivr.net/gh/AliceGoto/nighthawk@main/install.ps1 | iex
+irm https://cdn.jsdelivr.net/gh/nighthawk-dev/nighthawk@main/install.ps1 | iex
 ```
 
 > Windows 用户首次启动前还需要安装 [Git for Windows](https://gitforwindows.org/)，NightHawk CLI 会使用其中的 Git Bash 作为 Shell 环境。如果 Git Bash 安装在非标准路径，请把 `NIGHTHAWK_SHELL_PATH` 设为 `bash.exe` 的绝对路径。
@@ -44,7 +44,7 @@ irm https://cdn.jsdelivr.net/gh/AliceGoto/nighthawk@main/install.ps1 | iex
 如果你使用 [Homebrew](https://brew.sh/)，可通过 NightHawk tap 安装：
 
 ```sh
-brew install AliceGoto/nighthawk/nighthawk
+brew install nighthawk-dev/nighthawk/nighthawk
 ```
 
 Formula 会从 GitHub Release 下载对应平台的二进制，并以常规 Homebrew 公式方式安装。
@@ -78,7 +78,7 @@ nighthawk --version
 npm install -g @nighthawk/nighthawk@latest
 ```
 
-**卸载**：脚本安装的用户删除 `nighthawk` 可执行文件即可；Homebrew 安装的用户执行 `brew uninstall AliceGoto/nighthawk/nighthawk`；npm 安装的用户：
+**卸载**：脚本安装的用户删除 `nighthawk` 可执行文件即可；Homebrew 安装的用户执行 `brew uninstall nighthawk-dev/nighthawk/nighthawk`；npm 安装的用户：
 
 ```sh
 npm uninstall -g @nighthawk/nighthawk

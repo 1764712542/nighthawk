@@ -18,6 +18,6 @@
     "shortDescription": "Control your real browser from NightHawk — navigate, click, type, and screenshot",
     "longDescription": "NightHawk WebBridge lets AI control the user's real browser — navigate, click, type, read, screenshot, and interact with any website using the user's actual login sessions. The skill talks to the local WebBridge daemon (http://127.0.0.1:10086), which drives Chrome/Edge through a browser extension over CDP. Everything runs locally; login state and page content never leave the device.\n\nRequires the NightHawk WebBridge daemon and browser extension — get them from your NightHawk distribution.",
     "developerName": "NightHawk Contributors",
-    "websiteURL": "https://github.com/AliceGoto/nighthawk"
+    "websiteURL": "https://github.com/nighthawk-dev/nighthawk"
   }
 }

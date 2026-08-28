@@ -365,7 +365,7 @@ export class NighthawkCore implements PromisableMethods<CoreAPI> {
     // persistence (local) kaos, not the tool kaos. In ACP mode the tool kaos is
     // the reverse-RPC bridge and the client does not know the session yet during
     // `session/new`, so reading through it fails with "unknown session"
-    // (https://github.com/AliceGoto/nighthawk/issues/988). The local config is
+    // (https://github.com/nighthawk-dev/nighthawk/issues/988). The local config is
     // a system file and must not depend on the tool bridge — same reason
     // `Session.systemContextKaos` is backed by the persistence sink.
     const localWorkspaceDirs = await readWorkspaceAdditionalDirs(persistenceKaos, workDir);

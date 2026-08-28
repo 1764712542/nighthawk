@@ -2,7 +2,7 @@
 
 > The Starting Point for Next-Gen Agents
 
-[![npm](https://img.shields.io/npm/v/@nighthawk/nighthawk)](https://www.npmjs.com/package/@nighthawk/nighthawk) [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)  [![Docs](https://img.shields.io/badge/docs-online-blue)](https://AliceGoto.github.io/nighthawk/en/)
+[![npm](https://img.shields.io/npm/v/@nighthawk/nighthawk)](https://www.npmjs.com/package/@nighthawk/nighthawk) [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)  [![Docs](https://img.shields.io/badge/docs-online-blue)](https://nighthawk-dev.github.io/nighthawk/en/)
 
 ## What is NightHawk CLI
 
@@ -15,13 +15,13 @@ The recommended install path is the official script. It does not require Node.js
 - **macOS / Linux**:
 
 ```sh
-curl -fsSL https://cdn.jsdelivr.net/gh/AliceGoto/nighthawk@main/install.sh | bash
+curl -fsSL https://cdn.jsdelivr.net/gh/nighthawk-dev/nighthawk@main/install.sh | bash
 ```
 
 - **Windows (PowerShell)**:
 
 ```powershell
-irm https://cdn.jsdelivr.net/gh/AliceGoto/nighthawk@main/install.ps1 | iex
+irm https://cdn.jsdelivr.net/gh/nighthawk-dev/nighthawk@main/install.ps1 | iex
 ```
 
 > On Windows, install [Git for Windows](https://gitforwindows.org/) before first launch because NightHawk CLI uses the bundled Git Bash as its shell environment. If Git Bash is installed in a custom location, set `NIGHTHAWK_SHELL_PATH` to the absolute path of `bash.exe`.
@@ -46,7 +46,7 @@ Or with pnpm:
 pnpm add -g @nighthawk/nighthawk
 ```
 
-For upgrade and uninstall instructions, see the [Getting Started guide](https://AliceGoto.github.io/nighthawk/en/guides/getting-started).
+For upgrade and uninstall instructions, see the [Getting Started guide](https://nighthawk-dev.github.io/nighthawk/en/guides/getting-started).
 
 ## Quick Start
 
@@ -75,14 +75,14 @@ Take a look at this project and explain the main directories.
 
 ## Documentation
 
-- Full docs: https://AliceGoto.github.io/nighthawk/en/
-- 中文文档: https://AliceGoto.github.io/nighthawk/zh/
-- Getting Started: https://AliceGoto.github.io/nighthawk/en/guides/getting-started
+- Full docs: https://nighthawk-dev.github.io/nighthawk/en/
+- 中文文档: https://nighthawk-dev.github.io/nighthawk/zh/
+- Getting Started: https://nighthawk-dev.github.io/nighthawk/en/guides/getting-started
 
 ## Repository & Issues
 
-- Source: https://github.com/AliceGoto/nighthawk
-- Issues: https://github.com/AliceGoto/nighthawk/issues
+- Source: https://github.com/nighthawk-dev/nighthawk
+- Issues: https://github.com/nighthawk-dev/nighthawk/issues
 - Security: see SECURITY.md in the main repository
 
 ## License
