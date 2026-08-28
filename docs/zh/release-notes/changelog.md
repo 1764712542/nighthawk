@@ -9,6 +9,9 @@ outline: 2
 ## 0.40.0（2026-08-28）
 
 ### 新功能
+- 新增 `/trace` 命令：查看会话追踪时间线，显示每个回合的耗时、工具调用链和状态。详见[斜杠命令](../reference/slash-commands.md#信息与状态)。
+
+### 新功能
 
 - **渗透测试模式**：输入 `/pentest` 或 `/hack` 切换到专业渗透测试工作台，界面切换为 Matrix 绿字黑底黑客主题。
 - **渗透测试工具**：五个仅在渗透测试模式下可用的新工具——`PortScanner`（nmap 端口扫描）、`DirBrute`（40+ 路径字典目录爆破）、`PasswordBrute`（常见密码字典凭据测试）、`ThreatModel`（STRIDE 威胁建模 + Mermaid 图表）、`SubdomainEnum`（DNS 解析 + 50+ 子域名枚举）。

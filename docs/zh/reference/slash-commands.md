@@ -107,6 +107,7 @@ Prompt 模式在目标完成时以退出码 `0` 退出，在目标阻塞时以 `
 | `/plugins` | — | 打开交互式 plugin 管理器 | 是 |
 | `/version` | — | 显示 NightHawk CLI 版本号 | 是 |
 | `/feedback` | `/bug` | 提交反馈，可附加诊断日志和代码库上下文 | 是 |
+| `/trace` | `/tracing`、`/timeline` | 查看会话追踪时间线：每个回合的耗时、工具调用链和状态 | 是 |
 
 ## 退出
 

@@ -375,6 +375,13 @@ export const BUILTIN_SLASH_COMMANDS = [
     pentestOnly: true,
   },
   {
+    name: 'trace',
+    aliases: ['tracing', 'timeline'],
+    description: 'Show session trace timeline · 查看会话追踪时间线',
+    priority: 60,
+    availability: 'always',
+  },
+  {
     name: 'goal',
     aliases: [],
     description: 'Start or manage an autonomous goal · 启动或管理自主目标',

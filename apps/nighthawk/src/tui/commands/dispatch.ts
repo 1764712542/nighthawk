@@ -71,6 +71,7 @@ import {
 } from './session';
 import { handleSwarmCommand } from './swarm';
 import { handleTowerCommand } from './tower';
+import { handleTraceCommand } from './trace';
 import { handleUndoCommand } from './undo';
 
 // ---------------------------------------------------------------------------
@@ -591,6 +592,9 @@ async function handleBuiltInSlashCommand(
       return;
     case 'report':
       await handleReportCommand(host, args);
+      return;
+    case 'trace':
+      await handleTraceCommand(host, args);
       return;
     case 'plan':
       await handlePlanCommand(host, args);

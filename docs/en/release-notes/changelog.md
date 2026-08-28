@@ -8,6 +8,9 @@ This page documents the changes in each NightHawk CLI release.
 
 ## 0.40.0 (2026-08-28)
 
+### New Features
+- Add `/trace` command: view session trace timeline showing each turn's duration, tool call chain, and status. See [Slash Commands](../reference/slash-commands.md#information-status).
+
 ### Features
 
 - **Pentest mode**: Enter `/pentest` or `/hack` to switch to a dedicated penetration testing workstation with a Matrix-green-on-black hacker theme. Includes a 9-stage orchestrated workflow: compliance → scope → recon → attack surface → vulnerability verification → exploitation → post-exploitation → remediation → report generation.

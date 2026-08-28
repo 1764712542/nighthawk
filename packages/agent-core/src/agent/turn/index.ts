@@ -703,6 +703,7 @@ export class TurnFlow {
       duration_ms: ended.durationMs,
       mode: this.telemetryModeByTurn.get(turnId) ?? this.telemetryMode(),
       thinking_effort: this.agent.config.thinkingEffort,
+      step: this.currentStep,
       ...this.requestProtocolProps(),
       trace_id: terminalTraceId,
     });
@@ -1181,6 +1182,7 @@ export class TurnFlow {
         duration_ms: Date.now() - started.startedAt,
         dup_type: dupType,
         trace_id: event.traceId ?? started.traceId,
+        step: this.currentStep,
       };
       const errorType = outcome === 'error' ? telemetryToolErrorType(event.result) : undefined;
       if (errorType !== undefined) {

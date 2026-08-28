@@ -12,6 +12,7 @@ import type {
 import type { NotificationsConfig, StatusLineConfig, UpgradePreferences } from './config';
 import type { PendingApproval, PendingQuestion } from './reverse-rpc/types';
 import type { ColorToken, ThemeName } from './theme';
+import type { TraceStore } from './utils/trace-store';
 
 /**
  * Live per-session aggregate statistics rendered in the footer. All fields
@@ -118,6 +119,8 @@ export interface AppState {
   mcpServersSummary: string | null;
   /** Optional banner shown below the welcome panel; null means no banner to render. */
   banner?: BannerState | null;
+  /** Trace store for observability timeline. */
+  traceStore?: TraceStore;
 }
 
 export interface StepRetryState {

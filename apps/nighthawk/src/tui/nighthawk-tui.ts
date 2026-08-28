@@ -41,6 +41,7 @@ import { detectFdPath, ensureFdPath } from '#/utils/process/fd-detect';
 import { quoteShellArg } from '#/utils/shell-quote';
 import { restoreTerminalModes } from '#/utils/terminal-restore';
 
+import { TraceStore } from './utils/trace-store';
 import { BannerProvider } from './banner/banner-provider';
 import { readBannerDisplayState, writeBannerDisplayState } from './banner/state';
 import {
@@ -319,6 +320,8 @@ export class NighthawkTUI {
   pentestOrchestrator: PentestOrchestrator | null = null;
   /** Pentest welcome panel — shown when pentest mode is active. */
   pentestWelcomeComponent: PentestWelcomeComponent | null = null;
+  /** Trace store for observability timeline. */
+  readonly traceStore = new TraceStore();
   private readonly approvalController = new ApprovalController();
   private readonly questionController = new QuestionController();
   private readonly reverseRpcDisposers: Array<() => void> = [];
@@ -429,6 +432,7 @@ export class NighthawkTUI {
     this.engineV2 = startupInput.engineV2 ?? false;
     this.startupNotice = startupInput.startupNotice;
     this.state = createTUIState(tuiOptions);
+    this.state.appState.traceStore = this.traceStore;
     this.uninstallRainbowDance = installRainbowDance(() => {
       this.state.ui.requestRender();
     });
@@ -1759,10 +1763,12 @@ export class NighthawkTUI {
 
   handleTurnStarted(event: TurnStartedEvent): void {
     this.staging.handleTurnStarted(event);
+    this.traceStore.onTurnStarted(String(event.turnId));
   }
 
   handleTurnEnded(event: TurnEndedEvent): void {
     this.staging.handleTurnEnded(event);
+    this.traceStore.onTurnEnded(String(event.turnId), event.durationMs ?? 0);
     this.pentestOrchestrator?.onTurnEnded(event);
   }
 

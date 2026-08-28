@@ -109,6 +109,7 @@ Prompt mode exits with code `0` when the goal completes, `3` when it blocks, and
 | `/plugins` | — | Open the interactive plugin manager | Yes |
 | `/version` | — | Display the NightHawk CLI version number | Yes |
 | `/feedback` | `/bug` | Submit feedback with optional diagnostic logs and codebase context | Yes |
+| `/trace` | `/tracing`, `/timeline` | Show session trace timeline: each turn's duration, tool call chain, and status | Yes |
 
 ## Exit
 

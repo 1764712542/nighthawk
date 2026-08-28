@@ -176,6 +176,8 @@ export class SessionEventHandler {
   private stats: SessionStats = createEmptySessionStats();
   /** llmDurationMs snapshot at turn start, to split turn duration into LLM vs tool time. */
   private turnStartLlmDurationMs = 0;
+  /** Tool call start timestamps for trace observability. */
+  private toolCallTraceStarts: Map<string, number> = new Map();
 
   resetRuntimeState(): void {
     this.backgroundTasks.clear();
@@ -195,6 +197,7 @@ export class SessionEventHandler {
     this.queuedGoalPromotionInFlight = false;
     this.stats = createEmptySessionStats();
     this.turnStartLlmDurationMs = 0;
+    this.toolCallTraceStarts.clear();
     this.host.setAppState({ sessionStats: this.stats });
     this.clearQueuedGoalPromotionTimer();
     this.clearStepRetryAttemptTimer();
@@ -689,6 +692,8 @@ export class SessionEventHandler {
       turnId,
     };
     streamingUI.registerToolCall(toolCall);
+    // Track start time for trace observability
+    this.toolCallTraceStarts.set(event.toolCallId, Date.now());
     if (event.name === 'AgentSwarm') {
       this.subAgentEventHandler.handleAgentSwarmToolCallStarted(event.toolCallId, toolCall.args);
     }
@@ -759,6 +764,18 @@ export class SessionEventHandler {
       resultData,
       event.isError === true,
     );
+    // Record tool call in trace store
+    if (matchedCall !== undefined) {
+      const traceStore = this.host.state.appState.traceStore;
+      if (traceStore !== undefined) {
+        const startedAt = this.toolCallTraceStarts.get(event.toolCallId);
+        const durationMs = startedAt !== undefined ? Date.now() - startedAt : 0;
+        const step = matchedCall.step ?? 0;
+        const turnId = matchedCall.turnId ?? String(event.turnId);
+        traceStore.onToolCall(matchedCall.name, durationMs, event.isError ? 'error' : 'ok', step, turnId);
+        this.toolCallTraceStarts.delete(event.toolCallId);
+      }
+    }
     if (matchedCall !== undefined && matchedCall.name === 'TodoList' && !event.isError) {
       const rawTodos = (matchedCall.args as { todos?: unknown }).todos;
       if (Array.isArray(rawTodos)) {

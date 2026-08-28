@@ -32,6 +32,7 @@ export { handlePentestCommand } from './pentest';
 export { handleScanCommand, handleReconCommand, handleExploitCommand, handleReportCommand } from './pentest-scan';
 export { goalArgumentCompletions } from './registry';
 export { handleForkCommand, handleInitCommand, handleTitleCommand } from './session';
+export { handleTraceCommand } from './trace';
 export { handleUndoCommand } from './undo';
 export {
   promptApiKey,
