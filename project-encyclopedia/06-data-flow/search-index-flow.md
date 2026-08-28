@@ -18,6 +18,16 @@ kap-server `/api/v1/search` 调用 search service，支持 live/index 模式。
 
 索引 generation 持久化，启动时加载 published generation + WAL replay。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/minidb/AGENTS.md`（非 TS 源码，可直接阅读）
+  - `packages/kap-server/src/search/searchService.ts` 导出：
+    - 符号：`SEARCH_WORKER_FLAG_ID`, `IGlobalSearchService`, `LiveTranscriptSource`, `SearchBackend`, `InlineSearchBackend`, `GlobalSearchService`
+  - `packages/kap-server/src/routes/search.ts` 导出：
+    - 符号：`registerSearchRoutes`
+
 ## 证据与代码位置
 
 - `packages/minidb/AGENTS.md`

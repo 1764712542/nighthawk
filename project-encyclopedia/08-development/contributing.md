@@ -18,6 +18,14 @@ PR 标题用 Conventional Commit；不要空泛描述。
 
 公开文本使用中性占位符，不暴露内部标识。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `CONTRIBUTING.md`（非 TS 源码，可直接阅读）
+  - `CONTRIBUTING.zh-CN.md`（非 TS 源码，可直接阅读）
+  - `.github/pull_request_template.md`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `CONTRIBUTING.md`

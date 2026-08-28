@@ -18,6 +18,14 @@ VS Code 扩展提供侧边栏 webview 聊天、文件插入、会话管理和 v1
 
 通过 `vsix-package.mjs` 打包 .vsix，可发布到 VS Code Marketplace 和 Open VSX。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `apps/vscode/package.json`（非 TS 源码，可直接阅读）
+  - `apps/vscode/src/extension.ts`（未发现直接 export 符号，可能以副作用注册为主）
+  - `apps/vscode/README.md`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `apps/vscode/package.json`

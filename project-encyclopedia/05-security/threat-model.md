@@ -18,6 +18,15 @@ OAuth token 写入使用事务串行化；日志 redact 敏感信息。
 
 依赖审计工具自身可检查 postinstall 脚本和未锁定版本。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/kap-server/src/start.ts` 导出：
+    - 符号：`ServerHostIdentity`, `ServerStartOptions`, `RunningServer`, `PORT_RETRY_LIMIT`, `ListenWithPortRetryOptions`
+  - `packages/agent-core-v2/docs/Permission.md`（非 TS 源码，可直接阅读）
+  - `docs/architecture/plugin-and-extension-design.md`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `packages/kap-server/src/start.ts`

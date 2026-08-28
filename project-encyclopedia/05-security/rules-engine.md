@@ -18,6 +18,13 @@ sqli、xss、cmdi、path、ssrf、deser、crypto、auth、xxe、node、python、
 
 `owaspFor(cwe)` 把 CWE 映射到 OWASP Top 10 2021 的 A 编号。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/agent-core/src/tools/builtin/security/rules.ts` 导出：
+    - 符号：`Severity`, `SecurityRule`, `SECURITY_RULES`, `rulesForLanguage`, `detectLanguage`
+
 ## 证据与代码位置
 
 - `packages/agent-core/src/tools/builtin/security/rules.ts`

@@ -18,6 +18,16 @@ Collection、ScopeUnits、Feature、ConfigSection、AgentToolContribution、Even
 
 provide/unprovide/update 以事务方式执行，依赖图变化触发级联重建；Ledger 记录有序副作用并逆序销毁。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/agent-core-v2/src/_base/di/scope.ts` 导出：
+    - 符号：`ScopeKind`, `setScopeTopology`, `ScopedEntry`, `registerScopedService`, `overrideScopedService`, `getScopedServiceDescriptors`, `_clearScopedRegistryForTests`, `ScopeSeed`, `ScopeOptions`, `IScopeHandle`, `IAppScopeHandle`, `ISessionScopeHandle`, `IAgentScopeHandle`, `createScopedChildHandle`, `Scope`, `createAppScope`
+  - `packages/agent-core-v2/docs/di.md`（非 TS 源码，可直接阅读）
+  - `packages/agent-core-v2/src/app/scopes.ts` 导出：
+    - 符号：`LifecycleScope`, `SCOPE_TOPOLOGY`
+
 ## 证据与代码位置
 
 - `packages/agent-core-v2/src/_base/di/scope.ts`

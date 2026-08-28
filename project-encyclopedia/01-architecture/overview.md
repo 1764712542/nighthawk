@@ -18,6 +18,16 @@ NightHawk 是分层架构：应用层、服务端/传输层、Agent 引擎层、
 
 用户输入进入 Session → Agent Loop → LLM Requester → 工具执行 → 结果回写 context/transcript → 事件广播到 TUI/Web。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/agent-core-v2/src/app/scopes.ts` 导出：
+    - 符号：`LifecycleScope`, `SCOPE_TOPOLOGY`
+  - `packages/kap-server/src/transport/dispatcher.ts` 导出：
+    - 符号：`ChannelLookup`
+  - `apps/nighthawk/AGENTS.md`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `packages/agent-core-v2/src/app/scopes.ts`

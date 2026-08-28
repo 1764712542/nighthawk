@@ -18,6 +18,33 @@ TUI 内常用 slash 命令。
 
 `/compact`、`/undo`、`/export`、`/status`、`/help`、`/quit`。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `apps/nighthawk/src/tui/commands//` 目录下源码文件示例：
+    - `apps/nighthawk/src/tui/commands/add-dir.ts`
+    - `apps/nighthawk/src/tui/commands/auth.ts`
+    - `apps/nighthawk/src/tui/commands/btw.ts`
+    - `apps/nighthawk/src/tui/commands/complete-args.ts`
+    - `apps/nighthawk/src/tui/commands/config.ts`
+    - `apps/nighthawk/src/tui/commands/copy.ts`
+    - `apps/nighthawk/src/tui/commands/dispatch.ts`
+    - `apps/nighthawk/src/tui/commands/experimental-flags.ts`
+    - `apps/nighthawk/src/tui/commands/goal.ts`
+    - `apps/nighthawk/src/tui/commands/index.ts`
+    - `apps/nighthawk/src/tui/commands/info.ts`
+    - `apps/nighthawk/src/tui/commands/parse.ts`
+    - `apps/nighthawk/src/tui/commands/pentest-scan.ts`
+    - `apps/nighthawk/src/tui/commands/pentest.ts`
+    - `apps/nighthawk/src/tui/commands/plugin-commands.ts`
+    - `apps/nighthawk/src/tui/commands/plugins.ts`
+    - `apps/nighthawk/src/tui/commands/prompts.ts`
+    - `apps/nighthawk/src/tui/commands/provider.ts`
+    - `apps/nighthawk/src/tui/commands/registry.ts`
+    - `apps/nighthawk/src/tui/commands/reload.ts`
+  - `docs/en/reference/slash-commands.md`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `apps/nighthawk/src/tui/commands/`

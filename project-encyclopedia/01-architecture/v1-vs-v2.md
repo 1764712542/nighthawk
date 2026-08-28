@@ -18,6 +18,14 @@ kap-server 和 klient 基于 v2；CLI 的很多新能力也走 v2；v1 仍保留
 
 `packages/agent-core-v2/docs/` 有 di、service-design、features、permission 等设计文档，说明迁移思路。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/agent-core/AGENTS.md`（非 TS 源码，可直接阅读）
+  - `packages/agent-core-v2/AGENTS.md`（非 TS 源码，可直接阅读）
+  - `packages/agent-core-v2/docs/di.md`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `packages/agent-core/AGENTS.md`

@@ -18,6 +18,29 @@
 
 子 agent 完成/失败后把结果带回主 agent。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/agent-core/src/agent/swarm//` 目录下源码文件示例：
+    - `packages/agent-core/src/agent/swarm/index.ts`
+  - `packages/agent-core-v2/src/agent/tools/agent//` 目录下源码文件示例：
+    - `packages/agent-core-v2/src/agent/tools/agent/agent.ts`
+    - `packages/agent-core-v2/src/agent/tools/agent/agentTool.ts`
+    - `packages/agent-core-v2/src/agent/tools/agent/subagent-task.ts`
+  - `packages/agent-core-v2/src/features/swarm//` 目录下源码文件示例：
+    - `packages/agent-core-v2/src/features/swarm/agent/injection/swarmInjection.ts`
+    - `packages/agent-core-v2/src/features/swarm/agent/swarm.ts`
+    - `packages/agent-core-v2/src/features/swarm/agent/swarmService.ts`
+    - `packages/agent-core-v2/src/features/swarm/configSection.ts`
+    - `packages/agent-core-v2/src/features/swarm/session/agentRunBatch.ts`
+    - `packages/agent-core-v2/src/features/swarm/session/sessionSwarm.ts`
+    - `packages/agent-core-v2/src/features/swarm/session/sessionSwarmService.ts`
+    - `packages/agent-core-v2/src/features/swarm/swarmFeature.ts`
+    - `packages/agent-core-v2/src/features/swarm/swarmOps.ts`
+    - `packages/agent-core-v2/src/features/swarm/tools/agent-swarm/agent-swarm.ts`
+    - `packages/agent-core-v2/src/features/swarm/tools/agent-swarm/agentSwarmTool.ts`
+
 ## 证据与代码位置
 
 - `packages/agent-core/src/agent/swarm/`

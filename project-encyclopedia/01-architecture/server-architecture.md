@@ -18,6 +18,16 @@ sessions、workspaces、prompts、approvals、questions、files、fs、terminals
 
 持久 bearer token + 可选密码；loopback 下 debug endpoints 可开启。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/kap-server/src/start.ts` 导出：
+    - 符号：`ServerHostIdentity`, `ServerStartOptions`, `RunningServer`, `PORT_RETRY_LIMIT`, `ListenWithPortRetryOptions`
+  - `packages/kap-server/src/middleware/auth.ts` 导出：
+    - 符号：`AuthHookOptions`, `createAuthHook`
+  - `packages/kap-server/src/routes/registerApiV2Routes.ts`（未发现直接 export 符号，可能以副作用注册为主）
+
 ## 证据与代码位置
 
 - `packages/kap-server/src/start.ts`

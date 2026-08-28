@@ -27,6 +27,13 @@ Terminal User Interface library with differential rendering for efficient text-b
 
 测试文件约 39 个；测试入口通常在 `packages/pi-tui/test/`。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/pi-tui/package.json`（非 TS 源码，可直接阅读）
+  - `packages/pi-tui/README.md`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `packages/pi-tui/package.json`

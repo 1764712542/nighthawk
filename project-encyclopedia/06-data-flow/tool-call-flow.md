@@ -18,6 +18,19 @@ kosong 把 provider 格式转成内部 ToolCall。
 
 ToolMessage 回填 contextMemory，并作为下一轮 LLM 输入。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/agent-core-v2/src/agent/toolExecutor/toolExecutor.ts` 导出：
+    - 符号：`ToolCallStartedPayload`, `ToolExecutorExecuteOptions`, `ToolExecutionResult`, `MissingToolDescriber`, `UnavailableToolDescriber`, `ToolCallGuard`, `ToolCallDupType`, `IAgentToolExecutorService`
+  - `packages/agent-core-v2/src/agent/toolApproval//` 目录下源码文件示例：
+    - `packages/agent-core-v2/src/agent/toolApproval/toolApproval.ts`
+    - `packages/agent-core-v2/src/agent/toolApproval/toolApprovalService.ts`
+  - `packages/agent-core-v2/src/agent/toolActivation//` 目录下源码文件示例：
+    - `packages/agent-core-v2/src/agent/toolActivation/toolActivation.ts`
+    - `packages/agent-core-v2/src/agent/toolActivation/toolActivationService.ts`
+
 ## 证据与代码位置
 
 - `packages/agent-core-v2/src/agent/toolExecutor/toolExecutor.ts`

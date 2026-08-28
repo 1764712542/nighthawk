@@ -18,6 +18,16 @@ kap-server search 服务基于 minidb text index，提供跨 session 全文搜�
 
 transcript 层把 agent 状态变更序列化为可重放事件，供 replay/UI。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/agent-core-v2/src/app/bootstrap/bootstrapService.ts` 导出：
+    - 符号：`BootstrapService`
+  - `packages/minidb/README.md`（非 TS 源码，可直接阅读）
+  - `packages/kap-server/src/search/searchService.ts` 导出：
+    - 符号：`SEARCH_WORKER_FLAG_ID`, `IGlobalSearchService`, `LiveTranscriptSource`, `SearchBackend`, `InlineSearchBackend`, `GlobalSearchService`
+
 ## 证据与代码位置
 
 - `packages/agent-core-v2/src/app/bootstrap/bootstrapService.ts`

@@ -18,6 +18,35 @@
 
 transcript 记录 op-batch，server 可推送 WS 事件。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/klient/README.md`（非 TS 源码，可直接阅读）
+  - `packages/agent-core-v2/src/agent/llmRequester/llmRequester.ts` 导出：
+    - 符号：`AgentLLMRequestLogFields`, `AgentLLMRequestSource`, `AgentLLMRequestFinish`, `AgentLLMRequestPartHandler`, `AgentLLMRequestOverrides`, `AgentLLMRequestTask`, `PreparedTurnRequestConfig`, `IAgentLLMRequesterService`
+  - `packages/kap-server/src/transport//` 目录下源码文件示例：
+    - `packages/kap-server/src/transport/businessSnapshotDispatcher.ts`
+    - `packages/kap-server/src/transport/businessSnapshotRoutes.ts`
+    - `packages/kap-server/src/transport/channel.ts`
+    - `packages/kap-server/src/transport/channelRegistry.ts`
+    - `packages/kap-server/src/transport/dispatcher.ts`
+    - `packages/kap-server/src/transport/errors.ts`
+    - `packages/kap-server/src/transport/mainAgent.ts`
+    - `packages/kap-server/src/transport/registerDebugRoutes.ts`
+    - `packages/kap-server/src/transport/serviceDispatcherRoutes.ts`
+    - `packages/kap-server/src/transport/ws/bearerProtocol.ts`
+    - `packages/kap-server/src/transport/ws/connectionRegistry.ts`
+    - `packages/kap-server/src/transport/ws/v1/events.ts`
+    - `packages/kap-server/src/transport/ws/v1/fsWatchBridge.ts`
+    - `packages/kap-server/src/transport/ws/v1/inFlightTurnTracker.ts`
+    - `packages/kap-server/src/transport/ws/v1/protocol.ts`
+    - `packages/kap-server/src/transport/ws/v1/registerWsV1.ts`
+    - `packages/kap-server/src/transport/ws/v1/sessionEventBroadcaster.ts`
+    - `packages/kap-server/src/transport/ws/v1/sessionEventJournal.ts`
+    - `packages/kap-server/src/transport/ws/v1/subagentRosterTracker.ts`
+    - `packages/kap-server/src/transport/ws/v1/wsConnectionV1.ts`
+
 ## 证据与代码位置
 
 - `packages/klient/README.md`

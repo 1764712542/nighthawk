@@ -18,6 +18,16 @@ agent-core-v2 提供 workspace/session/agent 生命周期、agent loop、工具�
 
 minidb 提供会话索引和搜索；文件系统存储 sessions/blobs/store/cache/logs；transcript 提供内存/持久化的 transcript 数据层。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/kap-server/src/routes/registerApiV2Routes.ts`（未发现直接 export 符号，可能以副作用注册为主）
+  - `packages/agent-core-v2/src/app/bootstrap/bootstrap.ts` 导出：
+    - 符号：`HostArgs`, `HostArgsInput`, `resolveHostArgs`, `IBootstrapOptions`, `PersistenceScopeName`, `IBootstrapService`, `BootstrapInput`, `resolveBootstrapOptions`, `bootstrapSeed`, `BootstrapResult`, `bootstrap`, `resolveNighthawkHome`, `resolveConfigPath`, `ensureNighthawkHome`
+  - `packages/minidb/src/mini-db.ts` 导出：
+    - 符号：`MiniDb`
+
 ## 证据与代码位置
 
 - `packages/kap-server/src/routes/registerApiV2Routes.ts`

@@ -18,6 +18,16 @@ idempotent 操作：同样的 op 多次应用结果一致，支持持久化重�
 
 framework-free view registry，可在 React/Vue/终端等不同 UI 复用。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/transcript/AGENTS.md`（非 TS 源码，可直接阅读）
+  - `packages/transcript/src/index.ts` 导出：
+    - 再导出：`./model/ids`, `./model/turn`, `./model/frame`, `./model/interaction`, `./model/attachment`, `./model/todo`, `./model/item`, `./model/task`, `./model/meta`, `./model/prompt`, `./ops/operation`, `./store/agentTranscript`, `./store/transcriptStore`, `./granularity/grade`, `./granularity/filterOps`, `./view/registry`, `./pagination/paginate`, `./history/groupTurns`, `./history/foldFacts`, `./contract/schema`, `./contract/events`, `./contract/mediaRef`
+  - `packages/transcript/src/contract/schema.ts` 导出：
+    - 符号：`turnIdSchema`, `stepIdSchema`, `frameIdSchema`, `taskIdSchema`, `agentIdSchema`, `isPlainAgentId`, `turnOriginSchema`, `transcriptUsageSchema`, `stepUsageSchema`, `stepTimingSchema`, `stepRetrySchema`, `turnStateSchema`, `stepStateSchema`, `textFrameSchema`, `thinkingFrameSchema`, `agentRefSchema`, `toolFrameProgressSchema`, `toolCallFrameSchema`, `interactionSchema`, `noticeFrameSchema`, `transcriptFrameSchema`, `transcriptStepSchema`, `transcriptTurnSchema`, `transcriptMarkerSchema`, `transcriptTaskRefSchema`, `transcriptItemSchema`, `transcriptTaskSchema`, `goalMetaSchema`, `modesMetaSchema`, `modesMetaMergeSchema`, `agentPhaseMetaSchema`, `agentUsageMetaSchema`, `agentStatusMetaSchema`, `transcriptMetaSchema`, `transcriptMetaMergeSchema`, `attachmentSchema`, `todoItemSchema`, `todoSchema`, `transcriptPromptSchema`, `agentTranscriptSnapshotSchema`, `turnHeaderSchema`, `stepHeaderSchema`, `appendTargetSchema`, `transcriptOperationSchema`, `transcriptOpBatchSchema`, `transcriptGradeSchema`, `transcriptSeqSchema`, `transcriptGradeSpecSchema`, `transcriptSubscribeV2PayloadSchema`, `TranscriptSubscribeV2Payload`, `transcriptQuerySchema`, `agentDescriptorSchema`, `transcriptResponseSchema`, `transcriptOpsCatchupResponseSchema`, `transcriptUserMessageSchema`, `transcriptUserMessagesResponseSchema`, `transcriptPlanReviewSchema`, `transcriptPlanEntrySchema`, `transcriptPlanResponseSchema`, `transcriptResetPayloadSchema`
+
 ## 证据与代码位置
 
 - `packages/transcript/AGENTS.md`

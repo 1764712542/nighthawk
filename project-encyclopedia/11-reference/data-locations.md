@@ -26,6 +26,14 @@ minidb 查询/索引存储。
 
 OAuth token 等凭据。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/agent-core-v2/src/app/bootstrap/bootstrapService.ts` 导出：
+    - 符号：`BootstrapService`
+  - `docs/en/configuration/data-locations.md`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `packages/agent-core-v2/src/app/bootstrap/bootstrapService.ts`

@@ -18,6 +18,39 @@ normal/yolo/auto；`--yolo` 跳过常规审批，`--auto` 全自动。
 
 敏感文件、git 控制路径需要特殊审批。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/agent-core/src/agent/permission//` 目录下源码文件示例：
+    - `packages/agent-core/src/agent/permission/index.ts`
+    - `packages/agent-core/src/agent/permission/matches-rule.ts`
+    - `packages/agent-core/src/agent/permission/policies/agent-swarm-exclusive-deny.ts`
+    - `packages/agent-core/src/agent/permission/policies/auto-mode-approve.ts`
+    - `packages/agent-core/src/agent/permission/policies/auto-mode-ask-user-question-deny.ts`
+    - `packages/agent-core/src/agent/permission/policies/default-tool-approve.ts`
+    - `packages/agent-core/src/agent/permission/policies/deny-all.ts`
+    - `packages/agent-core/src/agent/permission/policies/exit-plan-mode-review-ask.ts`
+    - `packages/agent-core/src/agent/permission/policies/fallback-ask.ts`
+    - `packages/agent-core/src/agent/permission/policies/file-access-ask.ts`
+    - `packages/agent-core/src/agent/permission/policies/git-cwd-write-approve.ts`
+    - `packages/agent-core/src/agent/permission/policies/goal-start-review-ask.ts`
+    - `packages/agent-core/src/agent/permission/policies/index.ts`
+    - `packages/agent-core/src/agent/permission/policies/plan-mode-guard-deny.ts`
+    - `packages/agent-core/src/agent/permission/policies/plan-mode-tool-approve.ts`
+    - `packages/agent-core/src/agent/permission/policies/pre-tool-call-hook.ts`
+    - `packages/agent-core/src/agent/permission/policies/session-approval-history.ts`
+    - `packages/agent-core/src/agent/permission/policies/swarm-mode-agent-swarm-approve.ts`
+    - `packages/agent-core/src/agent/permission/policies/user-configured-rules.ts`
+    - `packages/agent-core/src/agent/permission/policies/yolo-mode-approve.ts`
+  - `packages/agent-core-v2/src/agent/permissionRules//` 目录下源码文件示例：
+    - `packages/agent-core-v2/src/agent/permissionRules/configSection.ts`
+    - `packages/agent-core-v2/src/agent/permissionRules/matchesRule.ts`
+    - `packages/agent-core-v2/src/agent/permissionRules/permissionRules.ts`
+    - `packages/agent-core-v2/src/agent/permissionRules/permissionRulesOps.ts`
+    - `packages/agent-core-v2/src/agent/permissionRules/permissionRulesService.ts`
+  - `docs/en/configuration/config-files.md`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `packages/agent-core/src/agent/permission/`

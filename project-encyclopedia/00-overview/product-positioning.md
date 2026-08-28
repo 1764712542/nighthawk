@@ -18,6 +18,14 @@ TUI 由 `packages/pi-tui` 驱动，毫秒级启动，可 over SSH，不需要 ID
 
 LLM 抽象层在 `packages/kosong`，支持 OpenAI、Anthropic、Google、DeepSeek 与兼容端点。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `README.zh-CN.md`（非 TS 源码，可直接阅读）
+  - `docs/architecture/plugin-and-extension-design.md`（非 TS 源码，可直接阅读）
+  - `packages/kosong/README.md`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `README.zh-CN.md`

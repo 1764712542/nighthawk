@@ -27,6 +27,13 @@ Agent Client Protocol (ACP) host backed directly by the DI × Scope agent engine
 
 测试文件约 18 个；测试入口通常在 `packages/acp-server/test/`。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/acp-server/package.json`（非 TS 源码，可直接阅读）
+  - `packages/acp-server/package.json`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `packages/acp-server/package.json`

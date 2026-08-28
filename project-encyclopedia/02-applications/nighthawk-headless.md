@@ -18,6 +18,16 @@ headless 完成时 `finalizeHeadlessRun` 刷新 stdout/stderr 并 armed 一个 u
 
 `-p` 不能与 `--yolo`、`--auto`、`--plan` 同时使用。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `apps/nighthawk/src/cli/run-prompt.ts` 导出：
+    - 符号：`PromptRunIO`, `PromptProcess`, `requireConfiguredModel`, `configuredModel`, `installPromptTerminationCleanup`, `signalExitCode`
+  - `apps/nighthawk/src/cli/headless-exit.ts` 导出：
+    - 符号：`ExitableProcess`, `scheduleHeadlessForceExit`
+  - `docs/en/reference/nighthawk-command.md`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `apps/nighthawk/src/cli/run-prompt.ts`

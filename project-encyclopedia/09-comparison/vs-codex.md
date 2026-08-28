@@ -18,6 +18,13 @@ NightHawk 有完整 TypeScript SDK、REST/WS 协议、可自托管 server；Code
 
 NightHawk TUI 原生毫秒启动、可 SSH；Codex CLI 也支持终端，但 NightHawk 把安全审计做成工作流。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `README.zh-CN.md`（非 TS 源码，可直接阅读）
+  - `docs/en/reference/tools.md`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `README.zh-CN.md`

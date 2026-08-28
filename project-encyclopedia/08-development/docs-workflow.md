@@ -18,6 +18,14 @@
 
 `docs/scripts/sync-changelog.mjs` 自动同步 changelog。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `.agents/skills/gen-docs/SKILL.md`（非 TS 源码，可直接阅读）
+  - `.agents/skills/translate-docs/SKILL.md`（非 TS 源码，可直接阅读）
+  - `docs/AGENTS.md`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `.agents/skills/gen-docs/SKILL.md`

@@ -18,6 +18,23 @@ PortScanner、DirBrute、PasswordBrute、ThreatModel、SubdomainEnum 仅在 `/pe
 
 `rules.ts` 中可数到 116 条规则模板；`scripts/smoke-security.ts` 是安全冒烟。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/agent-core/src/tools/builtin/security//` 目录下源码文件示例：
+    - `packages/agent-core/src/tools/builtin/security/dep-audit.ts`
+    - `packages/agent-core/src/tools/builtin/security/engine.ts`
+    - `packages/agent-core/src/tools/builtin/security/index.ts`
+    - `packages/agent-core/src/tools/builtin/security/osv-client.ts`
+    - `packages/agent-core/src/tools/builtin/security/rules.ts`
+    - `packages/agent-core/src/tools/builtin/security/sarif-formatter.ts`
+    - `packages/agent-core/src/tools/builtin/security/scan-cache-persist.ts`
+    - `packages/agent-core/src/tools/builtin/security/secret-scan.ts`
+    - `packages/agent-core/src/tools/builtin/security/security-scan.ts`
+    - `packages/agent-core/src/tools/builtin/security/taint-trace.ts`
+  - `README.zh-CN.md`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `packages/agent-core/src/tools/builtin/security/`

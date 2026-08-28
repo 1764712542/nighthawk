@@ -18,6 +18,26 @@ v2 的 loop 由 stepRequest、turnOps、llmRequester、toolExecutor、toolSchedu
 
 `agent/contextMemory/` 维护 transcript、消息 id、工具结果渲染、loop event fold、compaction。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/agent-core-v2/src/agent/loop//` 目录下源码文件示例：
+    - `packages/agent-core-v2/src/agent/loop/configSection.ts`
+    - `packages/agent-core-v2/src/agent/loop/errors.ts`
+    - `packages/agent-core-v2/src/agent/loop/loop.ts`
+    - `packages/agent-core-v2/src/agent/loop/loopContinuation.ts`
+    - `packages/agent-core-v2/src/agent/loop/loopContinuationService.ts`
+    - `packages/agent-core-v2/src/agent/loop/loopService.ts`
+    - `packages/agent-core-v2/src/agent/loop/stepRequest.ts`
+    - `packages/agent-core-v2/src/agent/loop/stepRequestQueue.ts`
+    - `packages/agent-core-v2/src/agent/loop/turnEvents.ts`
+    - `packages/agent-core-v2/src/agent/loop/turnOps.ts`
+  - `packages/agent-core-v2/src/agent/llmRequester/llmRequester.ts` 导出：
+    - 符号：`AgentLLMRequestLogFields`, `AgentLLMRequestSource`, `AgentLLMRequestFinish`, `AgentLLMRequestPartHandler`, `AgentLLMRequestOverrides`, `AgentLLMRequestTask`, `PreparedTurnRequestConfig`, `IAgentLLMRequesterService`
+  - `packages/agent-core-v2/src/agent/toolExecutor/toolExecutor.ts` 导出：
+    - 符号：`ToolCallStartedPayload`, `ToolExecutorExecuteOptions`, `ToolExecutionResult`, `MissingToolDescriber`, `UnavailableToolDescriber`, `ToolCallGuard`, `ToolCallDupType`, `IAgentToolExecutorService`
+
 ## 证据与代码位置
 
 - `packages/agent-core-v2/src/agent/loop/`

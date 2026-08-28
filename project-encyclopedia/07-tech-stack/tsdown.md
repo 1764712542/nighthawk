@@ -18,6 +18,14 @@ dist/index.mjs、dist/main.mjs 等。
 
 publishConfig 的 exports 指向 dist 类型和实现。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `apps/nighthawk/tsdown.config.ts`（未发现直接 export 符号，可能以副作用注册为主）
+  - `packages/agent-core-v2/tsdown.config.ts`（未发现直接 export 符号，可能以副作用注册为主）
+  - `package.json`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `apps/nighthawk/tsdown.config.ts`

@@ -18,6 +18,38 @@ TUI 主题/布局配置。
 
 Markdown frontmatter 定义 agent profile。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `docs/en/configuration/config-files.md`（非 TS 源码，可直接阅读）
+  - `packages/agent-core/src/config//` 目录下源码文件示例：
+    - `packages/agent-core/src/config/env-model.ts`
+    - `packages/agent-core/src/config/index.ts`
+    - `packages/agent-core/src/config/merge.ts`
+    - `packages/agent-core/src/config/migrations.ts`
+    - `packages/agent-core/src/config/model.ts`
+    - `packages/agent-core/src/config/nighthawk-env-params.ts`
+    - `packages/agent-core/src/config/path.ts`
+    - `packages/agent-core/src/config/print-defaults.ts`
+    - `packages/agent-core/src/config/resolve.ts`
+    - `packages/agent-core/src/config/schema.ts`
+    - `packages/agent-core/src/config/secondary-model.ts`
+    - `packages/agent-core/src/config/toml.ts`
+    - `packages/agent-core/src/config/workspace-local.ts`
+  - `packages/agent-core-v2/src/app/config//` 目录下源码文件示例：
+    - `packages/agent-core-v2/src/app/config/config.ts`
+    - `packages/agent-core-v2/src/app/config/configEvents.ts`
+    - `packages/agent-core-v2/src/app/config/configOverlayContributions.ts`
+    - `packages/agent-core-v2/src/app/config/configPure.ts`
+    - `packages/agent-core-v2/src/app/config/configSectionContributions.ts`
+    - `packages/agent-core-v2/src/app/config/configService.ts`
+    - `packages/agent-core-v2/src/app/config/deprecations.ts`
+    - `packages/agent-core-v2/src/app/config/errors.ts`
+    - `packages/agent-core-v2/src/app/config/migrations.ts`
+    - `packages/agent-core-v2/src/app/config/sectionDiff.ts`
+    - `packages/agent-core-v2/src/app/config/toml.ts`
+
 ## 证据与代码位置
 
 - `docs/en/configuration/config-files.md`

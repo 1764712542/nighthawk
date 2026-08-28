@@ -50,7 +50,7 @@ const config = withMermaid(defineConfig({
               text: '指南',
               items: [
                 { text: '开始使用', link: '/zh/guides/getting-started' },
-                { text: '从 kimi-cli 迁移', link: '/zh/guides/migration' },
+                { text: '从 legacy-cli 迁移', link: '/zh/guides/migration' },
                 { text: '常见使用案例', link: '/zh/guides/use-cases' },
                 { text: '交互与输入', link: '/zh/guides/interaction' },
                 { text: '会话与上下文', link: '/zh/guides/sessions' },
@@ -138,7 +138,7 @@ const config = withMermaid(defineConfig({
               text: 'Guides',
               items: [
                 { text: 'Getting Started', link: '/en/guides/getting-started' },
-                { text: 'Migrating from kimi-cli', link: '/en/guides/migration' },
+                { text: 'Migrating from legacy-cli', link: '/en/guides/migration' },
                 { text: 'Common Use Cases', link: '/en/guides/use-cases' },
                 { text: 'Interaction and Input', link: '/en/guides/interaction' },
                 { text: 'Sessions and Context', link: '/en/guides/sessions' },

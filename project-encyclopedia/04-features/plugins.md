@@ -18,6 +18,36 @@
 
 `IPluginService` 管理插件生命周期；feature 可 contribute plugin commands。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/agent-core/src/plugin//` 目录下源码文件示例：
+    - `packages/agent-core/src/plugin/archive.ts`
+    - `packages/agent-core/src/plugin/commands.ts`
+    - `packages/agent-core/src/plugin/github-resolver.ts`
+    - `packages/agent-core/src/plugin/index.ts`
+    - `packages/agent-core/src/plugin/manager.ts`
+    - `packages/agent-core/src/plugin/manifest.ts`
+    - `packages/agent-core/src/plugin/source.ts`
+    - `packages/agent-core/src/plugin/store.ts`
+    - `packages/agent-core/src/plugin/types.ts`
+  - `packages/agent-core-v2/src/app/plugin//` 目录下源码文件示例：
+    - `packages/agent-core-v2/src/app/plugin/archive.ts`
+    - `packages/agent-core-v2/src/app/plugin/commands.ts`
+    - `packages/agent-core-v2/src/app/plugin/errors.ts`
+    - `packages/agent-core-v2/src/app/plugin/github-resolver.ts`
+    - `packages/agent-core-v2/src/app/plugin/manager.ts`
+    - `packages/agent-core-v2/src/app/plugin/manifest.ts`
+    - `packages/agent-core-v2/src/app/plugin/marketplace.ts`
+    - `packages/agent-core-v2/src/app/plugin/plugin.ts`
+    - `packages/agent-core-v2/src/app/plugin/pluginEvents.ts`
+    - `packages/agent-core-v2/src/app/plugin/pluginService.ts`
+    - `packages/agent-core-v2/src/app/plugin/source.ts`
+    - `packages/agent-core-v2/src/app/plugin/store.ts`
+    - `packages/agent-core-v2/src/app/plugin/types.ts`
+  - `docs/en/customization/plugins.md`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `packages/agent-core/src/plugin/`

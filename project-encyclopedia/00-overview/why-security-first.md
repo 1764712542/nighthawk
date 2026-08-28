@@ -14,6 +14,15 @@ NightHawk 把“审计”当作一等工作流，而不是附加功能；安全�
 
 `packages/agent-core/src/tools/builtin/security/rules.ts` 中实际有 116 条规则模板；`scripts/smoke-security.ts` 提供安全引擎冒烟测试。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `README.zh-CN.md`（非 TS 源码，可直接阅读）
+  - `packages/agent-core/src/tools/builtin/security/rules.ts` 导出：
+    - 符号：`Severity`, `SecurityRule`, `SECURITY_RULES`, `rulesForLanguage`, `detectLanguage`
+  - `scripts/smoke-security.ts`（未发现直接 export 符号，可能以副作用注册为主）
+
 ## 证据与代码位置
 
 - `README.zh-CN.md`

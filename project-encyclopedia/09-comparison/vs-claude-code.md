@@ -18,6 +18,13 @@ NightHawk 把 OWASP/CWE 规则、污点追踪作为一等工具；Claude Code �
 
 NightHawk 源码仓库公开且 MIT；Claude Code 不开源。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/kosong/README.md`（非 TS 源码，可直接阅读）
+  - `README.zh-CN.md`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `packages/kosong/README.md`

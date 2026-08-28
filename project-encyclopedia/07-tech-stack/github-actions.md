@@ -18,6 +18,14 @@ oxlint + sherif + 仓库守卫。
 
 Changesets action 管理版本 PR 和 npm publish。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `.github/workflows//`（目录内无 .ts 文件）
+  - `AGENTS.md`（非 TS 源码，可直接阅读）
+  - `package.json`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `.github/workflows/`

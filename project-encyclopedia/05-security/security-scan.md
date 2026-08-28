@@ -18,6 +18,17 @@ SQLi、XSS、命令注入、路径穿越、SSRF、反序列化、弱加密、认
 
 `scan-cache-persist.ts` 按文件内容 hash 缓存结果，未变更文件重复扫描更快。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/agent-core/src/tools/builtin/security/security-scan.ts` 导出：
+    - 符号：`SecurityScanInputSchema`, `SecurityScanInput`, `SecurityScanTool`
+  - `packages/agent-core/src/tools/builtin/security/engine.ts` 导出：
+    - 符号：`ScanResult`, `FindingKind`, `FindingEvidence`, `NormalizedFinding`, `ScanMetrics`, `ScanReport`, `SecretFinding`, `TaintFinding`, `SKIP_DIRS`, `ScanOptions`, `ScanProgress`, `ScanProgressCallback`, `scanContent`, `ScanCacheKey`, `ScanCacheEntry`, `ScanCache`, `createScanCacheKey`, `formatScanReport`, `scanSecretsInContent`, `formatSecrets`, `taintAnalyzeContent`, `formatTaint`, `secretFindingToNormalized`, `taintFindingToNormalized`
+  - `packages/agent-core/src/tools/builtin/security/scan-cache-persist.ts` 导出：
+    - 符号：`PersistentScanCache`
+
 ## 证据与代码位置
 
 - `packages/agent-core/src/tools/builtin/security/security-scan.ts`

@@ -18,6 +18,15 @@ KNOWN_RISKS 内置列表、loose range、http registry、postinstall 远程脚�
 
 `useExternal: true` 运行 npm audit / pnpm audit / pip-audit 等。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/agent-core/src/tools/builtin/security/dep-audit.ts` 导出：
+    - 符号：`DepAuditInputSchema`, `DepAuditInput`, `DepAuditInputArgs`, `DepAuditFinding`, `DepAuditManifest`, `DepAuditResult`, `parsePackageJson`, `parseRequirementsTxt`, `parseGoMod`, `LockFileInfo`, `parseNpmAuditJson`, `parsePipAuditJson`, `OsvClient`, `DepAuditTool`, `depFindingToNormalized`
+  - `packages/agent-core/src/tools/builtin/security/osv-client.ts` 导出：
+    - 符号：`OsvPackage`, `OsvQuery`, `OsvVulnerability`, `OsvBatchQuery`, `OsvBatchResponse`, `OsvClientOptions`, `OsvClient`, `mapEcosystem`, `extractFixedVersion`, `extractCvssScore`, `createOsvClient`
+
 ## 证据与代码位置
 
 - `packages/agent-core/src/tools/builtin/security/dep-audit.ts`

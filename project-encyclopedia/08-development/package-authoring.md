@@ -18,6 +18,14 @@ monorepo 中加包必须同步 pnpm-workspace 与 flake.nix。
 
 运行 `pnpm run sherif`、`node scripts/check-nix-workspace.mjs`。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `pnpm-workspace.yaml`（非 TS 源码，可直接阅读）
+  - `flake.nix`（非 TS 源码，可直接阅读）
+  - `AGENTS.md`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `pnpm-workspace.yaml`

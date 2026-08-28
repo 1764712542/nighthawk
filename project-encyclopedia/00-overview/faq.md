@@ -18,6 +18,13 @@ v1 是 `packages/agent-core` 的统一引擎，包含 Agent/Session/profile/skil
 
 不是。有 VS Code 扩展、REST/WS 服务端、Web inspector、可视化工具；但终端是主力形态。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `README.zh-CN.md`（非 TS 源码，可直接阅读）
+  - `docs/architecture/plugin-and-extension-design.md`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `README.zh-CN.md`

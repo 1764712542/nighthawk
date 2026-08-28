@@ -18,6 +18,16 @@ Unit tree、Graph、Cascade、Pending 四个视图，反映 DI 单元状态和�
 
 没有 fallback 数据源；连接失败显示 blocking 错误页。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `apps/nighthawk-inspect/README.md`（非 TS 源码，可直接阅读）
+  - `apps/nighthawk-inspect/src/panels.ts` 导出：
+    - 符号：`AnyService`, `call`, `PanelAction`, `ServicePanelDef`, `CORE_PANELS`, `SESSION_PANELS`, `AGENT_PANELS`
+  - `packages/kap-server/src/transport/registerDebugRoutes.ts` 导出：
+    - 符号：`registerDebugRoutes`
+
 ## 证据与代码位置
 
 - `apps/nighthawk-inspect/README.md`

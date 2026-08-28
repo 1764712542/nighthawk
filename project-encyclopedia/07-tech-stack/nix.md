@@ -18,6 +18,14 @@ x86_64-linux、aarch64-linux、x86_64-darwin、aarch64-darwin。
 
 workspacePaths 和 workspaceNames 必须手动与 pnpm workspace 同步。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `flake.nix`（非 TS 源码，可直接阅读）
+  - `AGENTS.md`（非 TS 源码，可直接阅读）
+  - `Makefile`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `flake.nix`

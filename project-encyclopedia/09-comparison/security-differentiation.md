@@ -18,6 +18,16 @@ NightHawk 的“安全优先”不是宣传语，而是代码中的一等工具�
 
 扩展进入统一审批，格式自由但行为不自由。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/agent-core/src/tools/builtin/security/rules.ts` 导出：
+    - 符号：`Severity`, `SecurityRule`, `SECURITY_RULES`, `rulesForLanguage`, `detectLanguage`
+  - `packages/agent-core/src/tools/builtin/security/taint-trace.ts` 导出：
+    - 符号：`TaintTraceInputSchema`, `TaintTraceInput`, `TaintTraceInputArgs`, `TaintTraceTool`
+  - `docs/architecture/plugin-and-extension-design.md`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `packages/agent-core/src/tools/builtin/security/rules.ts`

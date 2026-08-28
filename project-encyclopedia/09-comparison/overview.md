@@ -18,6 +18,13 @@ NightHawk 同时兼容 MCP、SKILL.md、插件 manifest 和 OpenAI function sche
 
 NightHawk 可本地 SEA 单文件、npm 包、server/Web、VS Code 扩展多种形态。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `README.zh-CN.md`（非 TS 源码，可直接阅读）
+  - `docs/architecture/plugin-and-extension-design.md`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `README.zh-CN.md`

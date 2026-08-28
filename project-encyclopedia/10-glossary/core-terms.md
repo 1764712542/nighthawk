@@ -18,6 +18,14 @@
 
 DI 生命周期层级：App/Workspace/Session/Agent。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/agent-core-v2/src/app/scopes.ts` 导出：
+    - 符号：`LifecycleScope`, `SCOPE_TOPOLOGY`
+  - `packages/agent-core-v2/docs/di.md`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `packages/agent-core-v2/src/app/scopes.ts`

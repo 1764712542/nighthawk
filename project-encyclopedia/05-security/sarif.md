@@ -18,6 +18,15 @@ ScanReport 可带 `sarif` 字段。
 
 `engine.ts` 中 `SarifLog` 类型和 `formatToSarif` 引用。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/agent-core/src/tools/builtin/security/sarif-formatter.ts` 导出：
+    - 符号：`SarifLog`, `SarifRun`, `SarifTool`, `SarifReportingDescriptor`, `SarifResult`, `SarifInvocation`, `SarifFormatterOptions`, `severityToLevel`, `normalizeFileUri`, `RuleInfo`, `buildSarifRules`, `formatToSarif`
+  - `packages/agent-core/src/tools/builtin/security/engine.ts` 导出：
+    - 符号：`ScanResult`, `FindingKind`, `FindingEvidence`, `NormalizedFinding`, `ScanMetrics`, `ScanReport`, `SecretFinding`, `TaintFinding`, `SKIP_DIRS`, `ScanOptions`, `ScanProgress`, `ScanProgressCallback`, `scanContent`, `ScanCacheKey`, `ScanCacheEntry`, `ScanCache`, `createScanCacheKey`, `formatScanReport`, `scanSecretsInContent`, `formatSecrets`, `taintAnalyzeContent`, `formatTaint`, `secretFindingToNormalized`, `taintFindingToNormalized`
+
 ## 证据与代码位置
 
 - `packages/agent-core/src/tools/builtin/security/sarif-formatter.ts`

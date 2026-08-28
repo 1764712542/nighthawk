@@ -18,6 +18,15 @@ ACP（Agent Client Protocol）让 IDE 通过 JSON-RPC over stdio 直接驱动 Ni
 
 IDE 扩展把 NightHawk 作为子进程，实现编辑器内 agent 体验。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `apps/nighthawk/src/cli/sub/acp.ts` 导出：
+    - 符号：`registerAcpCommand`
+  - `packages/acp-server/README.md`（路径不存在，请以仓库实际文件为准）
+  - `packages/acp-server/package.json`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `apps/nighthawk/src/cli/sub/acp.ts`

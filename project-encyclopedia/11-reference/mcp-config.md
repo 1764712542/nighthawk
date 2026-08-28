@@ -18,6 +18,33 @@ global mcp.json、project mcp.json、plugin manifest、caller/session overlay。
 
 项目级 MCP 在 workspace untrusted 时跳过。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/agent-core/src/mcp//` 目录下源码文件示例：
+    - `packages/agent-core/src/mcp/auth-tool.ts`
+    - `packages/agent-core/src/mcp/client-http.ts`
+    - `packages/agent-core/src/mcp/client-remote.ts`
+    - `packages/agent-core/src/mcp/client-shared.ts`
+    - `packages/agent-core/src/mcp/client-sse.ts`
+    - `packages/agent-core/src/mcp/client-stdio.ts`
+    - `packages/agent-core/src/mcp/config-loader.ts`
+    - `packages/agent-core/src/mcp/config-view.ts`
+    - `packages/agent-core/src/mcp/connection-manager.ts`
+    - `packages/agent-core/src/mcp/global-config.ts`
+    - `packages/agent-core/src/mcp/index.ts`
+    - `packages/agent-core/src/mcp/oauth/callback-server.ts`
+    - `packages/agent-core/src/mcp/oauth/index.ts`
+    - `packages/agent-core/src/mcp/oauth/provider.ts`
+    - `packages/agent-core/src/mcp/oauth/service.ts`
+    - `packages/agent-core/src/mcp/oauth/store.ts`
+    - `packages/agent-core/src/mcp/output.ts`
+    - `packages/agent-core/src/mcp/registry.ts`
+    - `packages/agent-core/src/mcp/session-config.ts`
+    - `packages/agent-core/src/mcp/tool-naming.ts`
+  - `docs/en/customization/mcp.md`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `packages/agent-core/src/mcp/`

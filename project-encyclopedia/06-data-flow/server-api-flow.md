@@ -18,6 +18,16 @@ Fastify route handler 校验参数/body，构造 request。
 
 中间件先验证 bearer token、origin/host。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/kap-server/src/middleware/auth.ts` 导出：
+    - 符号：`AuthHookOptions`, `createAuthHook`
+  - `packages/kap-server/src/transport/dispatcher.ts` 导出：
+    - 符号：`ChannelLookup`
+  - `packages/kap-server/src/envelope.ts`（未发现直接 export 符号，可能以副作用注册为主）
+
 ## 证据与代码位置
 
 - `packages/kap-server/src/middleware/auth.ts`

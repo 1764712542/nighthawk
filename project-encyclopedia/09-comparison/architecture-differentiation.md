@@ -18,6 +18,14 @@ memory 和 IPC 跑同一套 conformance suite，保证字节级一致。
 
 可复现构建和单文件原生分发降低部署成本。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/klient/README.md`（非 TS 源码，可直接阅读）
+  - `apps/nighthawk-inspect/README.md`（非 TS 源码，可直接阅读）
+  - `flake.nix`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `packages/klient/README.md`

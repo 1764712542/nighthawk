@@ -18,6 +18,15 @@ Static Analysis Results Interchange Format。
 
 不可信输入沿数据流传播到危险操作。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/agent-core/src/tools/builtin/security/rules.ts` 导出：
+    - 符号：`Severity`, `SecurityRule`, `SECURITY_RULES`, `rulesForLanguage`, `detectLanguage`
+  - `packages/agent-core/src/tools/builtin/security/sarif-formatter.ts` 导出：
+    - 符号：`SarifLog`, `SarifRun`, `SarifTool`, `SarifReportingDescriptor`, `SarifResult`, `SarifInvocation`, `SarifFormatterOptions`, `severityToLevel`, `normalizeFileUri`, `RuleInfo`, `buildSarifRules`, `formatToSarif`
+
 ## 证据与代码位置
 
 - `packages/agent-core/src/tools/builtin/security/rules.ts`

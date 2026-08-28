@@ -18,6 +18,28 @@ SecurityScanTool、SecretScanTool、TaintTraceTool、DepAuditTool 都实现 `Bui
 
 `packages/agent-core-v2/src/features/security/` 把安全工具移植到 v2 引擎。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/agent-core/src/tools/builtin/security/security-scan.ts` 导出：
+    - 符号：`SecurityScanInputSchema`, `SecurityScanInput`, `SecurityScanTool`
+  - `packages/agent-core-v2/src/features/security//` 目录下源码文件示例：
+    - `packages/agent-core-v2/src/features/security/engine/dep-audit.ts`
+    - `packages/agent-core-v2/src/features/security/engine/engine.ts`
+    - `packages/agent-core-v2/src/features/security/engine/rules.ts`
+    - `packages/agent-core-v2/src/features/security/engine/sarif-formatter.ts`
+    - `packages/agent-core-v2/src/features/security/engine/scan-cache-persist.ts`
+    - `packages/agent-core-v2/src/features/security/securityFeature.ts`
+    - `packages/agent-core-v2/src/features/security/tools/dep-audit.ts`
+    - `packages/agent-core-v2/src/features/security/tools/depAuditTool.ts`
+    - `packages/agent-core-v2/src/features/security/tools/secret-scan.ts`
+    - `packages/agent-core-v2/src/features/security/tools/secretScanTool.ts`
+    - `packages/agent-core-v2/src/features/security/tools/security-scan.ts`
+    - `packages/agent-core-v2/src/features/security/tools/securityScanTool.ts`
+    - `packages/agent-core-v2/src/features/security/tools/taint-trace.ts`
+    - `packages/agent-core-v2/src/features/security/tools/taintTraceTool.ts`
+
 ## 证据与代码位置
 
 - `packages/agent-core/src/tools/builtin/security/security-scan.ts`

@@ -18,6 +18,32 @@ packages/security-core 被上层应用或相邻包通过 workspace 依赖引用�
 
 阅读代码时应从 `src/index.ts` 或包入口开始，再沿导出符号进入具体实现。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/security-core/src/` 目录下源码文件示例：
+    - `packages/security-core/src/cli/commands.ts`
+    - `packages/security-core/src/cli/index.ts`
+    - `packages/security-core/src/config/index.ts`
+    - `packages/security-core/src/core/agent/loop.ts`
+    - `packages/security-core/src/core/llm/client.ts`
+    - `packages/security-core/src/core/providers/anthropic.ts`
+    - `packages/security-core/src/core/providers/index.ts`
+    - `packages/security-core/src/core/providers/nighthawk.ts`
+    - `packages/security-core/src/core/providers/openai.ts`
+    - `packages/security-core/src/core/rag/index.ts`
+    - `packages/security-core/src/core/session/store.ts`
+    - `packages/security-core/src/core/types.ts`
+    - `packages/security-core/src/security/rules.ts`
+    - `packages/security-core/src/security/scanner.ts`
+    - `packages/security-core/src/security/secrets.ts`
+    - `packages/security-core/src/security/taint.ts`
+    - `packages/security-core/src/tools/analysis-tools.ts`
+    - `packages/security-core/src/tools/file-tools.ts`
+    - `packages/security-core/src/tools/git-tools.ts`
+    - `packages/security-core/src/tools/registry.ts`
+
 ## 证据与代码位置
 
 - `packages/security-core/src`

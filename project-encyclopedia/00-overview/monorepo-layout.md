@@ -18,6 +18,14 @@
 
 用户输入 → CLI/TUI/SDK → server/dispatcher → agent-core-v2 Session/Agent → LLM 工具调用 → 结果写回 transcript/records/session。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `AGENTS.md`（非 TS 源码，可直接阅读）
+  - `apps/nighthawk/AGENTS.md`（非 TS 源码，可直接阅读）
+  - `packages/klient/AGENTS.md`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `AGENTS.md`

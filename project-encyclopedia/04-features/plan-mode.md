@@ -18,6 +18,25 @@ Plan 模式下写工具被 veto；退出计划需要 review 审批。
 
 用户 `/plan` 或 `--plan` → 进入 plan state → 工具调用被限制 → `ExitPlanMode` 提交计划 → 审批后恢复。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/agent-core-v2/src/features/plan//` 目录下源码文件示例：
+    - `packages/agent-core-v2/src/features/plan/configSection.ts`
+    - `packages/agent-core-v2/src/features/plan/exitPlanModeReview.ts`
+    - `packages/agent-core-v2/src/features/plan/injection/planModeInjection.ts`
+    - `packages/agent-core-v2/src/features/plan/plan.ts`
+    - `packages/agent-core-v2/src/features/plan/planFeature.ts`
+    - `packages/agent-core-v2/src/features/plan/planOps.ts`
+    - `packages/agent-core-v2/src/features/plan/planService.ts`
+    - `packages/agent-core-v2/src/features/plan/profile/plan.ts`
+    - `packages/agent-core-v2/src/features/plan/tools/enter-plan-mode/enter-plan-mode.ts`
+    - `packages/agent-core-v2/src/features/plan/tools/enter-plan-mode/enterPlanModeTool.ts`
+    - `packages/agent-core-v2/src/features/plan/tools/exit-plan-mode/exit-plan-mode.ts`
+    - `packages/agent-core-v2/src/features/plan/tools/exit-plan-mode/exitPlanModeTool.ts`
+  - `docs/en/reference/slash-commands.md`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `packages/agent-core-v2/src/features/plan/`

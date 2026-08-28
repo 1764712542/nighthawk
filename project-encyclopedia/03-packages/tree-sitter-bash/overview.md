@@ -27,6 +27,13 @@ A pure-TypeScript bash parser producing a syntax tree whose named node types mat
 
 测试文件约 8 个；测试入口通常在 `packages/tree-sitter-bash/test/`。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/tree-sitter-bash/package.json`（非 TS 源码，可直接阅读）
+  - `packages/tree-sitter-bash/README.md`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `packages/tree-sitter-bash/package.json`

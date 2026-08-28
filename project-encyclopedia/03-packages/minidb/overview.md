@@ -27,6 +27,13 @@ A pure-Node.js embedded key-value database mixing Redis-style in-memory KV with 
 
 测试文件约 53 个；测试入口通常在 `packages/minidb/test/`。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/minidb/package.json`（非 TS 源码，可直接阅读）
+  - `packages/minidb/README.md`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `packages/minidb/package.json`

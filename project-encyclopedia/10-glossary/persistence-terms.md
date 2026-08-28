@@ -18,6 +18,13 @@ minidb 持久化索引代际。
 
 为查询优化的投影数据。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/minidb/README.md`（非 TS 源码，可直接阅读）
+  - `packages/minidb/AGENTS.md`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `packages/minidb/README.md`

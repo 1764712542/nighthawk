@@ -18,6 +18,13 @@ packages/transcript 被上层应用或相邻包通过 workspace 依赖引用；�
 
 阅读代码时应从 `src/index.ts` 或包入口开始，再沿导出符号进入具体实现。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/transcript/src/index.ts` 导出：
+    - 再导出：`./model/ids`, `./model/turn`, `./model/frame`, `./model/interaction`, `./model/attachment`, `./model/todo`, `./model/item`, `./model/task`, `./model/meta`, `./model/prompt`, `./ops/operation`, `./store/agentTranscript`, `./store/transcriptStore`, `./granularity/grade`, `./granularity/filterOps`, `./view/registry`, `./pagination/paginate`, `./history/groupTurns`, `./history/foldFacts`, `./contract/schema`, `./contract/events`, `./contract/mediaRef`
+
 ## 证据与代码位置
 
 - `packages/transcript/src/index.ts`

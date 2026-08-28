@@ -18,6 +18,16 @@ git hooks 在提交前自动 fix。
 
 `check-nix-workspace.mjs`、`check-service-naming.mjs`、`check-no-comments.mjs`。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `.oxlintrc.json`（非 TS 源码，可直接阅读）
+  - `package.json`（非 TS 源码，可直接阅读）
+  - `scripts//` 目录下源码文件示例：
+    - `scripts/smoke-security.ts`
+    - `scripts/smoke-vendor.ts`
+
 ## 证据与代码位置
 
 - `.oxlintrc.json`

@@ -18,6 +18,13 @@ packages/node-sdk 被上层应用或相邻包通过 workspace 依赖引用；具
 
 阅读代码时应从 `src/index.ts` 或包入口开始，再沿导出符号进入具体实现。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/node-sdk/src/index.ts` 导出：
+    - 再导出：`#/events`, `#/types`
+
 ## 证据与代码位置
 
 - `packages/node-sdk/src/index.ts`

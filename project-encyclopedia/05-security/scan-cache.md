@@ -18,6 +18,15 @@ SecurityScan 使用持久化扫描缓存，未变更文件不重复计算。
 
 ScanMetrics 包含 cacheHits、filesScanned、durationMs。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/agent-core/src/tools/builtin/security/scan-cache-persist.ts` 导出：
+    - 符号：`PersistentScanCache`
+  - `packages/agent-core/src/tools/builtin/security/engine.ts` 导出：
+    - 符号：`ScanResult`, `FindingKind`, `FindingEvidence`, `NormalizedFinding`, `ScanMetrics`, `ScanReport`, `SecretFinding`, `TaintFinding`, `SKIP_DIRS`, `ScanOptions`, `ScanProgress`, `ScanProgressCallback`, `scanContent`, `ScanCacheKey`, `ScanCacheEntry`, `ScanCache`, `createScanCacheKey`, `formatScanReport`, `scanSecretsInContent`, `formatSecrets`, `taintAnalyzeContent`, `formatTaint`, `secretFindingToNormalized`, `taintFindingToNormalized`
+
 ## 证据与代码位置
 
 - `packages/agent-core/src/tools/builtin/security/scan-cache-persist.ts`

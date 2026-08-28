@@ -23,6 +23,12 @@ pnpm -C packages/pi-tui clean
 
 `pi-tui` 的公开入口以 package.json 的 `exports`/`imports` 为准；跨包引用请使用 workspace 协议 `workspace:^`。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `packages/pi-tui/package.json`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `packages/pi-tui/package.json`

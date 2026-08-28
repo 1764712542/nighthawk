@@ -18,6 +18,14 @@ Changesets 管理版本；VitePress 双语文档；Nix flake 提供可复现构�
 
 Fastify、zod、xstate、node-pty、openai/anthropic/google-genai SDK、MCP SDK、tree-sitter 数据等。具体见各 `package.json`。
 
+## 核心实现细节（源码导出）
+
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+
+  - `package.json`（非 TS 源码，可直接阅读）
+  - `pnpm-workspace.yaml`（非 TS 源码，可直接阅读）
+  - `flake.nix`（非 TS 源码，可直接阅读）
+
 ## 证据与代码位置
 
 - `package.json`
