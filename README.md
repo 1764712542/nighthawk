@@ -122,7 +122,9 @@ node apps/nighthawk/dist/main.mjs
 node apps/nighthawk/dist/main.mjs -p "Audit this repo for injection and XSS risks, then rank findings by exploitability."
 ```
 
-Configure a provider (API key or OAuth) in the TUI via `/login`, or set `NIGHTHAWK_API_KEY` / edit `~/.nighthawk/config.toml`.
+Configure a provider (API key) in the TUI via `/login`, or set `NIGHTHAWK_API_KEY` / edit `~/.nighthawk/config.toml`.
+
+> 📖 **Full documentation**: [https://AliceGoto.github.io/nighthawk/](https://AliceGoto.github.io/nighthawk/) — usage guide, slash commands, tools reference, and pentest mode walkthrough.
 
 ## Agent Capabilities
 

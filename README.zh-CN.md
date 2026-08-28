@@ -122,7 +122,9 @@ node apps/nighthawk/dist/main.mjs
 node apps/nighthawk/dist/main.mjs -p "审计这个仓库的注入和 XSS 风险，按可利用性排序。"
 ```
 
-在 TUI 中通过 `/login` 配置供应商（API 密钥或 OAuth），或设置 `NIGHTHAWK_API_KEY` / 编辑 `~/.nighthawk/config.toml`。
+在 TUI 中通过 `/login` 配置供应商（API 密钥），或设置 `NIGHTHAWK_API_KEY` / 编辑 `~/.nighthawk/config.toml`。
+
+> 📖 **完整文档**：[https://AliceGoto.github.io/nighthawk/zh/](https://AliceGoto.github.io/nighthawk/zh/) — 使用指南、斜杠命令、工具参考、渗透测试模式说明。
 
 ## Agent 能力
 
