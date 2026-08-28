@@ -499,7 +499,7 @@ describe('runUpdatePreflight', () => {
     await expect(runUpdatePreflight('0.4.0', options)).resolves.toBe('continue');
     expect(stdout.join('')).toContain('brew upgrade nighthawk');
     expect(stdout.join('')).toContain('Third-party sources may lag behind the official release.');
-    expect(stdout.join('')).toContain('https://github.com/1764712542/nighthawk');
+    expect(stdout.join('')).toContain('https://github.com/AliceGoto/nighthawk');
     expect(promptForInstallChoice).not.toHaveBeenCalled();
     expect(mocks.spawn).not.toHaveBeenCalled();
   });
@@ -562,13 +562,13 @@ describe('runUpdatePreflight', () => {
       // Native updates self-spawn the staged downloader silently, so the
       // region surface there is the manual install command text.
       expect(installCommandFor('native', '0.5.0', 'win32')).toBe(
-        'irm https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/install.ps1 | iex',
+        'irm https://cdn.jsdelivr.net/gh/AliceGoto/nighthawk@main/install.ps1 | iex',
       );
 
       mocks.detectInstallSource.mockResolvedValue('homebrew');
       const brew = captureOutput();
       await expect(runUpdatePreflight('0.4.0', brew.options)).resolves.toBe('continue');
-      expect(brew.stdout.join('')).toContain('https://github.com/1764712542/nighthawk');
+      expect(brew.stdout.join('')).toContain('https://github.com/AliceGoto/nighthawk');
       expect(mocks.spawn).not.toHaveBeenCalled();
     } finally {
       Object.defineProperty(process, 'platform', { value: originalPlatform });
@@ -991,7 +991,7 @@ describe('runUpdatePreflight', () => {
     const rendered = stdout.join('');
     expect(rendered).toContain('NightHawk updated to v0.5.0');
     expect(rendered).toContain(
-      'https://1764712542.github.io/nighthawk/en/release-notes/changelog.html',
+      'https://AliceGoto.github.io/nighthawk/en/release-notes/changelog.html',
     );
     expect(track).toHaveBeenCalledWith('update_success_notice_shown', expect.objectContaining({
       version: '0.5.0',

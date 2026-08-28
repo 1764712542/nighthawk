@@ -9,13 +9,6 @@ export const PROCESS_NAME = 'nighthawk';
 // Used in telemetry app names and HTTP User-Agent headers.
 export const CLI_USER_AGENT_PRODUCT = 'nighthawk-cli';
 export const CLI_UI_MODE = 'shell';
-// Telemetry ui_mode for the `nighthawk web` host. Same product
-// as the CLI (CLI_USER_AGENT_PRODUCT); the surface is distinguished by ui_mode.
-export const WEB_UI_MODE = 'web';
-// User-Agent suffix for the `nighthawk web` host: its requests go out as
-// `nighthawk-cli/<version> (web)` so upstream can tell web-UI traffic
-// apart from direct CLI runs without changing the product token or platform.
-export const WEB_USER_AGENT_SUFFIX = 'web';
 
 // Give telemetry a short flush window without making CLI exit feel stuck.
 export const CLI_SHUTDOWN_TIMEOUT_MS = 3000;
@@ -73,7 +66,7 @@ export const DEFAULT_OAUTH_PROVIDER_NAME = 'managed:nighthawk';
 // auto-propagates instead of silently breaking the startup recovery path.
 export const OAUTH_LOGIN_REQUIRED_CODE = ErrorCodes.AUTH_LOGIN_REQUIRED;
 
-export const FEEDBACK_ISSUE_URL = 'https://github.com/1764712542/nighthawk/issues';
+export const FEEDBACK_ISSUE_URL = 'https://github.com/AliceGoto/nighthawk/issues';
 // Project home offered to signed-out users — the GitHub repository hosts the
 // README, security policy, and issue tracker.
 export function nighthawkSignupUrl(): string {

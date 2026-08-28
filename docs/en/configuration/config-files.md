@@ -137,7 +137,7 @@ Each entry in the `providers` table defines an API provider, keyed by a unique n
 ```toml
 [providers.nighthawk.env]
 NIGHTHAWK_API_KEY = "sk-xxx"
-NIGHTHAWK_BASE_URL = "https://api.moonshot.ai/v1"
+NIGHTHAWK_BASE_URL = "https://api.kimi.com/coding/v1"
 ```
 
 Priority: `api_key` field > `env` sub-table key > if both are absent, startup fails with an error.
@@ -467,11 +467,11 @@ Like the `tools` / `disallowedTools` fields of an agent file, this section shape
 
 ```toml
 [services.nighthawk_search]
-base_url = "https://api.moonshot.cn/v1/search"
+base_url = "https://api.kimi.com/coding/v1/search"
 api_key = "sk-xxx"
 
 [services.nighthawk_fetch]
-base_url = "https://api.moonshot.cn/v1/fetch"
+base_url = "https://api.kimi.com/coding/v1/fetch"
 api_key = "sk-xxx"
 ```
 

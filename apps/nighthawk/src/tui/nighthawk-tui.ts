@@ -60,6 +60,7 @@ import { BannerComponent } from './components/chrome/banner';
 import { GutterContainer } from './components/chrome/gutter-container';
 import { MoonLoader, type SpinnerStyle } from './components/chrome/moon-loader';
 import { WelcomeComponent } from './components/chrome/welcome';
+import { PentestWelcomeComponent, type PentestPaneData } from './components/chrome/pentest-welcome';
 import { pickRandomWorkingWit } from './components/chrome/working-tips';
 import {
   ApprovalPanelComponent,
@@ -122,6 +123,7 @@ import { EditorKeyboardController } from './controllers/editor-keyboard';
 import { SessionEventHandler } from './controllers/session-event-handler';
 import { SessionReplayRenderer } from './controllers/session-replay';
 import { StagingLeaseTracker, type StagingLease } from './controllers/staging-leases';
+import { PentestOrchestrator } from './controllers/pentest-orchestrator';
 import { StreamingUIController } from './controllers/streaming-ui';
 import { TasksBrowserController } from './controllers/tasks-browser';
 import { installRainbowDance } from './easter-eggs/dance';
@@ -258,6 +260,7 @@ function createInitialAppState(input: NighthawkTUIStartupInput): AppState {
     inputMode: 'prompt',
     swarmMode: false,
     towerMode: false,
+    pentestMode: false,
     thinkingEffort: 'off',
     contextUsage: 0,
     contextTokens: 0,
@@ -312,6 +315,10 @@ export class NighthawkTUI {
   private readonly cacheHint = new CacheHintController(this);
   /** Staged prompt media lifecycle (daemon uploads + cache copies) — see StagingLeaseTracker. */
   private readonly staging: StagingLeaseTracker;
+  /** Pentest orchestrator — active only during pentest mode. */
+  pentestOrchestrator: PentestOrchestrator | null = null;
+  /** Pentest welcome panel — shown when pentest mode is active. */
+  pentestWelcomeComponent: PentestWelcomeComponent | null = null;
   private readonly approvalController = new ApprovalController();
   private readonly questionController = new QuestionController();
   private readonly reverseRpcDisposers: Array<() => void> = [];
@@ -458,10 +465,13 @@ export class NighthawkTUI {
   // =========================================================================
 
   private getSlashCommands(): readonly NighthawkSlashCommand[] {
+    const pentestMode = this.state.appState.pentestMode;
     const builtins = sortSlashCommands(BUILTIN_SLASH_COMMANDS).filter(
       (command) =>
         isExperimentalFlagEnabled(command.experimentalFlag) &&
-        (!command.requiresEngineV2 || this.engineV2),
+        (!command.requiresEngineV2 || this.engineV2) &&
+        !((command as NighthawkSlashCommand).pentestOnly && !pentestMode) &&
+        !((command as NighthawkSlashCommand).normalOnly && pentestMode),
     );
     return [...builtins, ...this.skillCommands, ...this.pluginCommands];
   }
@@ -504,6 +514,45 @@ export class NighthawkTUI {
 
   refreshSlashCommandAutocomplete(): void {
     this.setupAutocomplete();
+  }
+
+  /** Start the pentest orchestrator for the given target. */
+  startPentest(target: string): void {
+    this.pentestOrchestrator = new PentestOrchestrator(this, target);
+    this.pentestOrchestrator.start();
+  }
+
+  /** Stop the pentest orchestrator. */
+  stopPentest(): void {
+    this.pentestOrchestrator?.stop();
+    this.pentestOrchestrator = null;
+  }
+
+  /** Mount the pentest welcome panel after the entrance animation completes. */
+  startPentestMode(target?: string): void {
+    const data: PentestPaneData = {
+      target: target ?? '',
+      stage: 'compliance',
+      stageIndex: 0,
+      totalStages: 9,
+      findings: { critical: 0, high: 0, medium: 0, low: 0, info: 0 },
+      shells: 0,
+      elapsed: '0m 0s',
+    };
+    this.pentestWelcomeComponent = new PentestWelcomeComponent(data);
+    this.state.transcriptContainer.addChild(this.pentestWelcomeComponent);
+    this.state.transcriptContainer.invalidate();
+  }
+
+  /** Remove the pentest welcome panel and restore the normal welcome component. */
+  exitPentestMode(): void {
+    if (this.pentestWelcomeComponent !== null) {
+      // oxlint-disable-next-line unicorn/prefer-dom-node-remove
+      this.state.transcriptContainer.removeChild(this.pentestWelcomeComponent);
+      this.pentestWelcomeComponent = null;
+    }
+    this.renderWelcome();
+    this.state.transcriptContainer.invalidate();
   }
 
   async refreshSkillCommands(session?: SkillListSession): Promise<void> {
@@ -1714,6 +1763,7 @@ export class NighthawkTUI {
 
   handleTurnEnded(event: TurnEndedEvent): void {
     this.staging.handleTurnEnded(event);
+    this.pentestOrchestrator?.onTurnEnded(event);
   }
 
   releaseStagingMedia(mediaAttachmentIds: readonly number[]): void {
@@ -3250,7 +3300,7 @@ export class NighthawkTUI {
       const previousTip = this.currentLoadingTip?.tip;
       this.currentLoadingTip = {
         kind: tipKind,
-        tip: pickRandomWorkingWit(previousTip)?.text,
+        tip: pickRandomWorkingWit(previousTip, this.state.appState.pentestMode ? this.pentestOrchestrator?.currentStage : undefined, this.state.appState.pentestMode)?.text,
       };
     }
     this.syncTerminalProgress(this.shouldShowTerminalProgress(effectiveMode));

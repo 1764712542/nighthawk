@@ -28,6 +28,8 @@ export { handleFeedbackCommand, showMcpServers, showStatusReport, showUsage } fr
 export { handlePluginsCommand } from './plugins';
 export { handleReloadCommand, handleReloadTuiCommand } from './reload';
 export { handleGoalCommand, parseGoalCommand, goalObjectiveLengthWarning } from './goal';
+export { handlePentestCommand } from './pentest';
+export { handleScanCommand, handleReconCommand, handleExploitCommand, handleReportCommand } from './pentest-scan';
 export { goalArgumentCompletions } from './registry';
 export { handleForkCommand, handleInitCommand, handleTitleCommand } from './session';
 export { handleUndoCommand } from './undo';

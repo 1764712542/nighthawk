@@ -31,6 +31,7 @@ function makeHost(
     state: {
       appState: {
         towerMode: overrides.towerMode ?? false,
+        pentestMode: false,
         model: overrides.model ?? 'test-model',
       },
     },

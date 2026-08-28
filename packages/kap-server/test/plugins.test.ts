@@ -474,7 +474,7 @@ describe('server-v2 /api/v1 plugins', () => {
         if (typeof url === 'string' && url.includes('/releases/latest')) {
           return new Response(null, { status: 404 });
         }
-        if (url === 'https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/plugins/cdn/marketplace.json') {
+        if (url === 'https://cdn.jsdelivr.net/gh/AliceGoto/nighthawk@main/plugins/cdn/marketplace.json') {
           throw new Error('offline');
         }
         return realFetch(url as never, init);

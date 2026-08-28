@@ -6,7 +6,7 @@ This is a TypeScript monorepo built for agent-assisted development. Keep the roo
 
 ## Project Overview
 
-**NightHawk** is a security-first AI agent for the terminal — penetration testing, code audit, and full-strength coding in one loop. It pairs a modern coding agent core (Plan/Act/Observe/Reflect loop, sub-agents, MCP, skills, persistent memory) with a native security engine — 116 vulnerability rules mapped to OWASP Top 10 and CWE, Shannon-entropy secret detection, variable-level taint analysis, and dependency auditing — all exposed as first-class tools the agent can invoke mid-session.
+**NightHawk** is a security-first AI agent for the terminal — penetration testing, code audit, and full-strength coding in one loop. It pairs a modern coding agent core (Plan/Act/Observe/Reflect loop, sub-agents, MCP, skills, persistent memory) with a native security engine — 116+ vulnerability rules mapped to OWASP Top 10 and CWE, Shannon-entropy secret detection, cross-file taint analysis, and dependency auditing (offline, OSV, and host package-manager) — all exposed as first-class tools the agent can invoke mid-session.
 
 ### Technology Stack
 
@@ -14,12 +14,13 @@ This is a TypeScript monorepo built for agent-assisted development. Keep the roo
 - **Package Manager**: pnpm 10.33.0 (monorepo workspaces)
 - **Runtime**: Node.js ≥ 24.15.0
 - **Build Tools**: tsdown (for bundling), TypeScript 6.0.2
-- **Testing**: Vitest 4.1.4 (unit/integration tests), custom smoke tests
-- **Linting**: oxlint with TypeScript-aware rules
+- **Testing**: Vitest 4.1.4 (unit/integration tests), custom smoke tests, node:test for pi-tui
+- **Linting**: oxlint 1.59.0 with TypeScript-aware rules
 - **Formatting**: oxlint auto-fix + lint-staged with git hooks
 - **CI/CD**: GitHub Actions (sharded test runs, linting, typechecking, security smoke tests)
 - **Release Management**: Changesets for versioning and changelogs
 - **Documentation**: VitePress for bilingual docs (English/Chinese)
+- **Nix**: Flake-based build and dev shells for reproducible environments
 
 ### Key Architecture Components
 
@@ -27,7 +28,7 @@ This is a TypeScript monorepo built for agent-assisted development. Keep the roo
 2. **KAP Server** (`packages/kap-server`): NightHawk server exposing REST + WebSocket APIs
 3. **LLM Abstraction** (`packages/kosong`): Provider-agnostic LLM integration (OpenAI, Anthropic, Google, DeepSeek)
 4. **Execution Environment** (`packages/kaos`): File/process abstractions for local/remote execution
-5. **Security Engine** (`packages/security-core`): 116 vulnerability rules, secret scanning, taint analysis
+5. **Security Engine**: 116+ vulnerability rules, secret scanning, taint analysis (production code in `packages/agent-core/src/tools/builtin/security/`)
 6. **Terminal UI** (`packages/pi-tui`): Component framework for the TUI
 7. **Client SDK** (`packages/klient`): Contract-driven facade over agent-core-v2
 
@@ -183,6 +184,9 @@ pnpm -C apps/nighthawk run e2e
 
 # Security engine smoke tests
 node scripts/smoke-security.ts
+
+# PI-TUI tests (uses node:test, not vitest)
+pnpm --filter @nighthawk/pi-tui test
 ```
 
 ### Release Process
@@ -249,7 +253,7 @@ The CI runs tests in parallel shards (5 shards) for faster execution. Each PR tr
 
 NightHawk includes a comprehensive security engine with four main tools:
 
-1. **SecurityScan**: 116 vulnerability rules across SQLi, XSS, command injection, path traversal, SSRF, deserialization, weak crypto, auth flaws, XXE, and per-language risks
+1. **SecurityScan**: 116+ vulnerability rules across SQLi, XSS, command injection, path traversal, SSRF, deserialization, weak crypto, auth flaws, XXE, and per-language risks
 2. **SecretScan**: Detects hardcoded credentials using patterns and Shannon-entropy scoring
 3. **TaintTrace**: Variable-level taint tracking tracing user-controlled sources through assignment chains to dangerous sinks
 4. **DepAudit**: Flags risky dependency patterns like unpinned versions
@@ -257,7 +261,7 @@ NightHawk includes a comprehensive security engine with four main tools:
 ### Security Development Rules
 
 - Run security smoke tests after any engine change: `node scripts/smoke-security.ts`
-- The security engine is in `packages/security-core` with standalone sources
+- The security engine production code lives in `packages/agent-core/src/tools/builtin/security/`; `packages/security-core` is deprecated and retained for reference only
 - Security tools are exposed as first-class agent tools that can be invoked mid-session
 - Findings carry CWE/OWASP IDs, severity levels, and bilingual fix suggestions
 
@@ -319,3 +323,26 @@ The project includes specialized skills in `.agents/skills/` for common developm
 - Use `pnpm run sherif` to check for workspace dependency issues
 - Changesets manage versioning and changelogs for releases
 - CI validates package publishing with `publint` and `attw` checks
+
+## Additional Notes
+
+### Nix Build Support
+
+The project includes a `flake.nix` for reproducible builds and development environments:
+- **Dev shell**: Provides Node.js, pnpm, ripgrep, and fd
+- **Package build**: Builds the native SEA (Single Executable Application) binary
+- **Supported platforms**: x86_64-linux, aarch64-linux, x86_64-darwin, aarch64-darwin
+
+### Editor Configuration
+
+- `.editorconfig`: UTF-8, LF line endings, 2-space indentation, final newline
+- `.oxlintrc.json`: Comprehensive linting configuration with TypeScript, import, unicorn, promise, and node plugins
+
+### Security Verification
+
+To verify a checkout:
+```sh
+pnpm lint                                  # oxlint + repo guards
+pnpm -C packages/agent-core test           # engine + security tool tests
+node scripts/smoke-security.ts             # security engine end-to-end
+```

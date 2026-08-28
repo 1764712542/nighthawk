@@ -10,7 +10,7 @@
     "build:packages": "pnpm -r --filter './packages/*' run build",
     "dev:cli": "pnpm -C apps/nighthawk run dev",
     "dev:cli:legacy": "NIGHTHAWK_LEGACY_FLAG=1 pnpm -C apps/nighthawk run dev",
-    "dev:cli:marketplace": "NIGHTHAWK_DEV_MARKETPLACE_URL=https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/plugins/cdn/marketplace.json pnpm -C apps/nighthawk run dev",
+    "dev:cli:marketplace": "NIGHTHAWK_DEV_MARKETPLACE_URL=https://cdn.jsdelivr.net/gh/AliceGoto/nighthawk@main/plugins/cdn/marketplace.json pnpm -C apps/nighthawk run dev",
     "dev:server": "pnpm -C apps/nighthawk run dev:server",
     "dev:kap-server": "pnpm -C apps/nighthawk run dev:kap-server",
     "dev:v2": "pnpm -C apps/nighthawk run dev:kap-server:multi",

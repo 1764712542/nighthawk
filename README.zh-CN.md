@@ -26,8 +26,30 @@ NightHawk 的核心命题：进攻性安全与严肃工程属于同一个 Agent�
 | `SecretScan` | 检测硬编码凭据 —— AWS/GCP/Azure 密钥、token、私钥 —— 已知模式与 Shannon 熵评分相结合。 |
 | `TaintTrace` | 污点追踪：识别用户可控源（HTTP 参数、环境变量、stdin），追踪赋值链到危险汇点（exec、eval、innerHTML、SQL）。默认沿模块导入跨文件追踪数据流（`scope: file` 可限定单文件）。 |
 | `DepAudit` | 通过离线检查标记高风险依赖模式（postinstall 脚本、未锁定版本、已知风险配置），查询 OSV API，并可调用宿主机包管理器审计工具（`useExternal: true`）合并真实 CVE。 |
+| `PortScanner` | 端口扫描 —— 通过 nmap 扫描目标开放端口与服务。仅在渗透测试模式下可用。 |
+| `DirBrute` | 目录爆破 —— 内置 40+ 常见路径字典枚举 Web 目录。仅在渗透测试模式下可用。 |
+| `PasswordBrute` | 密码爆破 —— 常见密码字典测试登录凭证。需显式授权确认。仅在渗透测试模式下可用。 |
+| `ThreatModel` | 威胁建模 —— 基于 STRIDE 模型，含信任边界分析和 Mermaid 图。仅在渗透测试模式下可用。 |
+| `SubdomainEnum` | 子域名枚举 —— DNS 解析 + 50+ 常见子域名字典。仅在渗透测试模式下可用。 |
 
 工具间形成合力：规则命中为污点追踪提供种子，污点流确认可利用性，确认后的发现驱动修复建议。
+
+## 渗透测试模式
+
+渗透测试模式将 NightHawk 切换为专业渗透测试工作台。使用 `/pentest` 进入：
+
+- **黑客主题** — Matrix 绿字黑底界面、进场动画、渗透测试风格加载提示
+- **强制阶段编排** — Agent 按 9 个阶段依次执行：合规红线 → 范围确认 → 信息收集 → 攻击面分析 → 漏洞验证 → 漏洞利用（PoC） → 后渗透评估 → 修复方案 → 报告生成
+- **自动阶段推进** — 编排器发送阶段专属 prompt，等待完成后自动进入下一阶段
+- **完整工具集** — PortScanner、DirBrute、PasswordBrute、ThreatModel、SubdomainEnum 及四个核心安全工具
+- **专业报告** — 生成 HTML/PDF 报告，含风险评分和证据
+
+```
+/pentest              → 切换模式（开启/关闭）
+/pentest <target>     → 启动渗透测试
+```
+
+详见 [docs/zh/guides/pentest-mode.md](docs/zh/guides/pentest-mode.md)。
 
 ## 工程证明
 
@@ -60,7 +82,8 @@ node scripts/smoke-security.ts             # 安全引擎端到端
 │  Plan/Act/Observe/Reflect · 工具 · Skills · MCP 客户端   │
 │  会话检查点 · 权限 · 子 Agent                            │
 │  └─ 安全工具: SecurityScan / SecretScan /               │
-│     TaintTrace / DepAudit (规则引擎 + 污点引擎)          │
+│     TaintTrace / DepAudit / PortScanner / DirBrute /   │
+│     PasswordBrute / ThreatModel / SubdomainEnum        │
 ├─────────────────────────────────────────────────────────┤
 │  kosong — LLM 供应商抽象（多供应商）                     │
 │  kaos — 执行环境与文件/进程抽象                          │
@@ -87,7 +110,7 @@ node scripts/smoke-security.ts             # 安全引擎端到端
 环境要求：Node.js ≥ 24.15，pnpm 10.33。
 
 ```sh
-git clone https://github.com/1764712542/nighthawk && cd nighthawk
+git clone https://github.com/AliceGoto/nighthawk && cd nighthawk
 pnpm install
 pnpm run build:packages
 pnpm -C apps/nighthawk run build
@@ -103,7 +126,8 @@ node apps/nighthawk/dist/main.mjs -p "审计这个仓库的注入和 XSS 风险�
 
 ## Agent 能力
 
-- **工具** —— 读写/编辑文件、grep/glob、带审批门的 shell、fetch、网络搜索、git，外加四个安全工具。
+- **工具** —— 读写/编辑文件、grep/glob、带审批门的 shell、fetch、网络搜索、git，外加九个安全/渗透测试工具。
+- **渗透测试模式** —— `/pentest` 切换为专业渗透测试工作台，含黑客主题、强制阶段编排、自动报告生成。
 - **MCP** —— 接入任意 Model Context Protocol 服务器；对话式 `/mcp-config`，无需手写 JSON。
 - **Skills** —— Markdown 定义的可复用 playbook，按相关性自动加载。
 - **记忆** —— 跨会话复利的持久项目记忆。

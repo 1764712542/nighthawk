@@ -24,6 +24,7 @@ export * from './security/dep-audit';
 export * from './security/secret-scan';
 export * from './security/security-scan';
 export * from './security/taint-trace';
+export * from './pentest';
 export * from './select-tools';
 export * from './shell/bash';
 export * from './state/todo-list';

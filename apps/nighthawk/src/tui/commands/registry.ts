@@ -179,6 +179,7 @@ export const BUILTIN_SLASH_COMMANDS = [
     description: 'Toggle plan mode · 切换计划模式',
     priority: 100,
     availability: (args) => (args.trim().toLowerCase() === 'clear' ? 'idle-only' : 'always'),
+    normalOnly: true,
   },
   {
     name: 'swarm',
@@ -188,6 +189,7 @@ export const BUILTIN_SLASH_COMMANDS = [
     argumentHint: '[on|off] | <task>',
     completeArgs: swarmArgumentCompletions,
     availability: 'idle-only',
+    normalOnly: true,
   },
   {
     name: 'tower',
@@ -196,12 +198,10 @@ export const BUILTIN_SLASH_COMMANDS = [
     priority: 100,
     argumentHint: '[status|teardown|on|off] | <objective>',
     completeArgs: towerArgumentCompletions,
-    // Every form stays available while busy: objectives steer into the
-    // running coordinator turn (see sendMessage in nighthawk-tui.ts), so /tower
-    // commands never wait for the previous one to finish.
     availability: 'always',
     experimentalFlag: 'tower',
     requiresEngineV2: true,
+    normalOnly: true,
   },
   {
     name: 'model',
@@ -217,6 +217,7 @@ export const BUILTIN_SLASH_COMMANDS = [
     priority: 90,
     availability: 'always',
     experimentalFlag: 'secondary-model',
+    normalOnly: true,
   },
   {
     name: 'effort',
@@ -238,6 +239,7 @@ export const BUILTIN_SLASH_COMMANDS = [
     description: 'Ask a forked side agent a question · 向旁路子 Agent 提问',
     priority: 90,
     availability: 'always',
+    normalOnly: true,
   },
   {
     name: 'help',
@@ -257,12 +259,14 @@ export const BUILTIN_SLASH_COMMANDS = [
     aliases: ['resume'],
     description: 'Browse and resume sessions · 浏览并恢复会话',
     priority: 80,
+    normalOnly: true,
   },
   {
     name: 'session',
     aliases: [],
     description: 'Browse all sessions across workspaces — expand and delete · 浏览全部工作区会话（展开/删除）',
     priority: 80,
+    normalOnly: true,
   },
   {
     name: 'tasks',
@@ -270,6 +274,7 @@ export const BUILTIN_SLASH_COMMANDS = [
     description: 'Browse background tasks · 浏览后台任务',
     priority: 80,
     availability: 'always',
+    normalOnly: true,
   },
   {
     name: 'mcp',
@@ -277,6 +282,7 @@ export const BUILTIN_SLASH_COMMANDS = [
     description: 'Show MCP server status · 查看 MCP 服务器状态',
     priority: 60,
     availability: 'always',
+    normalOnly: true,
   },
   {
     name: 'plugins',
@@ -284,6 +290,7 @@ export const BUILTIN_SLASH_COMMANDS = [
     description: 'Manage plugins · 管理插件',
     priority: 60,
     availability: 'always',
+    normalOnly: true,
   },
   {
     name: 'add-dir',
@@ -293,6 +300,7 @@ export const BUILTIN_SLASH_COMMANDS = [
     availability: 'idle-only',
     argumentHint: '[list] | <path>',
     completeArgs: addDirArgumentCompletions,
+    normalOnly: true,
   },
   {
     name: 'experiments',
@@ -300,6 +308,7 @@ export const BUILTIN_SLASH_COMMANDS = [
     description: 'Manage experimental features · 管理实验特性',
     priority: 60,
     availability: 'idle-only',
+    normalOnly: true,
   },
   {
     name: 'reload',
@@ -307,6 +316,7 @@ export const BUILTIN_SLASH_COMMANDS = [
     description: 'Reload session and apply config.toml settings plus tui.toml UI preferences · 重载会话并应用配置',
     priority: 60,
     availability: 'idle-only',
+    normalOnly: true,
   },
   {
     name: 'reload-tui',
@@ -323,6 +333,48 @@ export const BUILTIN_SLASH_COMMANDS = [
     argumentHint: '<instruction>',
   },
   {
+    name: 'pentest',
+    aliases: ['hack', 'exploit-mode'],
+    description: 'Toggle pentest mode · 切换渗透测试模式',
+    priority: 85,
+    availability: 'always',
+    argumentHint: '[<target>]',
+  },
+  {
+    name: 'scan',
+    aliases: ['pentest-scan'],
+    description: 'Security scan · 安全扫描（渗透模式）',
+    priority: 84,
+    availability: 'always',
+    pentestOnly: true,
+  },
+  {
+    name: 'recon',
+    aliases: ['pentest-recon'],
+    description: 'Reconnaissance · 信息收集（渗透模式）',
+    priority: 84,
+    argumentHint: '<target>',
+    availability: 'always',
+    pentestOnly: true,
+  },
+  {
+    name: 'exploit',
+    aliases: ['pentest-exploit'],
+    description: 'Exploit analysis · 漏洞利用分析（渗透模式）',
+    priority: 84,
+    argumentHint: '[finding-id]',
+    availability: 'always',
+    pentestOnly: true,
+  },
+  {
+    name: 'report',
+    aliases: ['pentest-report'],
+    description: 'Generate pentest report · 生成渗透测试报告',
+    priority: 84,
+    availability: 'always',
+    pentestOnly: true,
+  },
+  {
     name: 'goal',
     aliases: [],
     description: 'Start or manage an autonomous goal · 启动或管理自主目标',
@@ -331,6 +383,7 @@ export const BUILTIN_SLASH_COMMANDS = [
     completeArgs: goalArgumentCompletions,
     // status / pause / cancel are always available; creation, replacement, and
     // resume start (or restart) a turn and so are idle-only.
+    normalOnly: true,
     availability: (args) => {
       const trimmed = args.trim();
       if (trimmed === 'next' || trimmed.startsWith('next ')) return 'always';
@@ -407,9 +460,9 @@ export const BUILTIN_SLASH_COMMANDS = [
     priority: 40,
   },
   {
-    name: 'connect',
-    aliases: [],
-    description: 'Connect a model provider via API key · 通过 API 密钥接入模型供应商',
+    name: 'login',
+    aliases: ['connect'],
+    description: 'Login to a model provider · 登录模型供应商',
     priority: 40,
   },
   {

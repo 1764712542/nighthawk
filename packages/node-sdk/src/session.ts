@@ -352,6 +352,17 @@ export class Session {
     await this.rpc.setTowerMode({ sessionId: this.id, enabled });
   }
 
+  async setPentestMode(enabled: boolean): Promise<void> {
+    this.ensureOpen();
+    if (typeof enabled !== 'boolean') {
+      throw new NighthawkError(
+        ErrorCodes.REQUEST_INVALID,
+        'Session pentest mode must be a boolean',
+      );
+    }
+    await this.rpc.setPentestMode({ sessionId: this.id, enabled });
+  }
+
   async getPlan(): Promise<SessionPlan> {
     this.ensureOpen();
     return this.rpc.getPlan({ sessionId: this.id });

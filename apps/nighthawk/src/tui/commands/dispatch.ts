@@ -41,6 +41,8 @@ import {
   showPermissionPicker,
   showSettingsSelector,
 } from './config';
+import { handlePentestCommand } from './pentest';
+import { handleScanCommand, handleReconCommand, handleExploitCommand, handleReportCommand } from './pentest-scan';
 import { handleGoalCommand } from './goal';
 import { handleFeedbackCommand, showMcpServers, showStatusReport, showUsage } from './info';
 import { handleAddDirCommand } from './add-dir';
@@ -202,6 +204,15 @@ export interface SlashCommandHost {
   readonly skillCommandMap: Map<string, string>;
   readonly pluginCommandMap: Map<string, string>;
 
+  // Pentest orchestration
+  startPentest(target: string): void;
+  stopPentest(): void;
+
+  /** Mount the pentest welcome panel after the entrance animation. */
+  startPentestMode(target?: string): void;
+  /** Remove the pentest welcome panel and restore the normal welcome component. */
+  exitPentestMode(): void;
+
   // Controller refs
   readonly streamingUI: StreamingUIController;
   readonly btwPanelController: BtwPanelController;
@@ -260,6 +271,7 @@ function dispatchInlineSkillCombo(host: SlashCommandHost, text: string): boolean
     isStreaming: false,
     isCompacting: false,
     engineV2: host.engineV2,
+    pentestMode: host.state.appState.pentestMode,
   });
   if (intent.kind !== 'skill' && intent.kind !== 'message') return false;
 
@@ -298,6 +310,7 @@ async function executeSlashCommand(host: SlashCommandHost, input: string): Promi
     isStreaming: host.state.appState.streamingPhase !== 'idle',
     isCompacting: host.state.appState.isCompacting,
     engineV2: host.engineV2,
+    pentestMode: host.state.appState.pentestMode,
   });
 
   switch (intent.kind) {
@@ -415,6 +428,7 @@ const SESSION_REQUIRING_COMMANDS: ReadonlySet<BuiltinSlashCommandName> = new Set
   'fork',
   'goal',
   'init',
+  'pentest',
   'plan',
   'swarm',
   'undo',
@@ -563,6 +577,21 @@ async function handleBuiltInSlashCommand(
     case 'auto':
       await handleAutoCommand(host, args);
       return;
+    case 'pentest':
+      await handlePentestCommand(host, args);
+      return;
+    case 'scan':
+      await handleScanCommand(host, args);
+      return;
+    case 'recon':
+      await handleReconCommand(host, args);
+      return;
+    case 'exploit':
+      await handleExploitCommand(host, args);
+      return;
+    case 'report':
+      await handleReportCommand(host, args);
+      return;
     case 'plan':
       await handlePlanCommand(host, args);
       return;
@@ -593,7 +622,7 @@ async function handleBuiltInSlashCommand(
     case 'copy':
       await handleCopyCommand(host);
       return;
-    case 'connect':
+    case 'login':
       await handleLoginCommand(host);
       return;
     case 'logout':

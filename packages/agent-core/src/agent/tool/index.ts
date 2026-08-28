@@ -876,6 +876,11 @@ export class ToolManager {
           ),
         toolServices?.webSearcher && new b.WebSearchTool(toolServices.webSearcher),
         toolServices?.urlFetcher && new b.FetchURLTool(toolServices.urlFetcher),
+        this.agent.config.pentestMode && new b.PortScannerTool(kaos, workspace),
+        this.agent.config.pentestMode && new b.DirBruteTool(kaos),
+        this.agent.config.pentestMode && new b.PasswordBruteTool(kaos),
+        this.agent.config.pentestMode && new b.ThreatModelTool(),
+        this.agent.config.pentestMode && new b.SubdomainEnumTool(kaos),
       ]
         .filter((tool) => !!tool)
         .map((tool) => [tool.name, tool] as const),

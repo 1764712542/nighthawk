@@ -54,10 +54,10 @@ export interface NighthawkRegionProfile {
  * the repo, so a plain `git push` publishes a release.
  */
 export const NIGHTHAWK_DEFAULT_CDN_BASE =
-  'https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main';
+  'https://cdn.jsdelivr.net/gh/AliceGoto/nighthawk@main';
 
 /** Default official site root: the GitHub repository home page. */
-export const NIGHTHAWK_DEFAULT_SITE_BASE = 'https://github.com/1764712542/nighthawk';
+export const NIGHTHAWK_DEFAULT_SITE_BASE = 'https://github.com/AliceGoto/nighthawk';
 
 export const NIGHTHAWK_REGION_PROFILES: Record<NighthawkRegion, NighthawkRegionProfile> = {
   'mainland-cn': {

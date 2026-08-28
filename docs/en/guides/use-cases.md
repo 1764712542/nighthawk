@@ -141,8 +141,37 @@ Based on the command implementations in src/cli, generate a draft command refere
 
 When you need a record or a retrospective, use `nighthawk export <sessionId>` to package the session as a ZIP, or use `/export-md` inside the TUI to export a readable Markdown transcript.
 
+## Security auditing and penetration testing
+
+NightHawk includes built-in security tools and a dedicated pentest mode for security-focused workflows. For the full pentest methodology, see [Pentest mode](./pentest-mode.md).
+
+**Code security scan** — analyze your codebase for known vulnerability patterns:
+
+```
+Scan this project for security vulnerabilities, focusing on SQL injection, command injection, and XSS.
+```
+
+**Secret detection** — find hardcoded credentials and sensitive information:
+
+```
+Scan the repository for any hardcoded secrets, API keys, or credentials.
+```
+
+**Dependency audit** — check third-party dependencies for known risks:
+
+```
+Audit our package.json dependencies for known CVEs and supply-chain risks.
+```
+
+**Pentest mode** — switch to the dedicated penetration testing workstation with port scanning, directory brute-forcing, and structured 9-stage workflows:
+
+```
+/pentest example.com
+```
+
 ## Next steps
 
+- [Pentest mode](./pentest-mode.md) — dedicated penetration testing workstation with security tools
 - [Agents and sub-agents](../customization/agents.md) — how to have the agent dispatch sub-tasks for parallel execution
 - [Hooks](../customization/hooks.md) — trigger local scripts at task-completion and other lifecycle points
 - [Built-in tools](../reference/tools.md) — full reference of all tools the agent can call

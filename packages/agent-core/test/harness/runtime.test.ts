@@ -267,7 +267,7 @@ micro_compaction = false
     expect(config?.models?.['__secondary__']?.overrides?.maxContextSize).toBe(65_536);
   });
 
-  // Regression for https://github.com/1764712542/nighthawk/issues/988: during
+  // Regression for https://github.com/AliceGoto/nighthawk/issues/988: during
   // ACP `session/new` the tool kaos is the reverse-RPC bridge and the client
   // does not know the session yet, so reading `.nighthawk/local.toml` through
   // it rejects. The workspace local config is a local system file and must be

@@ -602,6 +602,10 @@ export interface GetCronTasksResult {
   readonly tasks: readonly CronTaskSnapshot[];
 }
 
+export interface SetPentestModePayload {
+  readonly enabled: boolean;
+}
+
 export interface AgentAPI {
   prompt: (payload: PromptPayload) => void;
   runShellCommand: (payload: RunShellCommandPayload) => Promise<ShellCommandResult>;
@@ -611,6 +615,7 @@ export interface AgentAPI {
   undoHistory: (payload: UndoHistoryPayload) => void;
   setThinking: (payload: SetThinkingPayload) => void;
   setPermission: (payload: SetPermissionPayload) => void;
+  setPentestMode: (payload: SetPentestModePayload) => void;
   setModel: (payload: SetModelPayload) => SetModelResult;
   getModel: (payload: EmptyPayload) => string;
   enterPlan: (payload: EmptyPayload) => void;

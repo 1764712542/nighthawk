@@ -25,14 +25,14 @@ export const OPEN_PLATFORMS: readonly OpenPlatformDefinition[] = [
     id: 'nighthawk-cn',
     name: 'OpenAI-compatible API · CN',
     baseUrl: 'https://api.nighthawk.com/v1',
-    consoleUrl: 'https://github.com/1764712542/nighthawk',
+    consoleUrl: 'https://github.com/AliceGoto/nighthawk',
     allowedPrefixes: ['nighthawk-'],
   },
   {
     id: 'nighthawk-ai',
     name: 'OpenAI-compatible API · Global',
     baseUrl: 'https://api.nighthawk.com/v1',
-    consoleUrl: 'https://github.com/1764712542/nighthawk',
+    consoleUrl: 'https://github.com/AliceGoto/nighthawk',
     allowedPrefixes: ['nighthawk-'],
   },
 ];

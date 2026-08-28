@@ -13,6 +13,10 @@ export interface NighthawkSlashCommand<Name extends string = string> extends Sla
   readonly experimentalFlag?: string;
   /** When set, the command is hidden and unresolved on the legacy (v1) engine. */
   readonly requiresEngineV2?: boolean;
+  /** When true, the command is only available when pentest mode is active. */
+  readonly pentestOnly?: boolean;
+  /** When true, the command is hidden when pentest mode is active. */
+  readonly normalOnly?: boolean;
   /**
    * Generic argument autocompletion. `argumentPrefix` is the text typed after
    * `/<command> `; return suggestions or `null`. Declared as a plain function

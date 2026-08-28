@@ -59,7 +59,7 @@ Fill in the following:
 
 | Field | Value |
 | --- | --- |
-| GitHub Organization | `1764712542` |
+| GitHub Organization | `AliceGoto` |
 | GitHub Repository | `nighthawk` |
 | GitHub Workflow | `release.yml` |
 | Environment | leave empty |

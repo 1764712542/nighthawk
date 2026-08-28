@@ -7,11 +7,11 @@
   "author": "NightHawk Contributors",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/1764712542/nighthawk.git",
+    "url": "git+https://github.com/AliceGoto/nighthawk.git",
     "directory": "packages/transcript"
   },
   "bugs": {
-    "url": "https://github.com/1764712542/nighthawk/issues"
+    "url": "https://github.com/AliceGoto/nighthawk/issues"
   },
   "type": "module",
   "imports": {

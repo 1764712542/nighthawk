@@ -141,8 +141,31 @@ src/api 下所有公开函数里，凡是没有 docstring 的都补上文档注�
 
 需要留档或复盘时，用 `nighthawk export <sessionId>` 打包为 ZIP，或在 TUI 中用 `/export-md` 导出为可读的 Markdown 对话记录。
 
+## 安全扫描
+
+使用内置安全工具进行代码安全分析：
+
+```
+扫描当前项目的安全漏洞，重点关注 SQL 注入和 XSS 问题
+```
+
+```
+检测代码中的硬编码密钥和敏感信息
+```
+
+## 渗透测试
+
+进入渗透测试模式，对目标进行专业安全测试：
+
+```
+/pentest example.com
+```
+
+这将启动 9 阶段渗透测试流程：合规红线 → 范围确认 → 信息收集 → 攻击面分析 → 漏洞验证 → 漏洞利用 → 后渗透评估 → 修复方案 → 报告生成。
+
 ## 下一步
 
 - [Agent 与 subagent](../customization/agents.md) — 如何让 Agent 派发子任务并行处理
 - [Hooks](../customization/hooks.md) — 在任务完成等节点触发本地脚本
 - [内置工具](../reference/tools.md) — Agent 可调用的全部工具参考
+- [渗透测试模式](./pentest-mode.md) — 专业渗透测试工作台使用指南

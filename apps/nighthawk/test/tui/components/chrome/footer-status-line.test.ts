@@ -36,6 +36,7 @@ const baseState: AppState = {
   inputMode: 'prompt',
   swarmMode: false,
   towerMode: false,
+  pentestMode: false,
   theme: 'dark',
   editorCommand: null,
   notifications: { enabled: true, condition: 'unfocused' },

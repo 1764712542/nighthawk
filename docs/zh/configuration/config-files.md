@@ -1,6 +1,6 @@
 # 配置文件
 
-NightHawk CLI 把所有长期偏好写进 `~/.nighthawk/` 下的 TOML（一种结构清晰的纯文本配置格式）文件——比如使用哪个模型、填哪个 API 密钥、Agent 每轮最多跑几步。改一次，每次启动都生效。Agent 与运行时设置放在 `config.toml`，终端界面与客户端偏好（主题、编辑器、通知、自动更新）放在配套的 `tui.toml`。
+NightHawk CLI 把所有长期偏好写进 `~/.nighthawk/` 下的 TOML（一种结构清晰的纯文本配置格式）文件——比如使用哪个模型、填哪个 API 密钥、Agent 每轮最多跑几步。改一次，每次启动都生效。Agent 与运行时设置放在 `config.toml`，终端界面与客户端偏好（主题、编辑器、通知、自动更新）放在配套的 `tui.toml`。渗透测试模式相关配置也在此处管理。
 
 默认位置：`~/.nighthawk/config.toml`，首次运行时自动创建。
 
@@ -137,7 +137,7 @@ timeout = 5
 ```toml
 [providers.nighthawk.env]
 NIGHTHAWK_API_KEY = "sk-xxx"
-NIGHTHAWK_BASE_URL = "https://api.moonshot.ai/v1"
+NIGHTHAWK_BASE_URL = "https://api.kimi.com/coding/v1"
 ```
 
 优先级：`api_key` 字段 > `env` 子表键 > 两者都缺时启动报错。
@@ -466,11 +466,11 @@ disabled = ["EnterPlanMode", "ExitPlanMode", "mcp__github__*"]
 
 ```toml
 [services.nighthawk_search]
-base_url = "https://api.moonshot.cn/v1/search"
+base_url = "https://api.kimi.com/coding/v1/search"
 api_key = "sk-xxx"
 
 [services.nighthawk_fetch]
-base_url = "https://api.moonshot.cn/v1/fetch"
+base_url = "https://api.kimi.com/coding/v1/fetch"
 api_key = "sk-xxx"
 ```
 
@@ -576,3 +576,4 @@ additional_dir = ["/absolute/path/to/shared"]
 - [平台与模型](./providers.md) — 各供应商类型（NightHawk、Claude、OpenAI、Gemini）的接入示例
 - [配置覆盖](./overrides.md) — CLI 选项、配置文件、环境变量的优先级规则
 - [环境变量](./env-vars.md) — `NIGHTHAWK_HOME` 等运行时变量的完整列表
+- [渗透测试模式](../guides/pentest-mode.md) — 专业渗透测试工作台配置与使用

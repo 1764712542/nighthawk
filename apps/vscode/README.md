@@ -36,7 +36,7 @@ See [the changelog](CHANGELOG.md) for the full compatibility notes.
 
 ## Docs
 
-Official docs for NightHawk can be found at [1764712542.github.io/nighthawk](https://1764712542.github.io/nighthawk/en/)
+Official docs for NightHawk can be found at [AliceGoto.github.io/nighthawk](https://AliceGoto.github.io/nighthawk/en/)
 
 ## License
 

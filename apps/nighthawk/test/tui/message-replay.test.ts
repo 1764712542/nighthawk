@@ -164,6 +164,7 @@ function baseAgentState(
         max_context_tokens: 100,
       },
       thinkingEffort: 'off',
+      pentestMode: false,
       systemPrompt: '',
     },
     context: { history: [], tokenCount: 0 },

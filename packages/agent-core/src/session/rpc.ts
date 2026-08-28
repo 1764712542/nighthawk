@@ -29,6 +29,7 @@ import type {
   SetActiveToolsPayload,
   SetModelPayload,
   SetPermissionPayload,
+  SetPentestModePayload,
   SetThinkingPayload,
   SkillSummary,
   PluginCommandDef,
@@ -175,6 +176,10 @@ export class SessionAPIImpl implements PromisableMethods<SessionAPI> {
 
   async setPermission({ agentId, ...payload }: AgentScopedPayload<SetPermissionPayload>) {
     return (await this.getAgent(agentId)).setPermission(payload);
+  }
+
+  async setPentestMode({ agentId, ...payload }: AgentScopedPayload<SetPentestModePayload>) {
+    return (await this.getAgent(agentId)).setPentestMode(payload);
   }
 
   async getModel({ agentId, ...payload }: AgentScopedPayload<EmptyPayload>) {

@@ -25,7 +25,6 @@ export const WORKING_TIPS: readonly ToolbarTip[] = [
   { text: '/sessions to browse and resume earlier sessions', solo: true },
   { text: '/goal for multi-step work with a clear finish line', priority: 2, solo: true  },
   { text: '/goal next to queue follow-up work while the current goal keeps running', solo: true },
-  { text: '/web: use the Web UI for a better experience', solo: true },
   { text: '@: mention files', priority: 2 },
   { text: '! to run a shell command', priority: 2 },
 ];
@@ -42,6 +41,38 @@ export const ALL_TIPS: readonly ToolbarTip[] = [
   { text: 'ctrl-o to hide or reveal tool output switching between a clean chat view and full execution details', priority: 2 },
   { text: 'shift-tab to Plan mode to review the approach before NightHawk edits files.', priority: 2 },
   { text: '/model: switch model', priority: 2 },
+];
+
+/**
+ * Hacker-style one-liners shown behind the waiting spinner when pentest mode
+ * is active. Picked at random per loading burst.
+ */
+export const PENTEST_WITS: readonly ToolbarTip[] = [
+  { text: '刺探端口…  ssh -p 22 正在响应' },
+  { text: '注入 SQL 负载…  UNION SELECT NULL--' },
+  { text: '枚举子域名…  dig +nocmd any target' },
+  { text: '破解哈希中…  hashcat -m 0 hash.txt' },
+  { text: '横向移动分析…  寻找信任关系' },
+  { text: '权限提升路径探测…  sudo -l 检查' },
+  { text: 'Webshell 部署准备…  上传路径验证' },
+  { text: '反连 shell 监听中…  nc -lvnp 4444' },
+  { text: '抓取 HTTP 响应头…  curl -v target' },
+  { text: '扫描目录…  gobuster dir -w wordlist' },
+  { text: 'WAF 指纹识别…  绕过策略加载' },
+  { text: '靶标攻击面测绘…  入口点排序' },
+  { text: '凭证喷洒…  hydra -L users -P pass' },
+  { text: '内网穿透…  chisel 隧道建立' },
+  { text: '漏洞验证…  Python exploit 骨架生成' },
+  { text: 'Secrets 提取…  Git 历史深度扫描' },
+  { text: 'SSH 密钥劫持分析…  authorized_keys 检查' },
+  { text: '容器逃逸检查…  /proc/1/root 可达性' },
+  { text: '云元数据探测…  169.254.169.254 可达' },
+  { text: '日志清理痕迹…  审计日志梳理' },
+  { text: 'C2 心跳维持…  beacon 间隔调优' },
+  { text: '域渗透路径规划…  BloodHound 数据导入' },
+  { text: 'Kerberos 票据投毒…  golden ticket 检测' },
+  { text: 'DLL 劫持点枚举…  Process Monitor 日志' },
+  { text: '内核 exploit 条件检查…  uname -a 比对' },
 ];
 
 /**

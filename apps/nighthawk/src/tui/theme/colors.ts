@@ -133,6 +133,37 @@ export const lightColors: ColorPalette = {
   shellMode: '#6C3ABE',
 };
 
+/**
+ * Hacker terminal theme — Matrix green on black.
+ * Activated when pentest mode is on.
+ */
+export const hackerColors: ColorPalette = {
+  primary: '#00FF41',
+  accent: '#00FF00',
+
+  text: '#00FF41',
+  textStrong: '#00FF41',
+  textDim: '#008F11',
+  textMuted: '#005A00',
+
+  border: '#00FF41',
+  borderFocus: '#00FF41',
+
+  success: '#00FF41',
+  warning: '#FFB800',
+  error: '#FF0000',
+
+  diffAdded: '#00FF41',
+  diffRemoved: '#FF0000',
+  diffAddedStrong: '#00FF41',
+  diffRemovedStrong: '#FF0000',
+  diffGutter: '#005A00',
+  diffMeta: '#008F11',
+
+  roleUser: '#00FF41',
+  shellMode: '#00FF41',
+};
+
 export type ResolvedTheme = 'dark' | 'light';
 
 /** Synchronous palette lookup for built-in themes only. */

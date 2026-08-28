@@ -596,6 +596,10 @@ export class Agent {
           this.telemetry.track('afk_toggle', { enabled: afkEnabled });
         }
       },
+      setPentestMode: (payload) => {
+        this.config.update({ pentestMode: payload.enabled });
+        this.tools.refreshBuiltinTools();
+      },
       setModel: (payload) => {
         // Validate the alias resolves before recording it so resume / runtime
         // callers fail fast on missing aliases instead of deferring to the

@@ -2,8 +2,7 @@
  * FeedbackInputDialog — blue rounded box that collects a single line of
  * user feedback before submitting it to the managed NightHawk platform.
  *
- * Geometry mirrors `DeviceCodeBox` so the chrome stays consistent with
- * the OAuth login flow. The box embeds a `pi-tui` Input for the actual
+ * The box embeds a `pi-tui` Input for the actual
  * text entry; cursor visibility tracks the dialog's `focused` flag.
  *
  * This is stage 1 of the feedback flow: it collects the free-form text

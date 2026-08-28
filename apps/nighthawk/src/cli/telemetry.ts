@@ -16,7 +16,7 @@ import {
   withTelemetryContext,
 } from '@nighthawk/telemetry';
 
-import { CLI_USER_AGENT_PRODUCT, WEB_UI_MODE } from '#/constant/app';
+import { CLI_USER_AGENT_PRODUCT } from '#/constant/app';
 import { nighthawkTelemetryEndpoint } from '#/utils/region';
 
 import { createNighthawkHostIdentity } from './version';
@@ -71,22 +71,6 @@ export interface InitializeServerTelemetryOptions {
   readonly version: string;
 }
 
-/**
- * Bootstrap telemetry for the `nighthawk web` host.
- *
- * Mirrors {@link initializeCliTelemetry}: mints the device id, reads config to
- * honor the `telemetry` toggle and pick up the default model, attaches the
- * sink with `ui_mode = "web"`, and returns a {@link TelemetryClient} the
- * caller hands to `startServer` via `coreProcessOptions.telemetry`. That wires
- * the same real client into `NighthawkCore`, so agent-core events emitted inside the
- * server process (`mcp_connected`, `session_load_failed`, plan-mode / cron
- * events, …) actually leave the process carrying the enriched context
- * (`app_name` / `version` / `ui_mode` / `model` / platform fields).
- *
- * The returned client wraps the `@nighthawk/telemetry` module
- * functions, so the module-level `track` / `withTelemetryContext` (used to
- * fire the startup event) share the same underlying client + sink.
- */
 export function initializeServerTelemetry(
   options: InitializeServerTelemetryOptions,
 ): TelemetryClient {
@@ -105,7 +89,6 @@ export function initializeServerTelemetry(
     enabled: config.telemetry !== false,
     appName: CLI_USER_AGENT_PRODUCT,
     version: options.version,
-    uiMode: WEB_UI_MODE,
     model: config.defaultModel,
     endpoint: () => nighthawkTelemetryEndpoint(),
     getAccessToken: async () => (await auth.getCachedAccessToken(NIGHTHAWK_PROVIDER_NAME)) ?? null,

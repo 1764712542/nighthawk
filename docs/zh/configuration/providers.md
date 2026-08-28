@@ -1,6 +1,6 @@
 # 平台与模型
 
-NightHawk CLI 支持同时接入多家 LLM 平台——用 NightHawk 托管服务一键登录、用 Anthropic API key 接 Claude、用 OpenAI 兼容协议连接第三方推理服务。每个供应商对应一种 API 协议，模型在供应商之上声明自己的名称、上下文长度和能力。本页介绍如何在 `config.toml` 里配置各种供应商。
+NightHawk CLI 支持同时接入多家 LLM 平台——用 NightHawk 托管服务一键登录、用 Anthropic API key 接 Claude、用 OpenAI 兼容协议连接第三方推理服务。每个供应商对应一种 API 协议，模型在供应商之上声明自己的名称、上下文长度和能力。本页介绍如何在 `config.toml` 里配置各种供应商。配置供应商后，可以使用 `/pentest` 模式进行专业渗透测试。
 
 ## 支持的供应商类型
 
@@ -44,14 +44,14 @@ NightHawk CLI 支持同时接入多家 LLM 平台——用 NightHawk 托管服�
 
 用于对接 NightHawk AI 的 OpenAI 兼容接口，包括 NightHawk 托管服务和 NightHawk Platform API 密钥。
 
-- 默认 `base_url`：`https://api.moonshot.ai/v1`
+- 默认 `base_url`：`https://api.kimi.com/coding/v1`
 - 凭证键名：`NIGHTHAWK_API_KEY`、`NIGHTHAWK_BASE_URL`
 - 额外能力：支持视频上传
 
 ```toml
 [providers.nighthawk]
 type = "nighthawk"
-base_url = "https://api.moonshot.ai/v1"
+base_url = "https://api.kimi.com/coding/v1"
 api_key = "sk-xxxxx"
 ```
 
@@ -161,3 +161,4 @@ NightHawk 托管服务使用 OAuth 而非静态 API 密钥。内置的认证工�
 - [配置文件](./config-files.md) — `providers` 和 `models` 表的完整字段参考
 - [配置覆盖](./overrides.md) — 供应商凭证的解析优先级规则
 - [环境变量](./env-vars.md) — 各供应商对应的凭证键名列表
+- [渗透测试模式](../guides/pentest-mode.md) — 配置供应商后可使用专业渗透测试工具

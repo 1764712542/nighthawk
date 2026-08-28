@@ -89,15 +89,17 @@ function multipleAgentSwarmDeniedMessage(hasOtherToolCalls: boolean): string {
     ? ' AgentSwarm also must not be combined with other tools in the same response.'
     : '';
   return (
-    'AgentSwarm must be called one swarm at a time. Multiple AgentSwarm calls are not forbidden, ' +
-    'but issue them sequentially: call one AgentSwarm, wait for its result, then call the next; ' +
-    `or merge the work into a single AgentSwarm when one swarm can cover it.${suffix}`
+    'AgentSwarm must be called one swarm at a time — this response contained multiple AgentSwarm ' +
+    'calls, which is rejected. To parallelize many tasks, put ALL items in a single AgentSwarm ' +
+    'call (up to 128). To work across phases, call one AgentSwarm, wait for it to finish, then ' +
+    `call the next in a new response.${suffix}`
   );
 }
 
 function mixedAgentSwarmDeniedMessage(): string {
   return (
-    'AgentSwarm must be the only tool call in a model response. Retry with a single AgentSwarm ' +
-    'call by itself, then call any other tools after it returns.'
+    'AgentSwarm must be the only tool call in a model response — this response mixed AgentSwarm ' +
+    'with other tools. Retry with a single AgentSwarm call by itself; call other tools only after ' +
+    'the AgentSwarm returns.'
   );
 }

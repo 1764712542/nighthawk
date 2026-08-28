@@ -4,12 +4,12 @@
 
 ### Patch Changes
 
-- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - Publish per-agent transcript activity state (idle / turn) on transcript snapshots, derived from live loop status and preserved across cold rebuilds and live backfills.
+- [`07c3e93`](https://github.com/AliceGoto/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@AliceGoto](https://github.com/AliceGoto)! - Publish per-agent transcript activity state (idle / turn) on transcript snapshots, derived from live loop status and preserved across cold rebuilds and live backfills.
 
-- [`07c3e93`](https://github.com/1764712542/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@1764712542](https://github.com/1764712542)! - Keep subagent task model and thinking-effort metadata on transcript tasks, including after the task terminates.
+- [`07c3e93`](https://github.com/AliceGoto/nighthawk/commit/07c3e93b949841e9789181a124b9d235a942c401) Thanks [@AliceGoto](https://github.com/AliceGoto)! - Keep subagent task model and thinking-effort metadata on transcript tasks, including after the task terminates.
 
 ## 0.0.1
 
 ### Patch Changes
 
-- [#1888](https://github.com/1764712542/nighthawk/pull/1888) [`5ae60fa`](https://github.com/1764712542/nighthawk/commit/5ae60fa6736b63b80bd764ef01d6c0334eb80595) Thanks [@sailist](https://github.com/sailist)! - Add a unified, agent-granular transcript rendering data layer and serve it from the v2 server: clients can fetch turn-paginated transcripts via `GET /sessions/{id}/transcript` and subscribe to per-agent transcript updates over the v1 WebSocket with per-connection granularity control (off / turn / block / delta). All transcript wire types are owned by the transcript package itself. `turn.started` now carries the turn's prompt text so live transcripts render the user input as soon as the turn opens.
+- [#1888](https://github.com/AliceGoto/nighthawk/pull/1888) [`5ae60fa`](https://github.com/AliceGoto/nighthawk/commit/5ae60fa6736b63b80bd764ef01d6c0334eb80595) Thanks [@sailist](https://github.com/sailist)! - Add a unified, agent-granular transcript rendering data layer and serve it from the v2 server: clients can fetch turn-paginated transcripts via `GET /sessions/{id}/transcript` and subscribe to per-agent transcript updates over the v1 WebSocket with per-connection granularity control (off / turn / block / delta). All transcript wire types are owned by the transcript package itself. `turn.started` now carries the turn's prompt text so live transcripts render the user input as soon as the turn opens.

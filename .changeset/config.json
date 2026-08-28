@@ -1,5 +1,5 @@
 {
-  "changelog": ["@changesets/changelog-github", { "repo": "1764712542/nighthawk" }],
+  "changelog": ["@changesets/changelog-github", { "repo": "AliceGoto/nighthawk" }],
   "commit": false,
   "fixed": [],
   "linked": [],

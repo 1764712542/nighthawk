@@ -162,6 +162,18 @@ Parameters:
 `TaintTrace` is heuristic — it follows only relative imports and resolves dynamic imports on a best-effort basis. Bare or npm imports and mixed-eval patterns are not traced, so treat results as evidence to confirm with `Read`.
 :::
 
+### Pentest Tools
+
+The following tools are available only in pentest mode (`/pentest`):
+
+| Tool | Parameters | Description |
+|------|------------|-------------|
+| `PortScanner` | `target`, `port_range`, `scan_type` | Port scanning via nmap. Supports `connect`, `version`, and `quick` scan types |
+| `DirBrute` | `url`, `wordlist`, `extensions`, `concurrency` | Directory enumeration with 40+ built-in common paths |
+| `PasswordBrute` | `target_url`, `username`, `password_list`, `field_user`, `field_pass`, `failure_indicator` | Credential testing against login forms. Requires explicit authorization |
+| `ThreatModel` | `path`, `scope`, `output_format` | STRIDE-based threat modeling with trust boundary analysis and Mermaid diagrams. Read-only analysis tool |
+| `SubdomainEnum` | `domain`, `methods`, `wordlist` | Subdomain enumeration via DNS resolution and a 50+ subdomain wordlist |
+
 ## Scheduled Tasks
 
 Scheduled task tools allow the Agent to re-inject a prompt into the current session at a future time — either as a one-time reminder or as a recurring cron-triggered task (periodic checks, daily reports, deployment monitoring, etc.). Schedules are bound to the session and remain active when you resume it with `nighthawk --session`, but are not carried into a brand-new session. A single session can hold at most 50 active scheduled tasks. Set `NIGHTHAWK_DISABLE_CRON=1` to disable them entirely; see [Environment Variables](../configuration/env-vars.md#runtime-switches).

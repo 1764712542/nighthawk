@@ -26,8 +26,30 @@ Most AI coding agents help you write code faster. NightHawk helps you **break it
 | `SecretScan` | Detects hardcoded credentials — AWS/GCP/Azure keys, tokens, private keys — combining known patterns with Shannon-entropy scoring. |
 | `TaintTrace` | Taint tracking: identifies user-controlled sources (HTTP params, env, stdin) and traces assignment chains to dangerous sinks (exec, eval, innerHTML, SQL). Follows data flow across module imports by default (`scope: file` restricts to a single file). |
 | `DepAudit` | Flags risky dependency patterns (postinstall scripts, unpinned versions, known-risk config) via offline checks, queries the OSV API, and can run the host package-manager audit (`useExternal: true`) to merge real CVEs. |
+| `PortScanner` | Scans targets for open ports and running services via nmap. Available in pentest mode. |
+| `DirBrute` | Enumerates web directories and files using a built-in wordlist of 40+ common paths. Available in pentest mode. |
+| `PasswordBrute` | Tests credentials against login forms with a common-password wordlist. Requires explicit authorization. Available in pentest mode. |
+| `ThreatModel` | STRIDE-based threat modeling with trust boundary analysis and Mermaid diagrams. Available in pentest mode. |
+| `SubdomainEnum` | Discovers subdomains via DNS resolution and a wordlist of 50+ common subdomains. Available in pentest mode. |
 
 The tools compound: rule hits seed taint traces, taint flows confirm exploitability, and confirmed findings feed the fix proposal.
+
+## Pentest Mode
+
+Pentest mode transforms NightHawk into a dedicated penetration testing workstation. Enter with `/pentest`:
+
+- **Hacker theme** — Matrix-green-on-black UI, boot animation, hacker-themed loading tips
+- **Forced stage orchestration** — agent executes 9 stages one at a time: Compliance → Scope → Recon → Attack Surface → Vulnerability Verification → Exploitation (PoC) → Post-Exploitation → Remediation → Report
+- **Automatic stage progression** — the orchestrator sends stage-specific prompts, waits for completion, then advances to the next stage
+- **All tools available** — PortScanner, DirBrute, PasswordBrute, ThreatModel, SubdomainEnum, plus the four core security tools
+- **Professional report** — generates HTML/PDF findings report with evidence and risk scoring
+
+```
+/pentest              → toggle mode on/off
+/pentest <target>     → start pentest against target
+```
+
+See [docs/en/guides/pentest-mode.md](docs/en/guides/pentest-mode.md) for full documentation.
 
 ## Engineering Proof
 
@@ -60,7 +82,8 @@ node scripts/smoke-security.ts             # security engine end-to-end
 │  Plan/Act/Observe/Reflect · tools · skills · MCP client │
 │  session checkpoints · permissions · sub-agents         │
 │  └─ security tools: SecurityScan / SecretScan /         │
-│     TaintTrace / DepAudit (rule engine + taint engine)  │
+│     TaintTrace / DepAudit / PortScanner / DirBrute /   │
+│     PasswordBrute / ThreatModel / SubdomainEnum        │
 ├─────────────────────────────────────────────────────────┤
 │  kosong — LLM provider abstraction (multi-provider)     │
 │  kaos — execution env & file/process abstractions       │
@@ -87,7 +110,7 @@ The design takes the strongest ideas from the current generation of agent harnes
 Requirements: Node.js ≥ 24.15, pnpm 10.33.
 
 ```sh
-git clone https://github.com/1764712542/nighthawk && cd nighthawk
+git clone https://github.com/AliceGoto/nighthawk && cd nighthawk
 pnpm install
 pnpm run build:packages
 pnpm -C apps/nighthawk run build
@@ -103,7 +126,8 @@ Configure a provider (API key or OAuth) in the TUI via `/login`, or set `NIGHTHA
 
 ## Agent Capabilities
 
-- **Tools** — read/edit/write files, grep/glob, shell with approval gates, fetch, web search, git, plus the four security tools.
+- **Tools** — read/edit/write files, grep/glob, shell with approval gates, fetch, web search, git, plus the nine security/pentest tools.
+- **Pentest mode** — `/pentest` toggles a dedicated pentest workstation with hacker theme, forced stage orchestration, and automatic report generation.
 - **MCP** — connect any Model Context Protocol server; conversational `/mcp-config` instead of hand-edited JSON.
 - **Skills** — markdown-defined reusable playbooks, auto-loaded when relevant.
 - **Memory** — persistent project memory that compounds across sessions.

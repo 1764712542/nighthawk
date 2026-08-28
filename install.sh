@@ -5,15 +5,15 @@
 # checksum published alongside it, and installs into ~/.nighthawk/bin.
 #
 # Usage:
-#   curl -fsSL https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/install.sh | bash
+#   curl -fsSL https://cdn.jsdelivr.net/gh/AliceGoto/nighthawk@main/install.sh | bash
 #
 # Environment overrides:
-#   NIGHTHAWK_INSTALL_REPO     GitHub <owner>/<repo> hosting releases (default 1764712542/nighthawk)
+#   NIGHTHAWK_INSTALL_REPO     GitHub <owner>/<repo> hosting releases (default AliceGoto/nighthawk)
 #   NIGHTHAWK_INSTALL_VERSION  Release tag to install (default: latest)
 #   NIGHTHAWK_INSTALL_DIR      Installation directory (default ~/.nighthawk/bin)
 set -euo pipefail
 
-REPO="${NIGHTHAWK_INSTALL_REPO:-1764712542/nighthawk}"
+REPO="${NIGHTHAWK_INSTALL_REPO:-AliceGoto/nighthawk}"
 VERSION="${NIGHTHAWK_INSTALL_VERSION:-latest}"
 INSTALL_DIR="${NIGHTHAWK_INSTALL_DIR:-"$HOME/.nighthawk/bin"}"
 TIMEOUT_SECONDS="${NIGHTHAWK_INSTALL_TIMEOUT:-120}"

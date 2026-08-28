@@ -38,6 +38,7 @@ export class ConfigState {
   private _unforcedThinkingEffort: ThinkingEffort | undefined;
   private _thinkingEffort: ThinkingEffort = 'off';
   private _systemPrompt: string = '';
+  private _pentestMode: boolean = false;
 
   constructor(protected readonly agent: Agent) {
     this._cwd = agent.kaos.getcwd();
@@ -126,6 +127,9 @@ export class ConfigState {
     if (changed.systemPrompt !== undefined) {
       this._systemPrompt = changed.systemPrompt;
     }
+    if (changed.pentestMode !== undefined) {
+      this._pentestMode = changed.pentestMode;
+    }
     if (this.hasProvider && (changed.cwd !== undefined || changed.modelAlias)) {
       this.agent.tools.initializeBuiltinTools();
     }
@@ -160,6 +164,7 @@ export class ConfigState {
       subagentNames: this.subagentNames,
       thinkingEffort: this.thinkingEffort,
       systemPrompt: this.systemPrompt,
+      pentestMode: this._pentestMode,
     };
   }
 
@@ -276,6 +281,10 @@ export class ConfigState {
 
   get systemPrompt(): string {
     return this._systemPrompt;
+  }
+
+  get pentestMode(): boolean {
+    return this._pentestMode;
   }
 
   get modelCapabilities(): ModelCapability {

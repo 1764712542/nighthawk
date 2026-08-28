@@ -225,7 +225,7 @@
 
             meta = {
               description = "NightHawk CLI";
-              homepage = "https://github.com/1764712542/nighthawk";
+              homepage = "https://github.com/AliceGoto/nighthawk";
               license = lib.licenses.mit;
               mainProgram = "nighthawk";
               platforms = systems;

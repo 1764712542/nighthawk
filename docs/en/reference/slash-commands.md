@@ -13,7 +13,7 @@ Some commands are only available in the idle state. Executing these commands whi
 | Command | Alias | Description | Always available |
 | --- | --- | --- | --- |
 | `/provider` | — | Open the interactive provider manager to view, add, and remove configured providers. See [Platforms & Models — `/provider` and provider management](../configuration/providers.md#provider-—-interactive-provider-management) | Yes |
-| `/connect` | — | Connect a model provider: mainstream providers and custom endpoints via API key | No |
+| `/login` | `/connect` | Login to a model provider: mainstream providers and custom endpoints via API key | No |
 | `/logout` | — | Remove a configured provider or clear OAuth credentials for the currently selected account | No |
 | `/model` | — | Switch the LLM model used in the current session | Yes |
 | `/secondary-model` | `/subagent-model` | Pick the default model for subagents (writes `[secondary_model] default_model`; see the [subagent model pool](../configuration/config-files.md#subagent-model-pool)). Visible when the subagent model pool experiment is enabled | Yes |
@@ -115,6 +115,27 @@ Prompt mode exits with code `0` when the goal completes, `3` when it blocks, and
 | Command | Alias | Description | Always available |
 | --- | --- | --- | --- |
 | `/exit` | `/quit`, `/q` | Exit NightHawk CLI | No |
+
+## Pentest Mode
+
+Pentest mode transforms NightHawk into a dedicated penetration testing workstation. Use `/pentest` to toggle the mode. When active, the interface switches to a Matrix-green-on-black hacker theme. Non-essential commands (`/goal`, `/swarm`, `/tower`, `/plan`, etc.) are hidden — only pentest commands and core Agent functions remain.
+
+| Command | Alias | Description | Always available |
+| --- | --- | --- | --- |
+| `/pentest` | `/hack` | Toggle pentest mode | Yes |
+| `/pentest <target>` | `/hack <target>` | Enable mode and launch a 9-stage pentest | No |
+| `/scan [path]` | `/pentest-scan` | Security scan (pentest mode) | No |
+| `/recon <target>` | `/pentest-recon` | Reconnaissance: port scan, subdomain enum, security scan, WebSearch OSINT (pentest mode) | No |
+| `/exploit [finding-id]` | `/pentest-exploit` | Exploit analysis — generate PoC plans (pentest mode) | No |
+| `/report` | `/pentest-report` | Generate pentest report HTML/PDF (pentest mode) | No |
+
+Pentest tools: `PortScanner` (port scanning), `DirBrute` (directory brute force), `PasswordBrute` (credential testing), `ThreatModel` (STRIDE threat modeling), `SubdomainEnum` (subdomain enumeration) + four core security tools.
+
+9-stage workflow: Compliance → Scope → Recon → Attack Surface → Vulnerability Verification → Exploitation → Post-Exploitation → Remediation → Report.
+
+::: warning
+Network probing tools are restricted to authorized targets only. Each execution requires user confirmation.
+:::
 
 ## Built-in skill commands
 

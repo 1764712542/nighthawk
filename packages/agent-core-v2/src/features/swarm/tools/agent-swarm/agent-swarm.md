@@ -11,3 +11,18 @@ Each of these is enforced — a violation is rejected before any subagent starts
 Use enough subagents to keep the work focused and parallel. AgentSwarm supports up to 128 subagents, and launches are queued automatically, so it is safe to split large tasks into many clear, independent items.
 
 If `AgentSwarm` is called, that call must be the only tool call in the response.
+
+## CRITICAL: One swarm at a time
+
+**Never call `AgentSwarm` more than once in a single response.** This is enforced at runtime and multiple calls will be vetoed. To run 100 tasks in parallel, put all 100 in one `AgentSwarm` call's `items` array — do NOT make 10 separate `AgentSwarm` calls. If you need to do work across multiple phases, call one `AgentSwarm`, wait for it to complete, then call the next in a subsequent response.
+
+Wrong:
+```
+AgentSwarm(description="tasks for group A", items=["a1","a2"])
+AgentSwarm(description="tasks for group B", items=["b1","b2"])  ← VETOED
+```
+
+Correct:
+```
+AgentSwarm(description="all tasks", items=["a1","a2","b1","b2"])  ← works
+```

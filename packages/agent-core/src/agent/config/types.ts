@@ -9,6 +9,7 @@ export interface AgentConfigData {
   subagentNames?: readonly string[];
   thinkingEffort: string;
   systemPrompt: string;
+  pentestMode: boolean;
 }
 
 export type AgentConfigUpdateData = Partial<{
@@ -18,4 +19,5 @@ export type AgentConfigUpdateData = Partial<{
   subagentNames: readonly string[];
   thinkingEffort: string;
   systemPrompt: string;
+  pentestMode: boolean;
 }>;

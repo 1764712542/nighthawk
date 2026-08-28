@@ -44,14 +44,14 @@ The same operations are also available in non-interactive environments via the s
 
 For connecting to NightHawk AI's OpenAI-compatible interface, including the NightHawk managed service and NightHawk Platform API keys.
 
-- Default `base_url`: `https://api.moonshot.ai/v1`
+- Default `base_url`: `https://api.kimi.com/coding/v1`
 - Credential key names: `NIGHTHAWK_API_KEY`, `NIGHTHAWK_BASE_URL`
 - Additional capability: supports video upload
 
 ```toml
 [providers.nighthawk]
 type = "nighthawk"
-base_url = "https://api.moonshot.ai/v1"
+base_url = "https://api.kimi.com/coding/v1"
 api_key = "sk-xxxxx"
 ```
 

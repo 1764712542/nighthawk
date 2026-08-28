@@ -6,9 +6,6 @@
  * legacy agent-core-backed path instead. `NIGHTHAWK_EXPERIMENTAL_FLAG` remains
  * the master switch for experimental features within either engine; it does
  * not select the engine.
- *
- * Note: `nighthawk web` always boots kap-server (the agent-core-v2 engine
- * server) — it does not consult this switch.
  */
 
 export const NIGHTHAWK_LEGACY_ENV = 'NIGHTHAWK_LEGACY_FLAG';

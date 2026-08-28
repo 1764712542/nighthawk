@@ -264,6 +264,7 @@ import {
   type SetSessionSwarmModeRpcInput,
   type SetSessionThinkingRpcInput,
   type SetSessionTowerModeRpcInput,
+  type SetSessionPentestModeRpcInput,
   type UpdateSessionMetadataRpcInput,
 } from '#/rpc';
 import type {
@@ -1106,6 +1107,7 @@ export class SDKRpcClientV2 extends SDKRpcClientBase {
         profileName: profile.profileName,
         thinkingEffort: profile.thinkingLevel,
         systemPrompt: profile.systemPrompt,
+        pentestMode: false,
       },
       context: context as AgentContextData,
       replay: limitAgentReplayByTurns(folded.replay, replayTurnLimit),
@@ -2096,6 +2098,15 @@ export class SDKRpcClientV2 extends SDKRpcClientBase {
       tower.exit();
     }
     await agent.accessor.get(IAgentContextInjectorService).reconcileWhenIdle('tower_mode');
+  }
+
+  /** Not yet implemented in agent-core-v2 — the v1 engine handles this through core-impl.ts. */
+  override async setPentestMode(input: SetSessionPentestModeRpcInput): Promise<void> {
+    void input;
+    throw new NighthawkError(
+      ErrorCodes.NOT_IMPLEMENTED,
+      'setPentestMode is only available on the agent-core engine.',
+    );
   }
 
   // -----------------------------------------------------------------------

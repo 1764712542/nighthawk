@@ -596,7 +596,7 @@ export class OpenAILegacyChatProvider implements ChatProvider {
     // from withThinking is honored as well: with thinking turned off the
     // auto-enable must not silently switch reasoning back on (or leak the field
     // to models that reject it).
-    // See: https://github.com/1764712542/nighthawk/issues/1616
+    // See: https://github.com/AliceGoto/nighthawk/issues/1616
     if (
       reasoningEffort === undefined &&
       effort !== 'off' &&

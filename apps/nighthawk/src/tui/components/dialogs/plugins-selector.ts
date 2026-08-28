@@ -39,7 +39,7 @@ const ELLIPSIS = '…';
 // in the browser; once the catalog carries the real entry, that row wins and
 // installs normally.
 const WEB_BRIDGE_URL =
-  'https://github.com/1764712542/nighthawk/tree/main/plugins/official/nighthawk-webbridge';
+  'https://github.com/AliceGoto/nighthawk/tree/main/plugins/official/nighthawk-webbridge';
 const WEB_BRIDGE_ENTRY: PluginMarketplaceEntry = {
   id: 'nighthawk-webbridge',
   displayName: 'NightHawk WebBridge',

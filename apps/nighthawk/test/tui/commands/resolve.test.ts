@@ -18,6 +18,7 @@ function resolve(
     isStreaming: false,
     isCompacting: false,
     engineV2: true,
+    pentestMode: false,
     ...overrides,
   });
 }

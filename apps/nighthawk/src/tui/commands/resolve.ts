@@ -52,6 +52,7 @@ export interface ResolveSlashCommandInput {
   readonly isStreaming: boolean;
   readonly isCompacting: boolean;
   readonly engineV2: boolean;
+  readonly pentestMode: boolean;
 }
 
 export function resolveSlashCommandInput(options: ResolveSlashCommandInput): SlashCommandIntent {
@@ -59,29 +60,39 @@ export function resolveSlashCommandInput(options: ResolveSlashCommandInput): Sla
   if (parsed === null) return { kind: 'not-command' };
 
   const command = findBuiltInSlashCommand(parsed.name);
-  // `command` is a literal union where only some members carry `experimentalFlag`; widen to read it.
-  if (
-    command !== undefined &&
-    isExperimentalFlagEnabled((command as NighthawkSlashCommand).experimentalFlag) &&
-    (!(command as NighthawkSlashCommand).requiresEngineV2 || options.engineV2)
-  ) {
-    const busyReason = slashCommandBusyReason(options);
+  if (command !== undefined) {
+    // `command` is a literal union where only some members carry `experimentalFlag`; widen to read it.
+    const widened = command as NighthawkSlashCommand;
     if (
-      busyReason !== undefined &&
-      resolveSlashCommandAvailability(command, parsed.args) === 'idle-only'
+      isExperimentalFlagEnabled(widened.experimentalFlag) &&
+      (!widened.requiresEngineV2 || options.engineV2)
     ) {
+      // Pentest mode filtering — hide mode-specific commands
+      if (widened.pentestOnly && !options.pentestMode) {
+        return { kind: 'message', input: options.input };
+      }
+      if (widened.normalOnly && options.pentestMode) {
+        return { kind: 'message', input: options.input };
+      }
+
+      const busyReason = slashCommandBusyReason(options);
+      if (
+        busyReason !== undefined &&
+        resolveSlashCommandAvailability(command, parsed.args) === 'idle-only'
+      ) {
+        return {
+          kind: 'blocked',
+          commandName: parsed.name,
+          reason: busyReason,
+        };
+      }
       return {
-        kind: 'blocked',
-        commandName: parsed.name,
-        reason: busyReason,
+        kind: 'builtin',
+        command,
+        name: command.name,
+        args: parsed.args,
       };
     }
-    return {
-      kind: 'builtin',
-      command,
-      name: command.name,
-      args: parsed.args,
-    };
   }
 
   const skillName = resolveSkillCommand(options.skillCommandMap, parsed.name);

@@ -2,13 +2,14 @@
 
 ## NightHawk CLI 是什么
 
-NightHawk CLI 是一个运行在终端中的 AI Agent，帮助你完成软件开发任务和日常的终端操作——阅读和修改代码、执行 Shell 命令、搜索文件、抓取网页，并在执行过程中根据反馈自主规划和调整下一步行动。
+NightHawk CLI 是一个运行在终端中的 AI Agent，帮助你完成软件开发任务和日常的终端操作——阅读和修改代码、执行 Shell 命令、搜索文件、抓取网页，并在执行过程中根据反馈自主规划和调整下一步行动。它还内置了专业的渗透测试模式，支持端口扫描、安全扫描、漏洞利用分析等安全测试任务。
 
 它适用于以下场景：
 
 - **编写和修改代码**：实现新功能、修复 bug、完成重构
 - **理解项目**：探索陌生的代码库，解答架构和实现层面的问题
 - **自动化任务**：批量处理文件、运行构建与测试、串联多个脚本
+- **渗透测试**：使用 `/pentest` 模式进行端口扫描、安全扫描、漏洞验证和报告生成
 
 整套 CLI 以 TypeScript 编写，通过 npm 分发，运行在 Node.js 之上。
 
@@ -25,13 +26,13 @@ NightHawk CLI 为全交互式 TUI 应用，推荐在支持真彩色与连字的�
 - **macOS / Linux**：
 
 ```sh
-curl -fsSL https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/install.sh | bash
+curl -fsSL https://cdn.jsdelivr.net/gh/AliceGoto/nighthawk@main/install.sh | bash
 ```
 
 - **Windows（PowerShell）**：
 
 ```powershell
-irm https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/install.ps1 | iex
+irm https://cdn.jsdelivr.net/gh/AliceGoto/nighthawk@main/install.ps1 | iex
 ```
 
 > Windows 用户首次启动前还需要安装 [Git for Windows](https://gitforwindows.org/)，NightHawk CLI 会使用其中的 Git Bash 作为 Shell 环境。如果 Git Bash 安装在非标准路径，请把 `NIGHTHAWK_SHELL_PATH` 设为 `bash.exe` 的绝对路径。
@@ -43,7 +44,7 @@ irm https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/install.ps1 | iex
 如果你使用 [Homebrew](https://brew.sh/)，可通过 NightHawk tap 安装：
 
 ```sh
-brew install 1764712542/nighthawk/nighthawk
+brew install AliceGoto/nighthawk/nighthawk
 ```
 
 Formula 会从 GitHub Release 下载对应平台的二进制，并以常规 Homebrew 公式方式安装。
@@ -77,7 +78,7 @@ nighthawk --version
 npm install -g @nighthawk/nighthawk@latest
 ```
 
-**卸载**：脚本安装的用户删除 `nighthawk` 可执行文件即可；Homebrew 安装的用户执行 `brew uninstall 1764712542/nighthawk/nighthawk`；npm 安装的用户：
+**卸载**：脚本安装的用户删除 `nighthawk` 可执行文件即可；Homebrew 安装的用户执行 `brew uninstall AliceGoto/nighthawk/nighthawk`；npm 安装的用户：
 
 ```sh
 npm uninstall -g @nighthawk/nighthawk
@@ -176,3 +177,4 @@ NightHawk CLI 的本地数据默认保存在 `~/.nighthawk/` 下，包含配置�
 - [交互与输入](./interaction.md) — 输入框操作、审批流程、Plan 模式和 YOLO 模式详解
 - [会话与上下文](./sessions.md) — 恢复会话、上下文压缩、导出会话
 - [常见使用案例](./use-cases.md) — 典型任务的 prompt 示例
+- [渗透测试模式](./pentest-mode.md) — 专业渗透测试工作台使用指南

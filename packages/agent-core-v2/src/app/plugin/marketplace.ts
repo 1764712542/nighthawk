@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { gt, valid } from 'semver';
 
 export const NIGHTHAWK_PLUGIN_MARKETPLACE_URL =
-  'https://cdn.jsdelivr.net/gh/1764712542/nighthawk@main/plugins/cdn/marketplace.json';
+  'https://cdn.jsdelivr.net/gh/AliceGoto/nighthawk@main/plugins/cdn/marketplace.json';
 export const NIGHTHAWK_PLUGIN_MARKETPLACE_URL_ENV = 'NIGHTHAWK_PLUGIN_MARKETPLACE_URL';
 
 export const PLUGIN_MARKETPLACE_TIERS = ['official', 'curated'] as const;

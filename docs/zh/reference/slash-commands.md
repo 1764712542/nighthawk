@@ -13,7 +13,7 @@
 | 命令 | 别名 | 说明 | 随时可用 |
 | --- | --- | --- | --- |
 | `/provider` | — | 打开交互式供应商管理器，查看、添加和删除已配置的供应商。详见[平台与模型 — `/provider` 与供应商管理](../configuration/providers.md#provider-—-交互式供应商管理) | 是 |
-| `/connect` | — | 通过 API 密钥接入模型供应商：主流供应商与自定义端点 | 否 |
+| `/login` | `/connect` | 登录 NightHawk 托管服务：验证码流程授权 | 否 |
 | `/logout` | — | 移除已配置的供应商，或清除当前账户的 OAuth 凭证 | 否 |
 | `/model` | — | 切换当前会话使用的 LLM 模型 | 是 |
 | `/secondary-model` | `/subagent-model` | 选择 subagent 的默认模型（写入 `[secondary_model] default_model`，详见[subagent 模型池](../configuration/config-files.md#subagent-模型池)）。在 subagent 模型池实验功能启用时可见 | 是 |
@@ -113,6 +113,27 @@ Prompt 模式在目标完成时以退出码 `0` 退出，在目标阻塞时以 `
 | 命令 | 别名 | 说明 | 随时可用 |
 | --- | --- | --- | --- |
 | `/exit` | `/quit`、`/q` | 退出 NightHawk CLI | 否 |
+
+## 渗透测试模式
+
+渗透测试模式将 NightHawk 切换为专业渗透测试工作台。使用 `/pentest` 切换模式，进入后界面切换为 Matrix 绿字黑底的黑客主题。进入渗透测试模式后，部分普通命令（如 `/goal`、`/swarm`、`/tower`、`/plan` 等扩展性功能）会被隐藏，只保留渗透测试专用命令和 Agent 基础功能。
+
+| 命令 | 别名 | 说明 | 随时可用 |
+| --- | --- | --- | --- |
+| `/pentest` | `/hack` | 切换渗透测试模式 | 是 |
+| `/pentest <target>` | `/hack <target>` | 开启模式并启动 9 阶段渗透测试 | 否 |
+| `/scan [path]` | `/pentest-scan` | 安全扫描（渗透模式） | 否 |
+| `/recon <target>` | `/pentest-recon` | 信息收集：端口扫描、子域名枚举、安全扫描、WebSearch OSINT（渗透模式） | 否 |
+| `/exploit [finding-id]` | `/pentest-exploit` | 漏洞利用分析，生成 PoC（渗透模式） | 否 |
+| `/report` | `/pentest-report` | 生成渗透测试报告 HTML/PDF（渗透模式） | 否 |
+
+渗透测试工具：`PortScanner`（端口扫描）、`DirBrute`（目录爆破）、`PasswordBrute`（密码爆破）、`ThreatModel`（威胁建模）、`SubdomainEnum`（子域名枚举）+ 四个核心安全工具。
+
+9 阶段工作流：合规红线 → 范围确认 → 信息收集 → 攻击面分析 → 漏洞验证 → 漏洞利用 → 后渗透评估 → 修复方案 → 报告生成。
+
+::: warning 注意
+渗透测试模式下的网络探测工具仅限授权目标，每次执行需要用户确认。
+:::
 
 ## 内置 Skill 命令
 

@@ -30,7 +30,7 @@ export function createProgram(
     .configureHelp({ helpWidth: 100 })
     .helpOption('-h, --help', 'Show help.')
     .usage('[options] [command]')
-    .addHelpText('after', '\nDocumentation:        https://1764712542.github.io/nighthawk/\n');
+    .addHelpText('after', '\nDocumentation:        https://AliceGoto.github.io/nighthawk/\n');
 
   program
     .addOption(

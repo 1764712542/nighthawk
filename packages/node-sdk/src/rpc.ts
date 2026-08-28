@@ -144,6 +144,10 @@ export interface SetSessionTowerModeRpcInput extends SessionIdRpcInput {
   readonly enabled: boolean;
 }
 
+export interface SetSessionPentestModeRpcInput extends SessionIdRpcInput {
+  readonly enabled: boolean;
+}
+
 export interface ActivateSkillRpcInput extends SessionIdRpcInput {
   readonly name: string;
   readonly args?: string | undefined;
@@ -697,6 +701,15 @@ export abstract class SDKRpcClientBase {
       ErrorCodes.NOT_IMPLEMENTED,
       'setTowerMode is only available on the agent-core-v2 engine.',
     );
+  }
+
+  async setPentestMode(input: SetSessionPentestModeRpcInput): Promise<void> {
+    const rpc = await this.getRpc();
+    return rpc.setPentestMode({
+      sessionId: input.sessionId,
+      agentId: this.interactiveAgentId,
+      enabled: input.enabled,
+    });
   }
 
   private async enterSwarmMode(

@@ -164,6 +164,18 @@ Plan 模式是一种受约束的工作状态：进入后 `Write` 与 `Edit` 只�
 `TaintTrace` 为启发式分析——只沿相对导入追踪，动态导入按尽力而为解析。裸导入、npm 导入及混合 eval 模式不会被追踪，请将结果视为待用 `Read` 核实的证据。
 :::
 
+### 渗透测试工具
+
+以下工具仅在渗透测试模式（`/pentest`）下可用：
+
+| 工具 | 参数 | 说明 |
+|------|------|------|
+| `PortScanner` | `target`, `port_range`, `scan_type` | 端口扫描：通过 nmap 扫描目标开放端口与服务版本。支持 `connect`、`version`、`quick` 三种扫描模式 |
+| `DirBrute` | `url`, `wordlist`, `extensions`, `concurrency` | 目录爆破：内置 40+ 常见路径字典枚举 Web 目录和文件 |
+| `PasswordBrute` | `target_url`, `username`, `password_list`, `field_user`, `field_pass`, `failure_indicator` | 密码爆破：常见密码字典测试登录凭证。需要显式授权确认 |
+| `ThreatModel` | `path`, `scope`, `output_format` | 威胁建模：STRIDE 分析 + 信任边界图 + Mermaid 图表。纯分析工具，不执行网络请求 |
+| `SubdomainEnum` | `domain`, `methods`, `wordlist` | 子域名枚举：DNS 解析 + 50+ 常见子域名字典。支持 `dns` 和 `common` 两种方法 |
+
 ## 定时任务
 
 定时任务工具允许 Agent 把一段 prompt 在未来某个时间重新注入到当前会话——既可以是一次性提醒，也可以是按 cron 周期触发的任务（定期巡检、每日报表、部署监控等）。计划绑定到会话，用 `nighthawk --session` 恢复会话后仍然有效，但不会带入全新的会话。单个会话最多保留 50 个生效中的定时任务。设置 `NIGHTHAWK_DISABLE_CRON=1` 可整体禁用，详见[环境变量](../configuration/env-vars.md#运行时开关)。

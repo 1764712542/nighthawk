@@ -2,14 +2,14 @@
  * Theme system public API.
  */
 
-import { getBuiltInPalette } from './colors';
+import { getBuiltInPalette, hackerColors } from './colors';
 import type { ColorPalette, ResolvedTheme } from './colors';
 import { loadCustomThemeMerged } from './custom-theme-loader';
 import { detectTerminalTheme } from './detect';
 
 export { currentTheme, Theme } from './theme';
 export type { ColorToken } from './theme';
-export { darkColors, lightColors, getBuiltInPalette } from './colors';
+export { darkColors, lightColors, hackerColors, getBuiltInPalette } from './colors';
 export type { ColorPalette, ResolvedTheme } from './colors';
 export { detectTerminalTheme } from './detect';
 export { loadCustomTheme, loadCustomThemeMerged, listCustomThemes } from './custom-theme-loader';
@@ -21,11 +21,11 @@ export { loadCustomTheme, loadCustomThemeMerged, listCustomThemes } from './cust
  * Any other string is treated as a custom theme name looked up in
  * `~/.nighthawk/themes/<name>.json`.
  */
-export type BuiltInTheme = 'dark' | 'light' | 'auto';
+export type BuiltInTheme = 'dark' | 'light' | 'auto' | 'hacker';
 export type ThemeName = BuiltInTheme | (string & {});
 
 export function isBuiltInTheme(value: string): value is BuiltInTheme {
-  return value === 'dark' || value === 'light' || value === 'auto';
+  return value === 'dark' || value === 'light' || value === 'auto' || value === 'hacker';
 }
 
 export function isThemeName(_value: string): _value is ThemeName {
@@ -43,6 +43,7 @@ export function isThemeName(_value: string): _value is ThemeName {
 export async function getColorPalette(theme: ThemeName): Promise<ColorPalette> {
   if (theme === 'light') return getBuiltInPalette('light');
   if (theme === 'dark') return getBuiltInPalette('dark');
+  if (theme === 'hacker') return hackerColors;
   if (theme === 'auto') {
     const detected = await detectTerminalTheme();
     return getBuiltInPalette(detected);
@@ -59,5 +60,6 @@ export async function getColorPalette(theme: ThemeName): Promise<ColorPalette> {
  */
 export function getColorPaletteSync(theme: ThemeName): ColorPalette {
   if (theme === 'light') return getBuiltInPalette('light');
+  if (theme === 'hacker') return hackerColors;
   return getBuiltInPalette('dark');
 }
