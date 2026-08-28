@@ -183,15 +183,9 @@ Use this when you can't reach the stores:
 1. Download the extension package (`nighthawk-webbridge-extension.zip`) from your NightHawk distribution mirror and unzip it
 2. Type `chrome://extensions/` in the address bar to open the extensions page, then turn on **Developer mode** in the top-right corner
 
-   ![Turn on Developer mode](../../media/webbridge-dev-mode.jpeg)
-
 3. Click **Load unpacked** in the top-left corner and select the unzipped `nighthawk-webbridge-extension` folder
 
-   ![Load the unpacked extension](../../media/webbridge-load-unpacked.jpeg)
-
 4. Once installed, the NightHawk WebBridge icon appears in the browser toolbar. Seeing the icon means the installation succeeded, and AI can start working on web pages for you.
-
-   ![The NightHawk WebBridge icon in the browser toolbar](../../media/webbridge-install-success.jpeg)
 
 #### What you can do
 
@@ -213,8 +207,6 @@ The first time you use NightHawk Computer Use after installation, it shows an au
 2. Turn on the **NightHawk** switch under "Connect local agents", then restart NightHawk for it to take effect
 
 <div style="max-width: 380px; margin: 0 auto;">
-
-![NightHawk Computer Use authorization window](../../media/nighthawk-computer-use-auth.jpeg)
 
 </div>
 

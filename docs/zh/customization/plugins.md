@@ -185,15 +185,9 @@ NightHawk WebBridge 让 AI 直接操控你的浏览器，带着你的登录状�
 1. 从你的 NightHawk 分发镜像下载扩展安装包（`nighthawk-webbridge-extension.zip`）并解压
 2. 在浏览器地址栏输入 `chrome://extensions/` 打开扩展管理页，开启右上角的**开发者模式**
 
-   ![开启开发者模式](../../media/webbridge-dev-mode.jpeg)
-
 3. 点击左上角的**加载未打包的扩展程序**，选择解压后的 `nighthawk-webbridge-extension` 文件夹
 
-   ![加载未打包的扩展程序](../../media/webbridge-load-unpacked.jpeg)
-
 4. 装好后，浏览器工具栏会出现 NightHawk WebBridge 图标，看到图标即安装成功，之后就可以让 AI 帮你操作网页了。
-
-   ![工具栏出现 NightHawk WebBridge 图标](../../media/webbridge-install-success.jpeg)
 
 #### 能做什么
 
@@ -215,8 +209,6 @@ NightHawk Computer Use 让 AI 直接操作你的桌面应用，可以完成点�
 2. 在**接入本地 Agent**中打开 **NightHawk** 开关，重启 NightHawk 后生效
 
 <div style="max-width: 380px; margin: 0 auto;">
-
-![NightHawk Computer Use 授权窗口](../../media/nighthawk-computer-use-auth.jpeg)
 
 </div>
 

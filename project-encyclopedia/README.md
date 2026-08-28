@@ -1,0 +1,30 @@
+# NightHawk 项目百科全书
+
+本目录是自动生成、可验证的 NightHawk 项目深度文档集，共 166 个 Markdown 文件（含本 README 索引，正文 165 篇）。
+
+## 怎么读
+
+- 从 [00-overview/README.md](00-overview/README.md) 开始了解项目全貌。
+- 按主题进入：架构、应用、包、特性、安全、数据流、技术栈、开发、竞品对比、术语、参考。
+- 每篇文末都有“证据与代码位置”，指向仓库内真实文件。
+
+## 文档分类
+
+| 分类 | 数量 | 说明 |
+| --- | --- | --- |
+| 00-overview | 10 | 项目概览、定位、仓库地图、快速开始 |
+| 01-architecture | 14 | 分层、DI×Scope、生命周期、Feature、服务端、传输 |
+| 02-applications | 10 | CLI/TUI、VS Code、inspect、vis、ACP、迁移 |
+| 03-packages | 54 | 18 个包的 overview / internals / usage |
+| 04-features | 10 | Plan、Goal、Skill、MCP、子 Agent、权限、Hook、插件 |
+| 05-security | 12 | 安全引擎、规则、SecretScan、TaintTrace、DepAudit |
+| 06-data-flow | 10 | 端到端数据流、会话、工具、MCP、事件、持久化 |
+| 07-tech-stack | 10 | TypeScript、pnpm、tsdown、Vitest、oxlint、Nix |
+| 08-development | 8 | 搭建、构建、测试、lint、贡献、Native |
+| 09-comparison | 9 | 与 Codex、Claude Code、Cursor、Aider 等差异 |
+| 10-glossary | 6 | 核心术语 |
+| 11-reference | 12 | CLI、命令、配置、API、WS、SDK、排障 |
+
+## 验证方式
+
+所有文档在生成时读取了仓库的 `package.json`、`AGENTS.md`、源码目录结构和关键实现文件。要验证某一篇结论，请打开文末列出的代码路径。
