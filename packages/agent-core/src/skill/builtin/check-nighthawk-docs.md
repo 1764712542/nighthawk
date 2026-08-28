@@ -12,7 +12,7 @@ Answer NightHawk **product** questions from the official documentation, not from
 Official documentation lives in the `docs/` directory of the repository:
 
 ```
-https://github.com/nighthawk-dev/nighthawk/tree/main/docs
+https://github.com/AliceGoto/nighthawk/tree/main/docs
 ```
 
 Both `docs/en/` (English) and `docs/zh/` (Chinese) are available.

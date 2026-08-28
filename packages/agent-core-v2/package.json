@@ -5,14 +5,14 @@
   "description": "The unified agent engine for NightHawk (v2 — DI Scope architecture)",
   "license": "MIT",
   "author": "NightHawk Contributors",
-  "homepage": "https://github.com/nighthawk-dev/nighthawk/tree/main/packages/agent-core-v2#readme",
+  "homepage": "https://github.com/AliceGoto/nighthawk/tree/main/packages/agent-core-v2#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nighthawk-dev/nighthawk.git",
+    "url": "git+https://github.com/AliceGoto/nighthawk.git",
     "directory": "packages/agent-core-v2"
   },
   "bugs": {
-    "url": "https://github.com/nighthawk-dev/nighthawk/issues"
+    "url": "https://github.com/AliceGoto/nighthawk/issues"
   },
   "keywords": [
     "agent",

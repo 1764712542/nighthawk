@@ -13,5 +13,5 @@ hero:
       link: guides/pentest-mode
     - theme: alt
       text: GitHub
-      link: https://github.com/nighthawk-dev/nighthawk
+      link: https://github.com/AliceGoto/nighthawk
 ---

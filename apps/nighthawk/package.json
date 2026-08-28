@@ -4,14 +4,14 @@
   "description": "The Starting Point for Next-Gen Agents",
   "license": "MIT",
   "author": "NightHawk Contributors",
-  "homepage": "https://github.com/nighthawk-dev/nighthawk/tree/main/apps/nighthawk#readme",
+  "homepage": "https://github.com/AliceGoto/nighthawk/tree/main/apps/nighthawk#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nighthawk-dev/nighthawk.git",
+    "url": "git+https://github.com/AliceGoto/nighthawk.git",
     "directory": "apps/nighthawk"
   },
   "bugs": {
-    "url": "https://github.com/nighthawk-dev/nighthawk/issues"
+    "url": "https://github.com/AliceGoto/nighthawk/issues"
   },
   "keywords": [
     "nighthawk",

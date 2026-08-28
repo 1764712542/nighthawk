@@ -371,7 +371,7 @@ describe('nighthawk-cu entry', () => {
     await entry.install((step, percent) => reports.push([step, percent]));
 
     expect(plugins.installs).toEqual([
-      'https://cdn.jsdelivr.net/gh/nighthawk-dev/nighthawk@main/nighthawk-computer-use-windows/latest/nighthawk-cu-win-plugin.zip',
+      'https://cdn.jsdelivr.net/gh/AliceGoto/nighthawk@main/nighthawk-computer-use-windows/latest/nighthawk-cu-win-plugin.zip',
     ]);
     expect(reports).toContainEqual(['plugin', undefined]);
     expect(reports).toContainEqual(['download', 0]);
@@ -444,7 +444,7 @@ describe('nighthawk-cu entry', () => {
       ),
     ).toBe(true);
     expect(plugins.installs).toEqual([
-      'https://cdn.jsdelivr.net/gh/nighthawk-dev/nighthawk@main/nighthawk-computer-use-windows/latest/nighthawk-cu-win-plugin.zip',
+      'https://cdn.jsdelivr.net/gh/AliceGoto/nighthawk@main/nighthawk-computer-use-windows/latest/nighthawk-cu-win-plugin.zip',
     ]);
   });
 
@@ -636,7 +636,7 @@ describe('nighthawk-cu entry', () => {
     await entry.install(() => undefined);
 
     expect(plugins.installs).toEqual([
-      'https://cdn.jsdelivr.net/gh/nighthawk-dev/nighthawk@main/nighthawk-computer-use-windows/latest/nighthawk-cu-win-plugin.zip',
+      'https://cdn.jsdelivr.net/gh/AliceGoto/nighthawk@main/nighthawk-computer-use-windows/latest/nighthawk-cu-win-plugin.zip',
     ]);
     expect(doctorResults).toEqual([]);
   });
@@ -939,7 +939,7 @@ describe('nighthawk-cu entry', () => {
     await entry.install(() => {});
 
     expect(plugins.installs).toEqual([
-      'https://cdn.jsdelivr.net/gh/nighthawk-dev/nighthawk@main/nighthawk-computer-use/latest/nighthawk-cu-plugin.zip',
+      'https://cdn.jsdelivr.net/gh/AliceGoto/nighthawk@main/nighthawk-computer-use/latest/nighthawk-cu-plugin.zip',
     ]);
   });
 

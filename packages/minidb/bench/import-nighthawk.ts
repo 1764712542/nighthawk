@@ -234,8 +234,8 @@ async function main() {
 
   // secondary index lookup by workspace
   const w0 = performance.now();
-  const byWs = db.findEq('byWorkspace', 'nighthawk-dev-1');
-  console.log(`  index lookup (workspace=nighthawk-dev-1) -> ${byWs.length} in ${(performance.now() - w0).toFixed(2)} ms`);
+  const byWs = db.findEq('byWorkspace', 'AliceGoto-1');
+  console.log(`  index lookup (workspace=AliceGoto-1) -> ${byWs.length} in ${(performance.now() - w0).toFixed(2)} ms`);
 
   await db.close();
   console.log(`\ndone. db at: ${OUT}`);

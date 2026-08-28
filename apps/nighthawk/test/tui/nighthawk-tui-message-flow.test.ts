@@ -2140,7 +2140,7 @@ command = "vim"
     expect(harness.auth.submitFeedback).not.toHaveBeenCalled();
     const transcript = stripSgr(renderTranscript(driver));
     expect(transcript).toContain("You're not signed in");
-    expect(transcript).toContain('https://github.com/nighthawk-dev/nighthawk/issues');
+    expect(transcript).toContain('https://github.com/AliceGoto/nighthawk/issues');
   });
 
   it('falls back to GitHub Issues when the sign-in status cannot be read', async () => {
@@ -2153,7 +2153,7 @@ command = "vim"
     await handleFeedbackCommand(feedbackDriver as any);
 
     expect(openUrl).toHaveBeenCalledTimes(1);
-    expect(openUrl).toHaveBeenCalledWith('https://github.com/nighthawk-dev/nighthawk/issues');
+    expect(openUrl).toHaveBeenCalledWith('https://github.com/AliceGoto/nighthawk/issues');
     expect(promptFeedbackInput).not.toHaveBeenCalled();
     expect(harness.auth.submitFeedback).not.toHaveBeenCalled();
     const transcript = stripSgr(renderTranscript(driver));
@@ -2490,7 +2490,7 @@ command = "vim"
 
     await expect(handleFeedbackCommand(feedbackDriver as any)).rejects.toThrow('socket hangup');
 
-    expect(openUrl).toHaveBeenCalledWith('https://github.com/nighthawk-dev/nighthawk/issues');
+    expect(openUrl).toHaveBeenCalledWith('https://github.com/AliceGoto/nighthawk/issues');
     const transcript = stripSgr(renderTranscript(driver));
     expect(transcript).toContain('Opening GitHub Issues as fallback');
   });
@@ -6852,14 +6852,14 @@ command = "vim"
         enabledMcpServerCount: 1,
         hasErrors: false,
         source: 'zip-url',
-        originalSource: 'https://cdn.jsdelivr.net/gh/nighthawk-dev/nighthawk@main/plugins/cdn/official/nighthawk-datasource.zip',
+        originalSource: 'https://cdn.jsdelivr.net/gh/AliceGoto/nighthawk@main/plugins/cdn/official/nighthawk-datasource.zip',
       })),
     });
     const { driver } = await makeDriver(session);
 
     // Official sources skip the trust prompt, so the install runs immediately.
     driver.handleUserInput(
-      '/plugins install https://cdn.jsdelivr.net/gh/nighthawk-dev/nighthawk@main/plugins/cdn/official/nighthawk-datasource.zip',
+      '/plugins install https://cdn.jsdelivr.net/gh/AliceGoto/nighthawk@main/plugins/cdn/official/nighthawk-datasource.zip',
     );
 
     await vi.waitFor(() => {
@@ -6940,7 +6940,7 @@ command = "vim"
             tier: 'official',
             displayName: 'NightHawk Datasource',
             description: 'Datasource plugin',
-            source: 'https://cdn.jsdelivr.net/gh/nighthawk-dev/nighthawk@main/plugins/cdn/official/nighthawk-datasource.zip',
+            source: 'https://cdn.jsdelivr.net/gh/AliceGoto/nighthawk@main/plugins/cdn/official/nighthawk-datasource.zip',
           },
         ],
       }),
@@ -6967,7 +6967,7 @@ command = "vim"
 
     await vi.waitFor(() => {
       expect(session.installPlugin).toHaveBeenCalledWith(
-        'https://cdn.jsdelivr.net/gh/nighthawk-dev/nighthawk@main/plugins/cdn/official/nighthawk-datasource.zip',
+        'https://cdn.jsdelivr.net/gh/AliceGoto/nighthawk@main/plugins/cdn/official/nighthawk-datasource.zip',
       );
     });
     await vi.waitFor(() => {
@@ -6993,7 +6993,7 @@ command = "vim"
             id: 'nighthawk-datasource',
             tier: 'official',
             displayName: 'NightHawk Datasource',
-            source: 'https://cdn.jsdelivr.net/gh/nighthawk-dev/nighthawk@main/plugins/cdn/official/nighthawk-datasource.zip',
+            source: 'https://cdn.jsdelivr.net/gh/AliceGoto/nighthawk@main/plugins/cdn/official/nighthawk-datasource.zip',
           },
         ],
       }),
@@ -7177,7 +7177,7 @@ command = "vim"
 
       await vi.waitFor(() => {
         expect(session.installPlugin).toHaveBeenCalledWith(
-          'https://cdn.jsdelivr.net/gh/nighthawk-dev/nighthawk@main/plugins/cdn/official/nighthawk-datasource.zip',
+          'https://cdn.jsdelivr.net/gh/AliceGoto/nighthawk@main/plugins/cdn/official/nighthawk-datasource.zip',
         );
       });
       expect(globalThis.fetch).toHaveBeenCalledWith(nighthawkPluginMarketplaceUrl());

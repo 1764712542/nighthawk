@@ -186,7 +186,7 @@ describe('VSIX verifier CLI (package contract and failure details)', () => {
 
 describe('Extension Development Host setup (isolated local state)', () => {
   it('creates the complete isolated directory layout for a debug launch', async () => {
-    const parent = await makeTempDir('nighthawk-dev-profile-');
+    const parent = await makeTempDir('AliceGoto-profile-');
     const baseDir = join(parent, 'vscode-extension-dev');
 
     const result = runNode(prepareDevScript, ['--base-dir', baseDir]);
@@ -201,7 +201,7 @@ describe('Extension Development Host setup (isolated local state)', () => {
   });
 
   it('refuses to clear a directory without the dedicated safety suffix', async () => {
-    const unsafeDir = await makeTempDir('nighthawk-dev-unsafe-');
+    const unsafeDir = await makeTempDir('AliceGoto-unsafe-');
     await writeFile(join(unsafeDir, 'keep.txt'), 'keep');
 
     const result = runNode(prepareDevScript, ['--base-dir', unsafeDir]);

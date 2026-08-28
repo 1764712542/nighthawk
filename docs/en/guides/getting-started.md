@@ -26,13 +26,13 @@ NightHawk CLI is a fully interactive TUI application. For the best visual experi
 - **macOS / Linux**:
 
 ```sh
-curl -fsSL https://cdn.jsdelivr.net/gh/nighthawk-dev/nighthawk@main/install.sh | bash
+curl -fsSL https://cdn.jsdelivr.net/gh/AliceGoto/nighthawk@main/install.sh | bash
 ```
 
 - **Windows (PowerShell)**:
 
 ```powershell
-irm https://cdn.jsdelivr.net/gh/nighthawk-dev/nighthawk@main/install.ps1 | iex
+irm https://cdn.jsdelivr.net/gh/AliceGoto/nighthawk@main/install.ps1 | iex
 ```
 
 > On Windows, install [Git for Windows](https://gitforwindows.org/) before first launch. NightHawk CLI uses the bundled Git Bash as its shell environment; if Git Bash is installed in a custom location, set `NIGHTHAWK_SHELL_PATH` to the absolute path of `bash.exe`.
@@ -44,7 +44,7 @@ The script automatically downloads the latest release, verifies the checksum, an
 If you use [Homebrew](https://brew.sh/), install from the NightHawk tap:
 
 ```sh
-brew install nighthawk-dev/nighthawk/nighthawk
+brew install AliceGoto/nighthawk/nighthawk
 ```
 
 The formula downloads the platform binary from the GitHub Release and installs it as a regular Homebrew formula.
@@ -78,7 +78,7 @@ nighthawk --version
 npm install -g @nighthawk/nighthawk@latest
 ```
 
-**Uninstall**: if you installed via the script, delete the `nighthawk` executable. Via Homebrew, `brew uninstall nighthawk-dev/nighthawk/nighthawk`. If you installed via npm:
+**Uninstall**: if you installed via the script, delete the `nighthawk` executable. Via Homebrew, `brew uninstall AliceGoto/nighthawk/nighthawk`. If you installed via npm:
 
 ```sh
 npm uninstall -g @nighthawk/nighthawk

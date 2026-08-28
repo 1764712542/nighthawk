@@ -110,7 +110,7 @@ The design takes the strongest ideas from the current generation of agent harnes
 Requirements: Node.js ≥ 24.15, pnpm 10.33.
 
 ```sh
-git clone https://github.com/nighthawk-dev/nighthawk && cd nighthawk
+git clone https://github.com/AliceGoto/nighthawk && cd nighthawk
 pnpm install
 pnpm run build:packages
 pnpm -C apps/nighthawk run build

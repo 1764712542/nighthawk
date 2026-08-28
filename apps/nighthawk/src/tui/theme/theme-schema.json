@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://github.com/nighthawk-dev/nighthawk/blob/main/apps/nighthawk/src/tui/theme/theme-schema.json",
+  "$id": "https://github.com/AliceGoto/nighthawk/blob/main/apps/nighthawk/src/tui/theme/theme-schema.json",
   "title": "NightHawk Custom Theme",
   "description": "Schema for NightHawk TUI custom theme definitions",
   "type": "object",

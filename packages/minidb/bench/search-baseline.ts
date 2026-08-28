@@ -205,8 +205,8 @@ async function main() {
 
   // ---- naive secondary index lookup: workspaceName ----
   {
-    const { value: res, ms } = med(() => docs.filter((d) => d.workspaceName === 'nighthawk-dev-1'));
-    console.log(`  naive lookup (workspace=nighthawk-dev-1) -> ${res.length} in ${ms.toFixed(2)} ms`);
+    const { value: res, ms } = med(() => docs.filter((d) => d.workspaceName === 'AliceGoto-1'));
+    console.log(`  naive lookup (workspace=AliceGoto-1) -> ${res.length} in ${ms.toFixed(2)} ms`);
   }
 
   console.log(`\ndone.`);

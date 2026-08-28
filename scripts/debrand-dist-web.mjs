@@ -33,7 +33,7 @@ const REPLACEMENTS = [
   // Marketing jump into the old kimi code site → project repo.
   [
     /return`\$\{y\$==="global"\?"https:\/\/www\.kimi\.ai":"https:\/\/www\.kimi\.com"\}\/code\?from=\$\{bf\?"kimi_code_desktop":"kimi_code_web"\}`/g,
-    'return"https://github.com/nighthawk-dev/nighthawk"',
+    'return"https://github.com/AliceGoto/nighthawk"',
   ],
   // Install command in the design-system docs.
   ['curl -fsSL https://code.kimi.com/install.sh | bash', 'npm install -g @nighthawk/nighthawk'],

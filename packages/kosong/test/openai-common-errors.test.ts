@@ -407,7 +407,7 @@ describe('normalizeAPIStatusError thinking effort guidance', () => {
 
     expect(error.message).toContain('Non-NightHawk providers receive effort strings');
     expect(error.message).toContain(
-      'https://nighthawk-dev.github.io/nighthawk/en/configuration/config-files.html#thinking',
+      'https://AliceGoto.github.io/nighthawk/en/configuration/config-files.html#thinking',
     );
   });
 });

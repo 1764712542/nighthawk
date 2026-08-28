@@ -506,7 +506,7 @@ describe('fsGitStatusResponseSchema (W11.2)', () => {
       pullRequest: {
         number: 625,
         state: 'open' as const,
-        url: 'https://github.com/nighthawk-dev/nighthawk/pull/625',
+        url: 'https://github.com/AliceGoto/nighthawk/pull/625',
       },
     };
     expect(fsGitStatusResponseSchema.parse(r)).toEqual(r);

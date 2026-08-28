@@ -2,7 +2,7 @@
 
 Provider-agnostic LLM abstraction layer for modern AI agent applications.
 
-Part of the [NightHawk](https://github.com/nighthawk-dev/nighthawk) monorepo.
+Part of the [NightHawk](https://github.com/AliceGoto/nighthawk) monorepo.
 
 ## Features
 
