@@ -83,15 +83,6 @@ The two can be combined: the main agent uses AgentSwarm for batch scanning, then
 - **Context isolation**: Each sub-agent has its own independent context
 - **Result merging**: Sub-agent results are aggregated by the main agent
 
-## Usage in Penetration Test Mode
-
-In penetration test mode, AgentSwarm can be used for:
-
-- Multi-port parallel scanning: scan multiple port ranges simultaneously
-- Multi-directory parallel brute-forcing: enumerate different paths concurrently
-- Multi-target parallel reconnaissance: gather information from multiple targets
-- Large-scale code audit: scan all code directories in parallel
-
 ## Notes
 
 - AgentSwarm is not suitable for tasks that require shared state
