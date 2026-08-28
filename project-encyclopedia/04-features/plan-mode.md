@@ -40,6 +40,165 @@ Feature 是自包含能力单元，必须能整体安装/卸载而不污染其�
 
 不要把所有能力塞进一个 Feature；配置段、wire 事件等静态契约必须保持可重放。
 
+## 逐函数实现说明
+
+以下按源码文件列出可验证的导出函数/类，并给出实现职责说明。
+
+### packages/agent-core-v2/src/features/plan/exitPlanModeReview.ts
+
+| 类 | 行号 | 声明 | 实现说明 |
+| --- | --- | --- | --- |
+| `ExitPlanModeReview` | 19 | `export class ExitPlanModeReview {` | 该类封装本文模块的核心状态与行为。 |
+
+### packages/agent-core-v2/src/features/plan/injection/planModeInjection.ts
+
+| 类 | 行号 | 声明 | 实现说明 |
+| --- | --- | --- | --- |
+| `PlanModeInjection` | 23 | `export class PlanModeInjection extends Service {` | 该类封装本文模块的核心状态与行为。 |
+
+### packages/agent-core-v2/src/features/plan/planFeature.ts
+
+| 类 | 行号 | 声明 | 实现说明 |
+| --- | --- | --- | --- |
+| `PlanFeature` | 12 | `export class PlanFeature extends Feature {` | 该类封装本文模块的核心状态与行为。 |
+
+### packages/agent-core-v2/src/features/plan/planOps.ts
+
+| 类 | 行号 | 声明 | 实现说明 |
+| --- | --- | --- | --- |
+| `PlanModeEnter` | 18 | `export class PlanModeEnter extends AgentEvent2<z.infer<typeof planModeEnterSchema>> {` | 该类封装本文模块的核心状态与行为。 |
+| `PlanModeCancel` | 33 | `export class PlanModeCancel extends AgentEvent2<z.infer<typeof planModeCancelSchema>> {` | 该类封装本文模块的核心状态与行为。 |
+| `PlanModeExit` | 48 | `export class PlanModeExit extends AgentEvent2<z.infer<typeof planModeExitSchema>> {` | 该类封装本文模块的核心状态与行为。 |
+| `PlanRevision` | 76 | `export class PlanRevision extends AgentEvent2<PlanRevisionRecordedEvent> {` | 该类封装本文模块的核心状态与行为。 |
+
+### packages/agent-core-v2/src/features/plan/planService.ts
+
+| 类 | 行号 | 声明 | 实现说明 |
+| --- | --- | --- | --- |
+| `AgentPlanService` | 46 | `export class AgentPlanService extends Service implements IAgentPlanService {` | 该类封装本文模块的核心状态与行为。 |
+
+### packages/agent-core-v2/src/features/plan/tools/enter-plan-mode/enterPlanModeTool.ts
+
+| 类 | 行号 | 声明 | 实现说明 |
+| --- | --- | --- | --- |
+| `EnterPlanModeTool` | 13 | `export class EnterPlanModeTool implements IEnterPlanModeTool {` | 该类封装本文模块的核心状态与行为。 |
+
+### packages/agent-core-v2/src/features/plan/tools/exit-plan-mode/exitPlanModeTool.ts
+
+| 类 | 行号 | 声明 | 实现说明 |
+| --- | --- | --- | --- |
+| `ExitPlanModeTool` | 22 | `export class ExitPlanModeTool implements IExitPlanModeTool {` | 该类封装本文模块的核心状态与行为。 |
+
+
+## 核心代码片段
+
+以下片段直接从仓库源码截取，用于展示关键实现形态；完整实现请打开对应文件。
+
+### 来自 `packages/agent-core-v2/src/features/plan/exitPlanModeReview.ts` 的 `ExitPlanModeReview`
+
+源码位置：`packages/agent-core-v2/src/features/plan/exitPlanModeReview.ts:19` 附近。
+
+```ts
+export class ExitPlanModeReview {
+  constructor(
+    private readonly plan: IAgentPlanService,
+    private readonly toolApproval: IAgentToolApprovalService,
+    private readonly telemetry: ITelemetryService,
+  ) {}
+
+  async requestApproval(
+    context: ResolvedToolExecutionHookContext,
+  ): Promise<BeforeExecuteDecision | undefined> {
+    const display = context.execution.display;
+    if (display?.kind !== 'plan_review') return undefined;
+    if (display.plan.trim().length === 0) return undefined;
+    this.trackPlanTelemetry('plan_submitted', {
+      has_options: display.options !== undefined && display.options.length >= 2,
+    });
+    return this.toolApproval.requestToolApproval(
+      context,
+      {
+        kind: 'ask',
+        reason: {
+          has_options: display.options !== undefined,
+        },
+        resolveApproval: (result) => this.approvalResult(result, display),
+// ...
+```
+
+### 来自 `packages/agent-core-v2/src/features/plan/injection/planModeInjection.ts` 的 `PlanModeInjection`
+
+源码位置：`packages/agent-core-v2/src/features/plan/injection/planModeInjection.ts:23` 附近。
+
+```ts
+export class PlanModeInjection extends Service {
+  constructor(
+    @IAgentContextInjectorService injector: IAgentContextInjectorService,
+    @IAgentPlanService private readonly plan: IAgentPlanService,
+    @IAgentContextMemoryService private readonly context: IAgentContextMemoryService,
+    @IAgentStateService private readonly states: IAgentStateService,
+  ) {
+    super();
+    this.states.contributeState(planWasActiveKey);
+
+    this._register(
+      injector.register(PLAN_MODE_INJECTION_VARIANT, async ({ lastInjectedAt: injectedAt }) => {
+        const data = await this.plan.status();
+        if (data === null) {
+          if (!this.states.get(planWasActiveKey)) return undefined;
+          this.states.set(planWasActiveKey, false);
+          return PLAN_MODE_EXIT_REMINDER;
+        }
+        const planFilePath = data.path;
+        if (!this.states.get(planWasActiveKey)) {
+          this.states.set(planWasActiveKey, true);
+          if (data.content.trim().length > 0) {
+            return reentryReminder(planFilePath);
+          }
+// ...
+```
+
+### 来自 `packages/agent-core-v2/src/features/plan/planFeature.ts` 的 `PlanFeature`
+
+源码位置：`packages/agent-core-v2/src/features/plan/planFeature.ts:12` 附近。
+
+```ts
+export class PlanFeature extends Feature {
+  static override readonly name = 'plan';
+
+  constructor() {
+    super();
+    this.contributeAgentService(IAgentPlanService, AgentPlanService);
+    this.contributeTool(IEnterPlanModeTool, EnterPlanModeTool, {
+      name: 'EnterPlanMode',
+      domain: 'plan',
+    });
+    this.contributeTool(IExitPlanModeTool, ExitPlanModeTool, {
+      name: 'ExitPlanMode',
+      domain: 'plan',
+    });
+  }
+}
+
+registerFeature(PlanFeature);
+```
+
+
+## 时序/状态图
+
+```mermaid
+stateDiagram-v2
+    [*] --> Init: 初始化
+    Init --> Ready: 依赖就绪
+    Ready --> Running: 执行主流程
+    Running --> Success: 正常完成
+    Running --> Failed: 异常/拒绝
+    Failed --> Ready: 重试/恢复
+    Success --> [*]
+```
+
+> 图注：`04-features/plan-mode.md` 的抽象流程；具体参与者与状态以源码和上文函数说明为准。
+
 ## 核心实现细节（源码导出）
 
 以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数、类与方法：

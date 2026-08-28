@@ -48,6 +48,65 @@ OAuth token 等凭据。
 
 参考内容随代码变更同步更新。
 
+## 逐函数实现说明
+
+以下按源码文件列出可验证的导出函数/类，并给出实现职责说明。
+
+### packages/agent-core-v2/src/app/bootstrap/bootstrapService.ts
+
+| 类 | 行号 | 声明 | 实现说明 |
+| --- | --- | --- | --- |
+| `BootstrapService` | 14 | `export class BootstrapService implements IBootstrapService {` | 该类封装本文模块的核心状态与行为。 |
+
+
+## 核心代码片段
+
+以下片段直接从仓库源码截取，用于展示关键实现形态；完整实现请打开对应文件。
+
+### 来自 `packages/agent-core-v2/src/app/bootstrap/bootstrapService.ts` 的 `BootstrapService`
+
+源码位置：`packages/agent-core-v2/src/app/bootstrap/bootstrapService.ts:14` 附近。
+
+```ts
+export class BootstrapService implements IBootstrapService {
+  declare readonly _serviceBrand: undefined;
+
+  readonly platform: NodeJS.Platform;
+  readonly arch: string;
+  readonly cwd: string;
+  readonly osHomeDir: string;
+  readonly homeDir: string;
+  readonly configPath: string;
+  readonly clientIdentity: NighthawkHostIdentity;
+  readonly args: HostArgs;
+  readonly sessionsDir: string;
+  readonly blobsDir: string;
+  readonly storeDir: string;
+  readonly cacheDir: string;
+  readonly logsDir: string;
+  readonly configKey: string;
+
+  private readonly env: NodeJS.ProcessEnv;
+  private readonly scopes: Readonly<Record<PersistenceScopeName, string>>;
+
+  constructor(@IBootstrapOptions options: IBootstrapOptions) {
+    this.platform = options.platform;
+    this.arch = options.arch;
+// ...
+```
+
+
+## 时序/状态图
+
+```mermaid
+flowchart LR
+    A[入口/调用方] --> B[本文核心模块]
+    B --> C[依赖服务/数据层]
+    C --> D[输出/事件/持久化]
+```
+
+> 图注：`11-reference/data-locations.md` 的抽象流程；具体参与者与状态以源码和上文函数说明为准。
+
 ## 核心实现细节（源码导出）
 
 以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数、类与方法：

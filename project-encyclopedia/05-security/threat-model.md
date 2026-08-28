@@ -40,6 +40,70 @@ OAuth token 写入使用事务串行化；日志 redact 敏感信息。
 
 新规则要覆盖多语言、提供中英文修复建议，并考虑误报率。
 
+## 逐函数实现说明
+
+以下按源码文件列出可验证的导出函数/类，并给出实现职责说明。
+
+### packages/kap-server/src/start.ts
+
+| 函数 | 行号 | 签名 | 实现说明 |
+| --- | --- | --- | --- |
+| `startServer` | 205 | `export async function startServer(opts: ServerStartOptions): Promise<RunningServer> {` | 启动 kap-server，包含认证、路由、WebSocket 和引擎初始化。 |
+| `listenWithPortRetry` | 664 | `export async function listenWithPortRetry(` | `listenWithPortRetry` 负责读取或查询数据。 |
+
+
+## 核心代码片段
+
+以下片段直接从仓库源码截取，用于展示关键实现形态；完整实现请打开对应文件。
+
+### 来自 `packages/kap-server/src/start.ts` 的 `startServer`
+
+源码位置：`packages/kap-server/src/start.ts:205` 附近。
+
+```ts
+export async function startServer(opts: ServerStartOptions): Promise<RunningServer> {
+  const host = opts.host ?? DEFAULT_HOST;
+  const port = opts.port ?? DEFAULT_PORT;
+  const homeDir = resolveNighthawkHome(opts.homeDir);
+  const serverVersion = opts.serverVersion ?? getServerVersion();
+  const registry = createInstanceRegistry({
+    instancesDir: opts.instancesDir ?? join(homeDir, 'server', 'instances'),
+  });
+  const registration: InstanceRegistration = await registry.register({
+    pid: process.pid,
+    host,
+    port,
+    startedAt: Date.now(),
+    serverVersion,
+  });
+  const exposureClass = classify(host, { bindClass: opts.bindClass });
+  if (exposureClass !== 'loopback' && opts.insecureNoTls !== true) {
+    await registration.release();
+    throw new Error(
+      `Refusing to bind ${host} (${exposureClass}) without TLS; terminate TLS at a reverse proxy or pass --insecure-no-tls.`,
+    );
+  }
+  const enableShutdown = exposureClass === 'loopback' || opts.allowRemoteShutdown === true;
+  const enableTerminals = exposureClass === 'loopback' || opts.allowRemoteTerminals === true;
+// ...
+```
+
+
+## 时序/状态图
+
+```mermaid
+stateDiagram-v2
+    [*] --> Init: 初始化
+    Init --> Ready: 依赖就绪
+    Ready --> Running: 执行主流程
+    Running --> Success: 正常完成
+    Running --> Failed: 异常/拒绝
+    Failed --> Ready: 重试/恢复
+    Success --> [*]
+```
+
+> 图注：`05-security/threat-model.md` 的抽象流程；具体参与者与状态以源码和上文函数说明为准。
+
 ## 核心实现细节（源码导出）
 
 以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数、类与方法：

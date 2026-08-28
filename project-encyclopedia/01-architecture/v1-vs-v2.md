@@ -40,6 +40,32 @@ kap-server 和 klient 基于 v2；CLI 的很多新能力也走 v2；v1 仍保留
 
 遵循依赖方向：子 scope 依赖父 scope；App 服务不得持有 session 级 Map 状态。
 
+## 逐函数实现说明
+
+以下按源码文件列出可验证的导出函数/类，并给出实现职责说明。
+
+
+## 核心代码片段
+
+以下片段直接从仓库源码截取，用于展示关键实现形态；完整实现请打开对应文件。
+
+> 本文证据路径没有可直接展示的 TS 源码片段。
+
+## 时序/状态图
+
+```mermaid
+stateDiagram-v2
+    [*] --> Init: 初始化
+    Init --> Ready: 依赖就绪
+    Ready --> Running: 执行主流程
+    Running --> Success: 正常完成
+    Running --> Failed: 异常/拒绝
+    Failed --> Ready: 重试/恢复
+    Success --> [*]
+```
+
+> 图注：`01-architecture/v1-vs-v2.md` 的抽象流程；具体参与者与状态以源码和上文函数说明为准。
+
 ## 核心实现细节（源码导出）
 
 以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数、类与方法：

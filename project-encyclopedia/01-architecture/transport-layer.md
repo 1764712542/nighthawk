@@ -40,6 +40,89 @@ klient 的 `createKlient({scope})` 或 `/ipc`；memory 直接进程内 dispatche
 
 遵循依赖方向：子 scope 依赖父 scope；App 服务不得持有 session 级 Map 状态。
 
+## 逐函数实现说明
+
+以下按源码文件列出可验证的导出函数/类，并给出实现职责说明。
+
+### packages/kap-server/src/transport/dispatcher.ts
+
+| 函数 | 行号 | 签名 | 实现说明 |
+| --- | --- | --- | --- |
+| `resolveScope` | 31 | `export async function resolveScope(` | `resolveScope` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+| `resolveService` | 72 | `export async function resolveService(` | `resolveService` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+| `dispatch` | 100 | `export async function dispatch(` | `dispatch` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+
+### packages/kap-server/src/protocol/ws-control.ts
+
+| 函数 | 行号 | 签名 | 实现说明 |
+| --- | --- | --- | --- |
+| `getClientControlOperation` | 694 | `export function getClientControlOperation(` | `getClientControlOperation` 负责读取或查询数据。 |
+
+
+## 核心代码片段
+
+以下片段直接从仓库源码截取，用于展示关键实现形态；完整实现请打开对应文件。
+
+### 来自 `packages/kap-server/src/transport/dispatcher.ts` 的 `resolveScope`
+
+源码位置：`packages/kap-server/src/transport/dispatcher.ts:31` 附近。
+
+```ts
+export async function resolveScope(
+  core: Scope,
+  scopeKind: ScopeKind,
+  params: Record<string, string>,
+): Promise<Scope | IScopeHandle> {
+  switch (scopeKind) {
+    case 'core':
+      return core;
+    case 'session': {
+      const sessionId = params['session_id'] ?? '';
+      const session = getLiveSessionById(core.accessor, sessionId);
+      if (session === undefined) {
+        throw new Error2(ErrorCodes.SESSION_NOT_FOUND, `session ${sessionId} not found`);
+      }
+      return session;
+    }
+    case 'agent': {
+      const sessionId = params['session_id'] ?? '';
+      const agentId = params['agent_id'] ?? '';
+      const session = getLiveSessionById(core.accessor, sessionId);
+      if (session === undefined) {
+        throw new Error2(ErrorCodes.SESSION_NOT_FOUND, `session ${sessionId} not found`);
+      }
+      if (agentId === MAIN_AGENT_ID) return ensureMainAgent(session);
+// ...
+```
+
+### 来自 `packages/kap-server/src/protocol/ws-control.ts` 的 `getClientControlOperation`
+
+源码位置：`packages/kap-server/src/protocol/ws-control.ts:694` 附近。
+
+```ts
+export function getClientControlOperation(
+  type: string,
+): (typeof clientControlOperations)[number] | undefined {
+  return clientControlOperations.find((operation) => operation.type === type);
+}
+```
+
+
+## 时序/状态图
+
+```mermaid
+stateDiagram-v2
+    [*] --> Init: 初始化
+    Init --> Ready: 依赖就绪
+    Ready --> Running: 执行主流程
+    Running --> Success: 正常完成
+    Running --> Failed: 异常/拒绝
+    Failed --> Ready: 重试/恢复
+    Success --> [*]
+```
+
+> 图注：`01-architecture/transport-layer.md` 的抽象流程；具体参与者与状态以源码和上文函数说明为准。
+
 ## 核心实现细节（源码导出）
 
 以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数、类与方法：

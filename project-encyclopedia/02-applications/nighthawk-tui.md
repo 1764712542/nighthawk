@@ -40,6 +40,65 @@ CLI 解析参数 → 创建 Harness/SDK 客户端 → 进入 TUI 或 headless；
 
 TUI 组件不得直接读写 session 状态；启动路径必须遵守 workspace trust。
 
+## 逐函数实现说明
+
+以下按源码文件列出可验证的导出函数/类，并给出实现职责说明。
+
+### apps/nighthawk/src/tui/nighthawk-tui.ts
+
+| 类 | 行号 | 声明 | 实现说明 |
+| --- | --- | --- | --- |
+| `NighthawkTUI` | 308 | `export class NighthawkTUI {` | 该类封装本文模块的核心状态与行为。 |
+
+
+## 核心代码片段
+
+以下片段直接从仓库源码截取，用于展示关键实现形态；完整实现请打开对应文件。
+
+### 来自 `apps/nighthawk/src/tui/nighthawk-tui.ts` 的 `NighthawkTUI`
+
+源码位置：`apps/nighthawk/src/tui/nighthawk-tui.ts:308` 附近。
+
+```ts
+export class NighthawkTUI {
+  readonly harness: NighthawkHarness;
+  readonly options: NighthawkTUIOptions;
+  session: Session | undefined;
+  state: TUIState;
+  /** In-flight lazy session creation (v2 engine), shared by concurrent first-use triggers. */
+  private ensureSessionPromise: Promise<Session | undefined> | null = null;
+  private readonly cacheHint = new CacheHintController(this);
+  /** Staged prompt media lifecycle (daemon uploads + cache copies) — see StagingLeaseTracker. */
+  private readonly staging: StagingLeaseTracker;
+  /** Pentest orchestrator — active only during pentest mode. */
+  pentestOrchestrator: PentestOrchestrator | null = null;
+  /** Pentest welcome panel — shown when pentest mode is active. */
+  pentestWelcomeComponent: PentestWelcomeComponent | null = null;
+  private readonly approvalController = new ApprovalController();
+  private readonly questionController = new QuestionController();
+  private readonly reverseRpcDisposers: Array<() => void> = [];
+  private skillCommands: readonly NighthawkSlashCommand[] = [];
+  readonly skillCommandMap = new Map<string, string>();
+  private pluginCommands: readonly NighthawkSlashCommand[] = [];
+  readonly pluginCommandMap = new Map<string, string>();
+  private readonly imageStore = new ImageAttachmentStore();
+  // Detected lazily in startBackgroundFdAutocomplete() — detection spawns
+  // `fd --version`, which must not happen before the workspace trust gate:
+// ...
+```
+
+
+## 时序/状态图
+
+```mermaid
+flowchart LR
+    A[入口/调用方] --> B[本文核心模块]
+    B --> C[依赖服务/数据层]
+    C --> D[输出/事件/持久化]
+```
+
+> 图注：`02-applications/nighthawk-tui.md` 的抽象流程；具体参与者与状态以源码和上文函数说明为准。
+
 ## 核心实现细节（源码导出）
 
 以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数、类与方法：

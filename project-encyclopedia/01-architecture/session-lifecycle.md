@@ -40,6 +40,144 @@ close 销毁 session scope；delete 删除目录并从 session index evict。
 
 遵循依赖方向：子 scope 依赖父 scope；App 服务不得持有 session 级 Map 状态。
 
+## 逐函数实现说明
+
+以下按源码文件列出可验证的导出函数/类，并给出实现职责说明。
+
+### packages/agent-core-v2/src/workspace/sessionLifecycle/coldSessionArchive.ts
+
+| 函数 | 行号 | 签名 | 实现说明 |
+| --- | --- | --- | --- |
+| `setColdSessionArchived` | 18 | `export async function setColdSessionArchived(` | `setColdSessionArchived` 负责写入或更新状态。 |
+| `setSessionArchived` | 68 | `export async function setSessionArchived(` | `setSessionArchived` 负责写入或更新状态。 |
+| `setSessionArchivedBatch` | 90 | `export async function setSessionArchivedBatch(` | `setSessionArchivedBatch` 负责写入或更新状态。 |
+
+### packages/agent-core-v2/src/workspace/sessionLifecycle/internal/addressing.ts
+
+| 函数 | 行号 | 签名 | 实现说明 |
+| --- | --- | --- | --- |
+| `workspacePersistenceScope` | 3 | `export function workspacePersistenceScope(sessionsScope: string, workspaceId: string): string {` | `workspacePersistenceScope` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+| `sessionScopeOf` | 7 | `export function sessionScopeOf(handlerScope: string, sessionId: string): string {` | `sessionScopeOf` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+| `sessionDirOf` | 11 | `export function sessionDirOf(homeDir: string, handlerScope: string, sessionId: string): string {` | `sessionDirOf` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+| `agentScopeOf` | 15 | `export function agentScopeOf(sessionScope: string, agentId: string): string {` | `agentScopeOf` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+| `legacySessionMetaScopeOf` | 19 | `export function legacySessionMetaScopeOf(sessionScope: string): string {` | `legacySessionMetaScopeOf` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+
+### packages/agent-core-v2/src/workspace/sessionLifecycle/internal/forkTurnSlice.ts
+
+| 函数 | 行号 | 签名 | 实现说明 |
+| --- | --- | --- | --- |
+| `assertForkTurnIndex` | 15 | `export function assertForkTurnIndex(turnIndex: number \| undefined): void {` | `assertForkTurnIndex` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+| `sliceMainRecordsAtTurn` | 25 | `export function sliceMainRecordsAtTurn(` | `sliceMainRecordsAtTurn` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+| `sliceSubagentRecordsAtTime` | 61 | `export function sliceSubagentRecordsAtTime(` | `sliceSubagentRecordsAtTime` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+
+### packages/agent-core-v2/src/workspace/sessionLifecycle/sessionLifecycleEvents.ts
+
+| 类 | 行号 | 声明 | 实现说明 |
+| --- | --- | --- | --- |
+| `SessionArchived` | 9 | `export class SessionArchived extends Event2<{ readonly payload: SessionArchivedPayload }> {` | 该类封装本文模块的核心状态与行为。 |
+| `SessionCreated` | 22 | `export class SessionCreated extends Event2<{ readonly payload: SessionCreatedPayload }> {` | 该类封装本文模块的核心状态与行为。 |
+
+### packages/agent-core-v2/src/workspace/sessionLifecycle/sessionLifecycleService.ts
+
+| 类 | 行号 | 声明 | 实现说明 |
+| --- | --- | --- | --- |
+| `SessionLifecycleService` | 112 | `export class SessionLifecycleService extends Disposable implements ISessionLifecycleService {` | 该类封装本文模块的核心状态与行为。 |
+
+
+## 核心代码片段
+
+以下片段直接从仓库源码截取，用于展示关键实现形态；完整实现请打开对应文件。
+
+### 来自 `packages/agent-core-v2/src/workspace/sessionLifecycle/coldSessionArchive.ts` 的 `setColdSessionArchived`
+
+源码位置：`packages/agent-core-v2/src/workspace/sessionLifecycle/coldSessionArchive.ts:18` 附近。
+
+```ts
+export async function setColdSessionArchived(
+  accessor: ServicesAccessor,
+  sessionId: string,
+  archived: boolean,
+): Promise<ColdSessionArchiveOutcome> {
+  const summary = await accessor.get(ISessionIndex).get(sessionId);
+  if (summary === undefined) return 'not_found';
+  const docs = accessor.get(IAtomicDocumentStore);
+  const metaScope = sessionScopeOf(
+    workspacePersistenceScope(
+      accessor.get(IBootstrapService).scope('sessions'),
+      summary.workspaceId,
+    ),
+    sessionId,
+  );
+  let raw = await docs.get<SessionMeta>(metaScope, 'state.json');
+  let legacyMetaScope: string | undefined;
+  if (raw === undefined) {
+    legacyMetaScope = legacySessionMetaScopeOf(metaScope);
+    raw = await docs.get<SessionMeta>(legacyMetaScope, 'state.json');
+  }
+  if (raw === undefined) return 'not_found';
+  const persisted = normalizeSessionMeta(raw, sessionId);
+  const archivedAt = archived ? Date.now() : undefined;
+// ...
+```
+
+### 来自 `packages/agent-core-v2/src/workspace/sessionLifecycle/internal/addressing.ts` 的 `workspacePersistenceScope`
+
+源码位置：`packages/agent-core-v2/src/workspace/sessionLifecycle/internal/addressing.ts:3` 附近。
+
+```ts
+export function workspacePersistenceScope(sessionsScope: string, workspaceId: string): string {
+  return join(sessionsScope, workspaceId);
+}
+
+export function sessionScopeOf(handlerScope: string, sessionId: string): string {
+  return `${handlerScope}/${sessionId}`;
+}
+
+export function sessionDirOf(homeDir: string, handlerScope: string, sessionId: string): string {
+  return join(homeDir, sessionScopeOf(handlerScope, sessionId));
+}
+
+export function agentScopeOf(sessionScope: string, agentId: string): string {
+  return `${sessionScope}/agents/${agentId}`;
+}
+
+export function legacySessionMetaScopeOf(sessionScope: string): string {
+  return `${sessionScope}/session-meta`;
+}
+```
+
+### 来自 `packages/agent-core-v2/src/workspace/sessionLifecycle/internal/forkTurnSlice.ts` 的 `assertForkTurnIndex`
+
+源码位置：`packages/agent-core-v2/src/workspace/sessionLifecycle/internal/forkTurnSlice.ts:15` 附近。
+
+```ts
+export function assertForkTurnIndex(turnIndex: number | undefined): void {
+  if (turnIndex === undefined) return;
+  if (Number.isSafeInteger(turnIndex) && turnIndex >= 0) return;
+  throw new Error2(
+    ErrorCodes.REQUEST_INVALID,
+    'forkSession turnIndex must be a non-negative safe integer',
+    { details: { turnIndex } },
+  );
+}
+```
+
+
+## 时序/状态图
+
+```mermaid
+stateDiagram-v2
+    [*] --> Init: 初始化
+    Init --> Ready: 依赖就绪
+    Ready --> Running: 执行主流程
+    Running --> Success: 正常完成
+    Running --> Failed: 异常/拒绝
+    Failed --> Ready: 重试/恢复
+    Success --> [*]
+```
+
+> 图注：`01-architecture/session-lifecycle.md` 的抽象流程；具体参与者与状态以源码和上文函数说明为准。
+
 ## 核心实现细节（源码导出）
 
 以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数、类与方法：

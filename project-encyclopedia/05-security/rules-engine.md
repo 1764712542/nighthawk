@@ -40,6 +40,70 @@ sqli、xss、cmdi、path、ssrf、deser、crypto、auth、xxe、node、python、
 
 新规则要覆盖多语言、提供中英文修复建议，并考虑误报率。
 
+## 逐函数实现说明
+
+以下按源码文件列出可验证的导出函数/类，并给出实现职责说明。
+
+### packages/agent-core/src/tools/builtin/security/rules.ts
+
+| 函数 | 行号 | 签名 | 实现说明 |
+| --- | --- | --- | --- |
+| `rulesForLanguage` | 272 | `export function rulesForLanguage(lang: string): readonly SecurityRule[] {` | `rulesForLanguage` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+| `detectLanguage` | 276 | `export function detectLanguage(filePath: string): string {` | `detectLanguage` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+
+
+## 核心代码片段
+
+以下片段直接从仓库源码截取，用于展示关键实现形态；完整实现请打开对应文件。
+
+### 来自 `packages/agent-core/src/tools/builtin/security/rules.ts` 的 `rulesForLanguage`
+
+源码位置：`packages/agent-core/src/tools/builtin/security/rules.ts:272` 附近。
+
+```ts
+export function rulesForLanguage(lang: string): readonly SecurityRule[] {
+  return SECURITY_RULES.filter(r => r.languages.includes('*') || r.languages.includes(lang));
+}
+
+export function detectLanguage(filePath: string): string {
+  const ext = filePath.split('.').pop()?.toLowerCase() ?? '';
+  const m: Record<string, string> = {
+    py: 'python',
+    js: 'javascript',
+    jsx: 'javascript',
+    mjs: 'javascript',
+    cjs: 'javascript',
+    ts: 'typescript',
+    tsx: 'typescript',
+    java: 'java',
+    php: 'php',
+    go: 'go',
+    rb: 'ruby',
+    kt: 'java',
+    rs: 'rust',
+    c: 'c',
+    h: 'c',
+    cpp: 'cpp',
+    cc: 'cpp',
+// ...
+```
+
+
+## 时序/状态图
+
+```mermaid
+stateDiagram-v2
+    [*] --> Init: 初始化
+    Init --> Ready: 依赖就绪
+    Ready --> Running: 执行主流程
+    Running --> Success: 正常完成
+    Running --> Failed: 异常/拒绝
+    Failed --> Ready: 重试/恢复
+    Success --> [*]
+```
+
+> 图注：`05-security/rules-engine.md` 的抽象流程；具体参与者与状态以源码和上文函数说明为准。
+
 ## 核心实现细节（源码导出）
 
 以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数、类与方法：

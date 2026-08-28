@@ -40,6 +40,65 @@ CLI 解析参数 → 创建 Harness/SDK 客户端 → 进入 TUI 或 headless；
 
 TUI 组件不得直接读写 session 状态；启动路径必须遵守 workspace trust。
 
+## 逐函数实现说明
+
+以下按源码文件列出可验证的导出函数/类，并给出实现职责说明。
+
+### apps/nighthawk/src/cli/sub/acp.ts
+
+| 函数 | 行号 | 签名 | 实现说明 |
+| --- | --- | --- | --- |
+| `registerAcpCommand` | 34 | `export function registerAcpCommand(parent: Command): void {` | `registerAcpCommand` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+
+
+## 核心代码片段
+
+以下片段直接从仓库源码截取，用于展示关键实现形态；完整实现请打开对应文件。
+
+### 来自 `apps/nighthawk/src/cli/sub/acp.ts` 的 `registerAcpCommand`
+
+源码位置：`apps/nighthawk/src/cli/sub/acp.ts:34` 附近。
+
+```ts
+export function registerAcpCommand(parent: Command): void {
+  if (!isLegacyEnabled()) {
+    registerNativeAcpCommand(parent);
+    return;
+  }
+
+  parent
+    .command('acp')
+    .description('Run nighthawk as an Agent Client Protocol (ACP) server over stdio.')
+    .action(async () => {
+      const identity = createNighthawkHostIdentity();
+      const harness = createNighthawkHarness({
+        identity,
+        uiMode: 'acp',
+      });
+      const builtinCommands: AvailableCommand[] = (ACP_BUILTIN_SLASH_COMMANDS as readonly AvailableCommand[]).map((cmd) => ({
+        name: cmd.name,
+        description: cmd.description,
+        input: cmd.input,
+      }));
+      // Skills are session-scoped (per-cwd config), so we defer the
+      // listSkills() call until the adapter hands us the just-created
+      // Session — mirrors opencode's per-directory snapshot. A
+      // listSkills() failure degrades to builtins-only so a broken
+// ...
+```
+
+
+## 时序/状态图
+
+```mermaid
+flowchart LR
+    A[入口/调用方] --> B[本文核心模块]
+    B --> C[依赖服务/数据层]
+    C --> D[输出/事件/持久化]
+```
+
+> 图注：`02-applications/acp-ide-mode.md` 的抽象流程；具体参与者与状态以源码和上文函数说明为准。
+
 ## 核心实现细节（源码导出）
 
 以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数、类与方法：

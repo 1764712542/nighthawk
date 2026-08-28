@@ -40,6 +40,66 @@ CLI 解析参数 → 创建 Harness/SDK 客户端 → 进入 TUI 或 headless；
 
 TUI 组件不得直接读写 session 状态；启动路径必须遵守 workspace trust。
 
+## 逐函数实现说明
+
+以下按源码文件列出可验证的导出函数/类，并给出实现职责说明。
+
+### apps/vscode/src/extension.ts
+
+| 函数 | 行号 | 签名 | 实现说明 |
+| --- | --- | --- | --- |
+| `activate` | 17 | `export async function activate(context: vscode.ExtensionContext): Promise<void> {` | `activate` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+| `deactivate` | 130 | `export async function deactivate(): Promise<void> {` | `deactivate` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+
+
+## 核心代码片段
+
+以下片段直接从仓库源码截取，用于展示关键实现形态；完整实现请打开对应文件。
+
+### 来自 `apps/vscode/src/extension.ts` 的 `activate`
+
+源码位置：`apps/vscode/src/extension.ts:17` 附近。
+
+```ts
+export async function activate(context: vscode.ExtensionContext): Promise<void> {
+  outputChannel = vscode.window.createOutputChannel("NightHawk Code");
+  const remoteInfo = vscode.env.remoteName ? ` (remote: ${vscode.env.remoteName})` : "";
+  log(`NightHawk Code ${VSCodeSettings.getExtensionConfig().version} activating${remoteInfo}`);
+
+  provider = new NighthawkWebviewProvider(
+    context.extensionUri,
+    context,
+    () => outputChannel?.show(),
+    (message) => log(message),
+  );
+  context.subscriptions.push(provider, outputChannel);
+
+  context.subscriptions.push(
+    vscode.workspace.registerTextDocumentContentProvider("nighthawk-baseline", {
+      provideTextDocumentContent: async (uri) => {
+        const sessionId = new URLSearchParams(uri.query).get("sessionId");
+        if (!sessionId || !provider) return "";
+        const relativePath = decodeURIComponent(uri.path.replace(/^\//, ""));
+        try {
+          return await provider.getBaselineContent(sessionId, relativePath);
+        } catch (error) {
+          logError("Unable to open baseline content", error);
+          return "";
+// ...
+```
+
+
+## 时序/状态图
+
+```mermaid
+flowchart LR
+    A[入口/调用方] --> B[本文核心模块]
+    B --> C[依赖服务/数据层]
+    C --> D[输出/事件/持久化]
+```
+
+> 图注：`02-applications/nighthawk-vscode.md` 的抽象流程；具体参与者与状态以源码和上文函数说明为准。
+
 ## 核心实现细节（源码导出）
 
 以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数、类与方法：

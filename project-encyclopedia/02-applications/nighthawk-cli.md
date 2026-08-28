@@ -40,6 +40,105 @@ CLI 解析参数 → 创建 Harness/SDK 客户端 → 进入 TUI 或 headless；
 
 TUI 组件不得直接读写 session 状态；启动路径必须遵守 workspace trust。
 
+## 逐函数实现说明
+
+以下按源码文件列出可验证的导出函数/类，并给出实现职责说明。
+
+### apps/nighthawk/src/main.ts
+
+| 函数 | 行号 | 签名 | 实现说明 |
+| --- | --- | --- | --- |
+| `handleMainCommand` | 60 | `export async function handleMainCommand(` | `handleMainCommand` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+| `handleUpgradeCommand` | 101 | `export async function handleUpgradeCommand(version: string): Promise<void> {` | `handleUpgradeCommand` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+| `main` | 147 | `export function main(): void {` | `main` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+
+### apps/nighthawk/src/cli/commands.ts
+
+| 函数 | 行号 | 签名 | 实现说明 |
+| --- | --- | --- | --- |
+| `createProgram` | 18 | `export function createProgram(` | `createProgram` 负责创建/构建相关对象或流程。 |
+
+
+## 核心代码片段
+
+以下片段直接从仓库源码截取，用于展示关键实现形态；完整实现请打开对应文件。
+
+### 来自 `apps/nighthawk/src/main.ts` 的 `handleMainCommand`
+
+源码位置：`apps/nighthawk/src/main.ts:60` 附近。
+
+```ts
+export async function handleMainCommand(
+  opts: CLIOptions,
+  version: string,
+): Promise<MainCommandOutcome> {
+  let validated: ReturnType<typeof validateOptions>;
+  startupTrace('main:enter');
+  try {
+    validated = validateOptions(opts);
+  } catch (error) {
+    if (error instanceof OptionConflictError) {
+      process.stderr.write(`error: ${error.message}\n`);
+      process.exit(1);
+    }
+    throw error;
+  }
+
+  startupTrace('preflight:begin');
+  const preflightResult = await runUpdatePreflight(
+    version,
+    validated.uiMode === 'print' ? { track, isTTY: false } : { track },
+  );
+  startupTrace('preflight:end');
+  if (preflightResult === 'exit') {
+    process.exit(0);
+// ...
+```
+
+### 来自 `apps/nighthawk/src/cli/commands.ts` 的 `createProgram`
+
+源码位置：`apps/nighthawk/src/cli/commands.ts:18` 附近。
+
+```ts
+export function createProgram(
+  version: string,
+  onMain: MainCommandHandler,
+  onMigrate: MigrateCommandHandler,
+  onPluginNodeRunner: PluginNodeRunnerHandler = () => {},
+  onUpgrade: UpgradeCommandHandler = () => {},
+  onUpdateDownload: UpdateDownloadHandler = () => {},
+): Command {
+  const program = new Command(CLI_COMMAND_NAME)
+    .description('The Starting Point for Next-Gen Agents')
+    .version(version, '-V, --version')
+    .allowUnknownOption(false)
+    .configureHelp({ helpWidth: 100 })
+    .helpOption('-h, --help', 'Show help.')
+    .usage('[options] [command]')
+    .addHelpText('after', '\nDocumentation:        https://AliceGoto.github.io/nighthawk/\n');
+
+  program
+    .addOption(
+      new Option(
+        '-S, --session [id]',
+        'Resume a session. With ID: resume that session. Without ID: interactively pick.',
+      ).argParser((val: string | boolean) => (val === true ? '' : (val as string))),
+    )
+// ...
+```
+
+
+## 时序/状态图
+
+```mermaid
+flowchart LR
+    A[入口/调用方] --> B[本文核心模块]
+    B --> C[依赖服务/数据层]
+    C --> D[输出/事件/持久化]
+```
+
+> 图注：`02-applications/nighthawk-cli.md` 的抽象流程；具体参与者与状态以源码和上文函数说明为准。
+
 ## 核心实现细节（源码导出）
 
 以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数、类与方法：

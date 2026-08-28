@@ -40,6 +40,135 @@ minidb 提供会话索引和搜索；文件系统存储 sessions/blobs/store/cac
 
 遵循依赖方向：子 scope 依赖父 scope；App 服务不得持有 session 级 Map 状态。
 
+## 逐函数实现说明
+
+以下按源码文件列出可验证的导出函数/类，并给出实现职责说明。
+
+### packages/kap-server/src/routes/registerApiV2Routes.ts
+
+| 函数 | 行号 | 签名 | 实现说明 |
+| --- | --- | --- | --- |
+| `registerApiV2Routes` | 13 | `export async function registerApiV2Routes(app: ApiV2AppHost, core: Scope): Promise<void> {` | `registerApiV2Routes` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+
+### packages/agent-core-v2/src/app/bootstrap/bootstrap.ts
+
+| 函数 | 行号 | 签名 | 实现说明 |
+| --- | --- | --- | --- |
+| `resolveHostArgs` | 34 | `export function resolveHostArgs(input: HostArgsInput \| undefined): HostArgs {` | `resolveHostArgs` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+| `resolveBootstrapOptions` | 104 | `export function resolveBootstrapOptions(input: BootstrapInput): IBootstrapOptions {` | `resolveBootstrapOptions` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+| `bootstrapSeed` | 122 | `export function bootstrapSeed(input: BootstrapInput): ScopeSeed {` | `bootstrapSeed` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+| `bootstrap` | 135 | `export function bootstrap(input: BootstrapInput, extraSeeds: ScopeSeed = []): BootstrapResult {` | 创建 App Scope 并注入基础种子依赖。 |
+| `resolveNighthawkHome` | 160 | `export function resolveNighthawkHome(` | `resolveNighthawkHome` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+| `resolveConfigPath` | 168 | `export function resolveConfigPath(input: {` | `resolveConfigPath` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+| `ensureNighthawkHome` | 175 | `export function ensureNighthawkHome(homeDir: string): void {` | `ensureNighthawkHome` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+
+### packages/minidb/src/mini-db.ts
+
+| 类 | 行号 | 声明 | 实现说明 |
+| --- | --- | --- | --- |
+| `MiniDb` | 76 | `export class MiniDb<V = unknown> {` | 该类封装本文模块的核心状态与行为。 |
+
+
+## 核心代码片段
+
+以下片段直接从仓库源码截取，用于展示关键实现形态；完整实现请打开对应文件。
+
+### 来自 `packages/kap-server/src/routes/registerApiV2Routes.ts` 的 `registerApiV2Routes`
+
+源码位置：`packages/kap-server/src/routes/registerApiV2Routes.ts:13` 附近。
+
+```ts
+export async function registerApiV2Routes(app: ApiV2AppHost, core: Scope): Promise<void> {
+  await app.register(
+    async (apiV2) => {
+      registerV2SessionsRoutes(apiV2 as Parameters<typeof registerV2SessionsRoutes>[0], core);
+      registerV2McpRoutes(apiV2 as Parameters<typeof registerV2McpRoutes>[0], core);
+    },
+    { prefix: '/api/v2' },
+  );
+}
+```
+
+### 来自 `packages/agent-core-v2/src/app/bootstrap/bootstrap.ts` 的 `resolveHostArgs`
+
+源码位置：`packages/agent-core-v2/src/app/bootstrap/bootstrap.ts:34` 附近。
+
+```ts
+export function resolveHostArgs(input: HostArgsInput | undefined): HostArgs {
+  return {
+    agentFiles: input?.agentFiles,
+    skillDirs: input?.skillDirs,
+    requestHeaders: input?.requestHeaders ?? {},
+    displayName: input?.displayName,
+    replyStyleGuide: input?.replyStyleGuide,
+  };
+}
+
+export interface IBootstrapOptions {
+  readonly homeDir: string;
+  readonly configPath: string;
+  readonly osHomeDir: string;
+  readonly platform: NodeJS.Platform;
+  readonly arch: string;
+  readonly cwd: string;
+  readonly env: NodeJS.ProcessEnv;
+  readonly clientIdentity: NighthawkHostIdentity;
+  readonly args: HostArgs;
+}
+
+export const IBootstrapOptions: ServiceIdentifier<IBootstrapOptions> =
+  createDecorator<IBootstrapOptions>('bootstrapOptions');
+// ...
+```
+
+### 来自 `packages/minidb/src/mini-db.ts` 的 `MiniDb`
+
+源码位置：`packages/minidb/src/mini-db.ts:76` 附近。
+
+```ts
+export class MiniDb<V = unknown> {
+  dir!: string;
+  walPath!: string;
+  /* Non-private (package-internal): lifecycle.ts reads/writes this through its LifecycleHost view. */ indexPath!: string;
+  /* Non-private (package-internal): lifecycle.ts reads/writes this through its LifecycleHost view. */ compoundIndexPath!: string;
+  store!: Store;
+  wal!: WAL;
+  valueReader?: ValueReader;
+  valueMode: ValueMode = 'memory';
+  readonly indexes = new IndexManager();
+  readonly dt = new DtIndex();
+  readonly compound = new CompoundIndexManager();
+  /** Text-index registry state lives in the TextRegistry facet (declared
+   *  below, after stats); these views keep the generation / compaction /
+   *  write paths' call sites unchanged. */
+  private get text(): Map<string, TextIndex> {
+    return this.textRegistry.text;
+  }
+  private get textDefs(): TextIndexDef[] {
+    return this.textRegistry.textDefs;
+  }
+  private get textDrops(): Set<string> {
+    return this.textRegistry.textDrops;
+  }
+// ...
+```
+
+
+## 时序/状态图
+
+```mermaid
+stateDiagram-v2
+    [*] --> Init: 初始化
+    Init --> Ready: 依赖就绪
+    Ready --> Running: 执行主流程
+    Running --> Success: 正常完成
+    Running --> Failed: 异常/拒绝
+    Failed --> Ready: 重试/恢复
+    Success --> [*]
+```
+
+> 图注：`01-architecture/layered-architecture.md` 的抽象流程；具体参与者与状态以源码和上文函数说明为准。
+
 ## 核心实现细节（源码导出）
 
 以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数、类与方法：

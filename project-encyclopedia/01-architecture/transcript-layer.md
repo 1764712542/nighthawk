@@ -40,6 +40,69 @@ framework-free view registry，可在 React/Vue/终端等不同 UI 复用。
 
 遵循依赖方向：子 scope 依赖父 scope；App 服务不得持有 session 级 Map 状态。
 
+## 逐函数实现说明
+
+以下按源码文件列出可验证的导出函数/类，并给出实现职责说明。
+
+### packages/transcript/src/contract/schema.ts
+
+| 函数 | 行号 | 签名 | 实现说明 |
+| --- | --- | --- | --- |
+| `isPlainAgentId` | 17 | `export function isPlainAgentId(agentId: string): boolean {` | `isPlainAgentId` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+
+
+## 核心代码片段
+
+以下片段直接从仓库源码截取，用于展示关键实现形态；完整实现请打开对应文件。
+
+### 来自 `packages/transcript/src/contract/schema.ts` 的 `isPlainAgentId`
+
+源码位置：`packages/transcript/src/contract/schema.ts:17` 附近。
+
+```ts
+export function isPlainAgentId(agentId: string): boolean {
+  return AGENT_ID_PATTERN.test(agentId) && agentId !== '.' && agentId !== '..';
+}
+
+export const turnOriginSchema = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('user'), payload: z.unknown().optional() }),
+  z.object({
+    kind: z.literal('cron'),
+    taskId: taskIdSchema.optional(),
+    payload: z.unknown().optional(),
+  }),
+  z.object({ kind: z.literal('task'), taskId: taskIdSchema, payload: z.unknown().optional() }),
+  z.object({ kind: z.literal('hook'), payload: z.unknown().optional() }),
+  z.object({ kind: z.literal('compaction'), payload: z.unknown().optional() }),
+  z.object({ kind: z.literal('side'), payload: z.unknown().optional() }),
+  z.object({ kind: z.literal('other'), payload: z.unknown().optional() }),
+]);
+
+export const transcriptUsageSchema = z.object({
+  inputTokens: z.number().optional(),
+  outputTokens: z.number().optional(),
+  cachedTokens: z.number().optional(),
+  cost: z.number().optional(),
+});
+// ...
+```
+
+
+## 时序/状态图
+
+```mermaid
+stateDiagram-v2
+    [*] --> Init: 初始化
+    Init --> Ready: 依赖就绪
+    Ready --> Running: 执行主流程
+    Running --> Success: 正常完成
+    Running --> Failed: 异常/拒绝
+    Failed --> Ready: 重试/恢复
+    Success --> [*]
+```
+
+> 图注：`01-architecture/transcript-layer.md` 的抽象流程；具体参与者与状态以源码和上文函数说明为准。
+
 ## 核心实现细节（源码导出）
 
 以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数、类与方法：

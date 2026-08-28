@@ -40,6 +40,115 @@ kap-server `/api/v1/search` 调用 search service，支持 live/index 模式。
 
 异步链路要处理取消、重试、幂等；持久化要保证崩溃安全。
 
+## 逐函数实现说明
+
+以下按源码文件列出可验证的导出函数/类，并给出实现职责说明。
+
+### packages/kap-server/src/search/searchService.ts
+
+| 函数 | 行号 | 签名 | 实现说明 |
+| --- | --- | --- | --- |
+| `drainGlobalSearchDisposals` | 100 | `export async function drainGlobalSearchDisposals(): Promise<void> {` | `drainGlobalSearchDisposals` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+
+| 类 | 行号 | 声明 | 实现说明 |
+| --- | --- | --- | --- |
+| `InlineSearchBackend` | 219 | `export class InlineSearchBackend implements SearchBackend {` | 该类封装本文模块的核心状态与行为。 |
+| `GlobalSearchService` | 268 | `export class GlobalSearchService implements IGlobalSearchService {` | 该类封装本文模块的核心状态与行为。 |
+
+### packages/kap-server/src/routes/search.ts
+
+| 函数 | 行号 | 签名 | 实现说明 |
+| --- | --- | --- | --- |
+| `registerSearchRoutes` | 77 | `export function registerSearchRoutes(app: SearchRouteHost, core: Scope): void {` | `registerSearchRoutes` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+
+
+## 核心代码片段
+
+以下片段直接从仓库源码截取，用于展示关键实现形态；完整实现请打开对应文件。
+
+### 来自 `packages/kap-server/src/search/searchService.ts` 的 `drainGlobalSearchDisposals`
+
+源码位置：`packages/kap-server/src/search/searchService.ts:100` 附近。
+
+```ts
+export async function drainGlobalSearchDisposals(): Promise<void> {
+  while (pendingDisposals.size > 0) {
+    await Promise.all(pendingDisposals);
+  }
+}
+
+export interface IGlobalSearchService {
+  readonly _serviceBrand: undefined;
+  search(query: GlobalSearchQuery): Promise<GlobalSearchPage>;
+  /** Full rebuild: wipe the index and rescan every wire file. */
+  reindex(): Promise<{ sessions: number; documents: number }>;
+  /**
+   * Diagnostic status (the `/api/v1/debug` surface reflects it). Never
+   * throws: a backend that cannot answer (failed open, worker down) reports
+   * a degraded lifecycle instead of rejecting. `lifecycle` is the aggregate
+   * state machine (stage 5): stopped → opening → ready → building/degraded →
+   * closing. NOTE the historical contract: the call may kick/await the
+   * backend's open and read-only refresh — use `lifecycleReport()` for a
+   * non-intrusive local read.
+   */
+  status(): Promise<{
+    sessions: number;
+    documents: number;
+    lastIndexedAt: number | null;
+// ...
+```
+
+### 来自 `packages/kap-server/src/routes/search.ts` 的 `registerSearchRoutes`
+
+源码位置：`packages/kap-server/src/routes/search.ts:77` 附近。
+
+```ts
+export function registerSearchRoutes(app: SearchRouteHost, core: Scope): void {
+  const route = defineRoute(
+    {
+      method: 'POST',
+      path: '/search',
+      body: searchMessagesBodySchema,
+      success: { data: searchMessagesResponseSchema },
+      errors: {
+        [ErrorCode.VALIDATION_FAILED]: { detailsSchema },
+      },
+      description:
+        'Global full-text search over user messages, assistant replies and session titles across all sessions',
+      tags: ['search'],
+    },
+    async (req, reply) => {
+      try {
+        const page = await core.accessor.get(IGlobalSearchService).search(toServiceQuery(req.body));
+        reply.send(okEnvelope(toWirePage(page), req.id));
+      } catch (error) {
+        if (
+          error instanceof GlobalSearchError &&
+          (error.reason === 'invalid_query' || error.reason === 'invalid_page_token')
+        ) {
+          reply.send(errEnvelope(ErrorCode.VALIDATION_FAILED, error.message, req.id, error.stack));
+// ...
+```
+
+
+## 时序/状态图
+
+```mermaid
+sequenceDiagram
+    participant U as 用户/调用方
+    participant A as API/SDK
+    participant E as Engine/Service
+    participant D as Data/Store
+    U->>A: 发起请求
+    A->>E: 调用服务方法
+    E->>D: 读写持久化/索引
+    D-->>E: 返回数据
+    E-->>A: 返回结果
+    A-->>U: 输出/事件
+```
+
+> 图注：`06-data-flow/search-index-flow.md` 的抽象流程；具体参与者与状态以源码和上文函数说明为准。
+
 ## 核心实现细节（源码导出）
 
 以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数、类与方法：

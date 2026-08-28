@@ -40,6 +40,104 @@ NightHawk 的“安全优先”不是宣传语，而是代码中的一等工具�
 
 竞品功能会变化，定期复核，避免过时结论。
 
+## 逐函数实现说明
+
+以下按源码文件列出可验证的导出函数/类，并给出实现职责说明。
+
+### packages/agent-core/src/tools/builtin/security/rules.ts
+
+| 函数 | 行号 | 签名 | 实现说明 |
+| --- | --- | --- | --- |
+| `rulesForLanguage` | 272 | `export function rulesForLanguage(lang: string): readonly SecurityRule[] {` | `rulesForLanguage` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+| `detectLanguage` | 276 | `export function detectLanguage(filePath: string): string {` | `detectLanguage` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+
+### packages/agent-core/src/tools/builtin/security/taint-trace.ts
+
+| 类 | 行号 | 声明 | 实现说明 |
+| --- | --- | --- | --- |
+| `TaintTraceTool` | 41 | `export class TaintTraceTool implements BuiltinTool<TaintTraceInput> {` | 该类封装本文模块的核心状态与行为。 |
+
+
+## 核心代码片段
+
+以下片段直接从仓库源码截取，用于展示关键实现形态；完整实现请打开对应文件。
+
+### 来自 `packages/agent-core/src/tools/builtin/security/rules.ts` 的 `rulesForLanguage`
+
+源码位置：`packages/agent-core/src/tools/builtin/security/rules.ts:272` 附近。
+
+```ts
+export function rulesForLanguage(lang: string): readonly SecurityRule[] {
+  return SECURITY_RULES.filter(r => r.languages.includes('*') || r.languages.includes(lang));
+}
+
+export function detectLanguage(filePath: string): string {
+  const ext = filePath.split('.').pop()?.toLowerCase() ?? '';
+  const m: Record<string, string> = {
+    py: 'python',
+    js: 'javascript',
+    jsx: 'javascript',
+    mjs: 'javascript',
+    cjs: 'javascript',
+    ts: 'typescript',
+    tsx: 'typescript',
+    java: 'java',
+    php: 'php',
+    go: 'go',
+    rb: 'ruby',
+    kt: 'java',
+    rs: 'rust',
+    c: 'c',
+    h: 'c',
+    cpp: 'cpp',
+    cc: 'cpp',
+// ...
+```
+
+### 来自 `packages/agent-core/src/tools/builtin/security/taint-trace.ts` 的 `TaintTraceTool`
+
+源码位置：`packages/agent-core/src/tools/builtin/security/taint-trace.ts:41` 附近。
+
+```ts
+export class TaintTraceTool implements BuiltinTool<TaintTraceInput> {
+  readonly name = 'TaintTrace' as const;
+  readonly description = TAINT_TRACE_DESCRIPTION;
+  readonly parameters: Record<string, unknown> = toInputJsonSchema(TaintTraceInputSchema);
+
+  constructor(
+    private readonly kaos: Kaos,
+    private readonly workspace: WorkspaceConfig,
+  ) {}
+
+  resolveExecution(args: TaintTraceInputArgs): ToolExecution {
+    const filePath = resolvePathAccessPath(args.path, {
+      kaos: this.kaos,
+      workspace: this.workspace,
+      operation: 'read',
+      policy: { guardMode: 'absolute-outside-allowed', checkSensitive: false },
+    });
+    return {
+      accesses: ToolAccesses.searchTree(filePath),
+      description: `Tracing taint flows in ${args.path}`,
+      display: { kind: 'file_io', operation: 'grep', path: filePath },
+      approvalRule: literalRulePattern(this.name, args.path),
+      execute: async ({ signal }) => {
+        if (signal.aborted) {
+// ...
+```
+
+
+## 时序/状态图
+
+```mermaid
+flowchart LR
+    A[入口/调用方] --> B[本文核心模块]
+    B --> C[依赖服务/数据层]
+    C --> D[输出/事件/持久化]
+```
+
+> 图注：`09-comparison/security-differentiation.md` 的抽象流程；具体参与者与状态以源码和上文函数说明为准。
+
 ## 核心实现细节（源码导出）
 
 以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数、类与方法：

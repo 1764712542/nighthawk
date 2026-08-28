@@ -40,6 +40,110 @@ CLI 解析参数 → 创建 Harness/SDK 客户端 → 进入 TUI 或 headless；
 
 TUI 组件不得直接读写 session 状态；启动路径必须遵守 workspace trust。
 
+## 逐函数实现说明
+
+以下按源码文件列出可验证的导出函数/类，并给出实现职责说明。
+
+### apps/nighthawk/src/cli/run-prompt.ts
+
+| 函数 | 行号 | 签名 | 实现说明 |
+| --- | --- | --- | --- |
+| `raceWithTimeout` | 55 | `export async function raceWithTimeout(promise: Promise<void>, timeoutMs: number): Promise<void> {` | `raceWithTimeout` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+| `runPrompt` | 98 | `export async function runPrompt(` | `runPrompt` 负责执行核心流程。 |
+| `requireConfiguredModel` | 412 | `export function requireConfiguredModel(...models: readonly (string \| undefined)[]): string {` | `requireConfiguredModel` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+| `configuredModel` | 422 | `export function configuredModel(...models: readonly (string \| undefined)[]): string \| undefined {` | `configuredModel` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+| `installPromptTerminationCleanup` | 431 | `export function installPromptTerminationCleanup(` | `installPromptTerminationCleanup` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+| `signalExitCode` | 458 | `export function signalExitCode(signal: NodeJS.Signals): number {` | `signalExitCode` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+
+### apps/nighthawk/src/cli/headless-exit.ts
+
+| 函数 | 行号 | 签名 | 实现说明 |
+| --- | --- | --- | --- |
+| `scheduleHeadlessForceExit` | 29 | `export function scheduleHeadlessForceExit(` | `scheduleHeadlessForceExit` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+| `drainStdio` | 63 | `export async function drainStdio(` | `drainStdio` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+| `finalizeHeadlessRun` | 88 | `export async function finalizeHeadlessRun(` | `finalizeHeadlessRun` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
+
+
+## 核心代码片段
+
+以下片段直接从仓库源码截取，用于展示关键实现形态；完整实现请打开对应文件。
+
+### 来自 `apps/nighthawk/src/cli/run-prompt.ts` 的 `raceWithTimeout`
+
+源码位置：`apps/nighthawk/src/cli/run-prompt.ts:55` 附近。
+
+```ts
+export async function raceWithTimeout(promise: Promise<void>, timeoutMs: number): Promise<void> {
+  let timedOut = false;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  // Attach the catch eagerly (synchronously) so `promise` is always consumed and
+  // a late rejection can never become an unhandled rejection. Before the timeout
+  // wins, the handler rethrows so a real cleanup failure still propagates.
+  const guarded = promise.catch((error: unknown) => {
+    if (timedOut) return;
+    throw error;
+  });
+  const timedOutSignal = new Promise<void>((resolve) => {
+    timer = setTimeout(() => {
+      timedOut = true;
+      resolve();
+    }, timeoutMs);
+  });
+  try {
+    await Promise.race([guarded, timedOutSignal]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+}
+
+interface PromptOutput {
+// ...
+```
+
+### 来自 `apps/nighthawk/src/cli/headless-exit.ts` 的 `scheduleHeadlessForceExit`
+
+源码位置：`apps/nighthawk/src/cli/headless-exit.ts:29` 附近。
+
+```ts
+export function scheduleHeadlessForceExit(
+  proc: ExitableProcess,
+  getExitCode: () => number,
+  graceMs: number = HEADLESS_FORCE_EXIT_GRACE_MS,
+): NodeJS.Timeout {
+  const timer = setTimeout(() => {
+    proc.exit(getExitCode());
+  }, graceMs);
+  timer.unref?.();
+  return timer;
+}
+
+/** Resolve once a stream's currently-buffered writes have flushed to its sink. */
+function flushStream(stream: Writable): Promise<void> {
+  return new Promise<void>((resolve) => {
+    try {
+      // An empty write's callback fires after all previously-queued writes have
+      // been flushed (writes are ordered), which is the documented way to know a
+      // stream's buffer has drained.
+      stream.write('', () => resolve());
+    } catch {
+      resolve();
+    }
+  });
+// ...
+```
+
+
+## 时序/状态图
+
+```mermaid
+flowchart LR
+    A[入口/调用方] --> B[本文核心模块]
+    B --> C[依赖服务/数据层]
+    C --> D[输出/事件/持久化]
+```
+
+> 图注：`02-applications/nighthawk-headless.md` 的抽象流程；具体参与者与状态以源码和上文函数说明为准。
+
 ## 核心实现细节（源码导出）
 
 以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数、类与方法：

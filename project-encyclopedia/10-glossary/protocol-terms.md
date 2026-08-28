@@ -40,6 +40,45 @@ Model Context Protocol，模型上下文协议。
 
 新增概念时应同步补充术语表。
 
+## 逐函数实现说明
+
+以下按源码文件列出可验证的导出函数/类，并给出实现职责说明。
+
+### packages/kap-server/src/protocol/ws-control.ts
+
+| 函数 | 行号 | 签名 | 实现说明 |
+| --- | --- | --- | --- |
+| `getClientControlOperation` | 694 | `export function getClientControlOperation(` | `getClientControlOperation` 负责读取或查询数据。 |
+
+
+## 核心代码片段
+
+以下片段直接从仓库源码截取，用于展示关键实现形态；完整实现请打开对应文件。
+
+### 来自 `packages/kap-server/src/protocol/ws-control.ts` 的 `getClientControlOperation`
+
+源码位置：`packages/kap-server/src/protocol/ws-control.ts:694` 附近。
+
+```ts
+export function getClientControlOperation(
+  type: string,
+): (typeof clientControlOperations)[number] | undefined {
+  return clientControlOperations.find((operation) => operation.type === type);
+}
+```
+
+
+## 时序/状态图
+
+```mermaid
+flowchart LR
+    A[入口/调用方] --> B[本文核心模块]
+    B --> C[依赖服务/数据层]
+    C --> D[输出/事件/持久化]
+```
+
+> 图注：`10-glossary/protocol-terms.md` 的抽象流程；具体参与者与状态以源码和上文函数说明为准。
+
 ## 核心实现细节（源码导出）
 
 以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数、类与方法：
