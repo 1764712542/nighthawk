@@ -14,7 +14,7 @@ NightHawk CLI 通过环境变量控制少数运行时行为——迁移数据目
 
 ### `NIGHTHAWK_HOME`
 
-覆盖数据根目录，默认 `~/.nighthawk`。设置后，配置文件、会话、日志、OAuth 凭据等全部数据都落到新路径下：
+覆盖数据根目录，默认 `~/.nighthawk`。设置后，配置文件、会话、日志等全部数据都落到新路径下：
 
 ```sh
 export NIGHTHAWK_HOME="/path/to/custom/nighthawk"
@@ -61,7 +61,7 @@ export NIGHTHAWK_CUSTOM_HEADERS=$'X-Gateway-Cluster: my-cluster\nX-Custom-Tag: d
 ```toml
 [providers.nighthawk.env]
 NIGHTHAWK_API_KEY = "sk-xxx"
-NIGHTHAWK_BASE_URL = "https://api.kimi.com/coding/v1"
+NIGHTHAWK_BASE_URL = "https://api.nighthawk.dev/v1"
 ```
 
 各供应商对应的键名：
@@ -69,7 +69,7 @@ NIGHTHAWK_BASE_URL = "https://api.kimi.com/coding/v1"
 | 键名 | 适用供应商 | 默认值 |
 | --- | --- | --- |
 | `NIGHTHAWK_API_KEY` | NightHawk / NightHawk | 无 |
-| `NIGHTHAWK_BASE_URL` | NightHawk / NightHawk | `https://api.kimi.com/coding/v1` |
+| `NIGHTHAWK_BASE_URL` | NightHawk / NightHawk | `https://api.nighthawk.dev/v1` |
 | `ANTHROPIC_API_KEY` | Anthropic | 无 |
 | `ANTHROPIC_BASE_URL` | Anthropic | Anthropic SDK 默认值 |
 | `OPENAI_API_KEY` | OpenAI（`openai` 和 `openai_responses`） | 无 |
@@ -84,20 +84,6 @@ NIGHTHAWK_BASE_URL = "https://api.kimi.com/coding/v1"
 :::
 
 供应商类型与字段的完整说明见[平台与模型](./providers.md)。
-
-## OAuth 与托管端点
-
-这组变量用于将 OAuth 认证和托管服务端点指向自建或测试环境，日常使用不需要设置。
-
-| 环境变量 | 用途 | 默认值 |
-| --- | --- | --- |
-| `NIGHTHAWK_OAUTH_HOST` | OAuth 认证 host，优先级最高 | 未设时回退到 `NIGHTHAWK_OAUTH_HOST` |
-| `NIGHTHAWK_OAUTH_HOST` | OAuth 认证 host，作为上一个的 fallback | 未设时使用 `https://auth.kimi.com` |
-| `NIGHTHAWK_BASE_URL` | OAuth 登录后的托管 API base URL | `https://api.kimi.com/coding/v1` |
-
-::: warning
-`NIGHTHAWK_BASE_URL`（OAuth 托管服务，指向 `kimi.com`）和 `NIGHTHAWK_BASE_URL`（API 密钥直连，指向 `moonshot.ai`）是两个不同的变量，请按场景区分。
-:::
 
 ## 用环境变量定义模型（`NIGHTHAWK_MODEL_*`）
 
@@ -157,9 +143,9 @@ nighthawk
 | `NIGHTHAWK_LOOP_MAX_ATTEMPTS_PER_STEP` | 单步失败后的最大总尝试次数（含首次尝试）；优先级高于 `config.toml` 的 `[loop_control] max_attempts_per_step`（默认 `10`）。旧的 `NIGHTHAWK_LOOP_MAX_RETRIES_PER_STEP` 已废弃，但在本变量未设置时仍生效并给出警告 | 非负整数；非法值被忽略 |
 | `NIGHTHAWK_TOKEN_COUNTING_STRATEGY` | 对外上报的上下文 token 计数（上下文大小显示）；优先级高于 `config.toml` 的 `[token_counting] strategy`（默认 `measured+estimated`） | `measured+estimated`、`measured`、`estimated`（不区分大小写）；非法值被忽略 |
 | `NIGHTHAWK_WEB_SEARCH_BASE_URL` | 网页搜索（`WebSearch`）服务的 API URL；优先级高于 `config.toml` 的 `[services.nighthawk_search] base_url`，未写配置段时也可启用服务。文件中持久化的凭据和自定义 header 不会发送到环境变量指定的端点 | 非空字符串；空白值被忽略 |
-| `NIGHTHAWK_WEB_SEARCH_API_KEY` | 网页搜索（`WebSearch`）服务的 API 密钥；设置后同时替换配置中的 API 密钥和 OAuth 凭据 | 非空字符串；空白值被忽略 |
-| `NIGHTHAWK_WEB_FETCH_BASE_URL` | 网页抓取（`FetchURL`）服务的 API URL；优先级高于 `[services.nighthawk_fetch] base_url`。文件中持久化的凭据和自定义 header 不会发送到环境变量指定的端点。环境变量和配置都没有指定端点时，已登录用户会先尝试 NightHawk OAuth 托管抓取服务，再回退到本地直接请求 | 非空字符串；空白值被忽略 |
-| `NIGHTHAWK_WEB_FETCH_API_KEY` | 网页抓取（`FetchURL`）服务的 API 密钥；设置后同时替换配置中的 API 密钥和 OAuth 凭据 | 非空字符串；空白值被忽略 |
+| `NIGHTHAWK_WEB_SEARCH_API_KEY` | 网页搜索（`WebSearch`）服务的 API 密钥；设置后同时替换配置中的 API 密钥 | 非空字符串；空白值被忽略 |
+| `NIGHTHAWK_WEB_FETCH_BASE_URL` | 网页抓取（`FetchURL`）服务的 API URL；优先级高于 `[services.nighthawk_fetch] base_url`。文件中持久化的凭据和自定义 header 不会发送到环境变量指定的端点。环境变量和配置都没有指定端点时，会回退到本地直接请求 | 非空字符串；空白值被忽略 |
+| `NIGHTHAWK_WEB_FETCH_API_KEY` | 网页抓取（`FetchURL`）服务的 API 密钥；设置后同时替换配置中的 API 密钥 | 非空字符串；空白值被忽略 |
 | `NIGHTHAWK_EXPERIMENTAL_FLAG` | 在当前进程启用所有已注册的实验功能；不用于选择 Agent 引擎 | `1`、`true`、`yes`、`on` |
 | `NIGHTHAWK_LEGACY_FLAG` | 让 `nighthawk`、`nighthawk -p`、`nighthawk doctor`、`nighthawk acp`、`nighthawk export` 和 `nighthawk provider` 使用旧版 `agent-core` 引擎；这些命令默认使用 `agent-core-v2` | `1`、`true`、`yes`、`on` |
 | `NIGHTHAWK_SHELL_PATH` | Windows 上覆盖 Git Bash 路径（自动探测失败时使用） | 绝对路径 |

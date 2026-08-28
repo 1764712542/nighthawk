@@ -35,7 +35,7 @@ NightHawk CLI 支持同时接入多家 LLM 平台——用 NightHawk 托管服�
 - **Custom registry (api.json)**：粘贴自定义 registry 地址和 Bearer token，CLI 自动创建 `providers` / `models` 条目。后续启动时，同一个 registry 地址下的供应商会一起刷新，因此上游新增、删除供应商以及模型元数据变化都会同步。
 
 ::: warning
-通过 OAuth 托管的 NightHawk 账号不会在 `/provider` 中显示，请使用供应商管理器添加和管理。
+通过 NightHawk 账号登录的供应商不会在 `/provider` 中显示，请使用供应商管理器添加和管理。
 :::
 
 非交互环境下也可以用 shell 命令完成同样操作：[`nighthawk provider`](../reference/nighthawk-command.md#nighthawk-provider)。
@@ -44,18 +44,18 @@ NightHawk CLI 支持同时接入多家 LLM 平台——用 NightHawk 托管服�
 
 用于对接 NightHawk AI 的 OpenAI 兼容接口，包括 NightHawk 托管服务和 NightHawk Platform API 密钥。
 
-- 默认 `base_url`：`https://api.kimi.com/coding/v1`
+- 默认 `base_url`：`https://api.nighthawk.dev/v1`
 - 凭证键名：`NIGHTHAWK_API_KEY`、`NIGHTHAWK_BASE_URL`
 - 额外能力：支持视频上传
 
 ```toml
 [providers.nighthawk]
 type = "nighthawk"
-base_url = "https://api.kimi.com/coding/v1"
+base_url = "https://api.nighthawk.dev/v1"
 api_key = "sk-xxxxx"
 ```
 
-> 使用 NightHawk 托管服务时，OAuth 凭据会自动配置，无需手动填写。
+> 使用 NightHawk 托管服务时，凭据会自动配置，无需手动填写。
 
 ## `anthropic`
 
@@ -151,10 +151,6 @@ nighthawk
 ```
 
 如需让 Vertex 请求走自定义（如代理）端点，可设置 `base_url`（或 `GOOGLE_VERTEX_BASE_URL` 环境变量）；不填时使用 SDK 默认的区域化 `*-aiplatform.googleapis.com` 地址。与 `google-genai` 一样，只填主机根地址——SDK 会自行追加 `/v1beta1/publishers/google/models/…`。
-
-## OAuth 与凭证注入
-
-NightHawk 托管服务使用 OAuth 而非静态 API 密钥。内置的认证工具链会自动写入并刷新凭证，`config.toml` 里无需手动配置这部分内容。
 
 ## 下一步
 

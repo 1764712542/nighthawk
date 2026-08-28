@@ -14,7 +14,7 @@ For background, see [Config overrides: provider credentials](./overrides.md#prov
 
 ### `NIGHTHAWK_HOME`
 
-Overrides the data root directory; the default is `~/.nighthawk`. Once set, the config file, sessions, logs, OAuth credentials, and all other data land under the new path:
+Overrides the data root directory; the default is `~/.nighthawk`. Once set, the config file, sessions, logs, and all other data land under the new path:
 
 ```sh
 export NIGHTHAWK_HOME="/path/to/custom/nighthawk"
@@ -61,7 +61,7 @@ This design lets you keep familiar key name conventions while centralizing secre
 ```toml
 [providers.nighthawk.env]
 NIGHTHAWK_API_KEY = "sk-xxx"
-NIGHTHAWK_BASE_URL = "https://api.moonshot.ai/v1"
+NIGHTHAWK_BASE_URL = "https://api.nighthawk.dev/v1"
 ```
 
 Key names per provider:
@@ -69,7 +69,7 @@ Key names per provider:
 | Key | Applicable provider | Default |
 | --- | --- | --- |
 | `NIGHTHAWK_API_KEY` | NightHawk / NightHawk | None |
-| `NIGHTHAWK_BASE_URL` | NightHawk / NightHawk | `https://api.moonshot.ai/v1` |
+| `NIGHTHAWK_BASE_URL` | NightHawk / NightHawk | `https://api.nighthawk.dev/v1` |
 | `ANTHROPIC_API_KEY` | Anthropic | None |
 | `ANTHROPIC_BASE_URL` | Anthropic | Follows Anthropic SDK default |
 | `OPENAI_API_KEY` | OpenAI (`openai` and `openai_responses`) | None |
@@ -84,20 +84,6 @@ Key names per provider:
 :::
 
 For the full provider type and field reference, see [Providers and models](./providers.md).
-
-## OAuth and managed services
-
-This group of variables redirects OAuth authentication and managed service endpoints to a self-hosted or test environment. They are not needed for everyday use.
-
-| Variable | Purpose | Default |
-| --- | --- | --- |
-| `NIGHTHAWK_OAUTH_HOST` | OAuth auth host; highest priority | Falls back to `NIGHTHAWK_OAUTH_HOST` when unset |
-| `NIGHTHAWK_OAUTH_HOST` | OAuth auth host; fallback for `NIGHTHAWK_OAUTH_HOST` | Falls back to `https://auth.kimi.com` when unset |
-| `NIGHTHAWK_BASE_URL` | Managed API base URL used after OAuth login | `https://api.kimi.com/coding/v1` |
-
-::: warning
-`NIGHTHAWK_BASE_URL` (OAuth-managed service, targeting `kimi.com`) and `NIGHTHAWK_BASE_URL` (direct API key connection, targeting `moonshot.ai`) are two distinct variables. Use each one in its appropriate context.
-:::
 
 ## Define a model from environment variables (`NIGHTHAWK_MODEL_*`)
 
@@ -157,9 +143,9 @@ Switches that control the behavior of subsystems such as telemetry, background t
 | `NIGHTHAWK_LOOP_MAX_ATTEMPTS_PER_STEP` | Maximum total attempts for a failing step (including the initial attempt); takes higher priority than `[loop_control] max_attempts_per_step` in `config.toml` (default `10`). The deprecated `NIGHTHAWK_LOOP_MAX_RETRIES_PER_STEP` is still honored with a warning when this variable is unset | Non-negative integer; invalid values are ignored |
 | `NIGHTHAWK_TOKEN_COUNTING_STRATEGY` | Which context token count is reported externally (the context-size display); takes higher priority than `[token_counting] strategy` in `config.toml` (default `measured+estimated`) | `measured+estimated`, `measured`, `estimated` (case-insensitive); invalid values are ignored |
 | `NIGHTHAWK_WEB_SEARCH_BASE_URL` | API URL of the web search (`WebSearch`) service; takes higher priority than `[services.nighthawk_search] base_url` in `config.toml`, and enables the service without that config section. Persisted credentials and custom headers are not forwarded to an env-selected endpoint | Non-blank string; blank values are ignored |
-| `NIGHTHAWK_WEB_SEARCH_API_KEY` | API key of the web search (`WebSearch`) service; replaces both the configured API key and OAuth credential when set | Non-blank string; blank values are ignored |
-| `NIGHTHAWK_WEB_FETCH_BASE_URL` | API URL of the web fetch (`FetchURL`) service; takes higher priority than `[services.nighthawk_fetch] base_url`. Persisted credentials and custom headers are not forwarded to an env-selected endpoint. Without an env or config endpoint, signed-in users try the managed NightHawk OAuth fetch service before direct local requests | Non-blank string; blank values are ignored |
-| `NIGHTHAWK_WEB_FETCH_API_KEY` | API key of the web fetch (`FetchURL`) service; replaces both the configured API key and OAuth credential when set | Non-blank string; blank values are ignored |
+| `NIGHTHAWK_WEB_SEARCH_API_KEY` | API key of the web search (`WebSearch`) service; replaces the configured API key when set | Non-blank string; blank values are ignored |
+| `NIGHTHAWK_WEB_FETCH_BASE_URL` | API URL of the web fetch (`FetchURL`) service; takes higher priority than `[services.nighthawk_fetch] base_url`. Persisted credentials and custom headers are not forwarded to an env-selected endpoint. Without an env or config endpoint, falls back to local direct requests | Non-blank string; blank values are ignored |
+| `NIGHTHAWK_WEB_FETCH_API_KEY` | API key of the web fetch (`FetchURL`) service; replaces the configured API key when set | Non-blank string; blank values are ignored |
 | `NIGHTHAWK_EXPERIMENTAL_FLAG` | Enable all registered experimental features for this process; it does not select the agent engine | `1`, `true`, `yes`, `on` |
 | `NIGHTHAWK_LEGACY_FLAG` | Use the legacy `agent-core` engine for `nighthawk`, `nighthawk -p`, `nighthawk doctor`, `nighthawk acp`, `nighthawk export`, and `nighthawk provider`; these commands use `agent-core-v2` by default | `1`, `true`, `yes`, `on` |
 | `NIGHTHAWK_SHELL_PATH` | Override the Git Bash path on Windows (used when auto-detection fails) | Absolute path |

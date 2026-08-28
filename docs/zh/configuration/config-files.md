@@ -31,7 +31,7 @@ telemetry = true
 
 [providers."managed:nighthawk"]
 type = "nighthawk"
-base_url = "https://api.kimi.com/coding/v1"
+base_url = "https://api.nighthawk.dev/v1"
 api_key = ""
 
 [models."nighthawk/k3"]
@@ -69,11 +69,11 @@ max_running_tasks = 4
 keep_alive_on_exit = false
 
 [services.nighthawk_search]
-base_url = "https://api.kimi.com/coding/v1/search"
+base_url = "https://api.nighthawk.dev/v1/search"
 api_key = ""
 
 [services.nighthawk_fetch]
-base_url = "https://api.kimi.com/coding/v1/fetch"
+base_url = "https://api.nighthawk.dev/v1/fetch"
 api_key = ""
 
 [[permission.rules]]
@@ -128,7 +128,6 @@ timeout = 5
 | `type` | `string` | 是 | 供应商类型：`nighthawk`、`anthropic`、`openai`、`openai_responses`、`google-genai`、`vertexai` |
 | `api_key` | `string` | 否 | API 密钥，明文写在配置文件里 |
 | `base_url` | `string` | 否 | API 基础 URL |
-| `oauth` | `table` | 否 | OAuth 凭据引用（`storage`、`key` 两个字段），由登录流程自动注入，通常无需手写 |
 | `env` | `table<string, string>` | 否 | 供应商凭证的备用来源，详见下文 |
 | `custom_headers` | `table<string, string>` | 否 | 每次请求附加的自定义 HTTP 头 |
 
@@ -137,7 +136,7 @@ timeout = 5
 ```toml
 [providers.nighthawk.env]
 NIGHTHAWK_API_KEY = "sk-xxx"
-NIGHTHAWK_BASE_URL = "https://api.kimi.com/coding/v1"
+NIGHTHAWK_BASE_URL = "https://api.nighthawk.dev/v1"
 ```
 
 优先级：`api_key` 字段 > `env` 子表键 > 两者都缺时启动报错。
@@ -406,7 +405,7 @@ slug = "acme-dev"        # 可选
 
 如果名称中不含任何 ASCII 字母或数字（例如纯中文名称），就无法派生出 slug，此时回退为 `agent`；需要特定协议标识请显式填写 `slug`。
 
-身份在启动时解析一次，进程生命周期内保持不变——建立连接时它已宣告给 MCP 服务器和 provider，中途无法更换。修改本节配置在下次启动时对新会话生效；resume 的会话保留录制时的系统提示词，因为其历史轮次本就以原身份自称。同理，已完成的 MCP OAuth 授权保留其授予时的客户端注册；重置该服务器的认证即可在新身份下重新注册。
+身份在启动时解析一次，进程生命周期内保持不变——建立连接时它已宣告给 MCP 服务器和 provider，中途无法更换。修改本节配置在下次启动时对新会话生效；resume 的会话保留录制时的系统提示词，因为其历史轮次本就以原身份自称。同理，已完成的 MCP 授权保留其授予时的客户端注册；重置该服务器的认证即可在新身份下重新注册。
 
 本节由默认的 `agent-core-v2` 引擎读取。设置 `NIGHTHAWK_LEGACY_FLAG=1` 后，旧版 `nighthawk` / `nighthawk -p` 路径会忽略此配置。
 
@@ -459,18 +458,17 @@ disabled = ["EnterPlanMode", "ExitPlanMode", "mcp__github__*"]
 | --- | --- | --- | --- |
 | `base_url` | `string` | 否 | 服务 API URL |
 | `api_key` | `string` | 否 | API 密钥 |
-| `oauth` | `table` | 否 | OAuth 凭据引用，结构同 `providers.*.oauth` |
 | `custom_headers` | `table<string, string>` | 否 | 请求时附加的自定义 HTTP 头 |
 
-`base_url` 和 `api_key` 也可由环境变量提供，环境变量优先于配置文件：`NIGHTHAWK_WEB_SEARCH_BASE_URL` / `NIGHTHAWK_WEB_SEARCH_API_KEY` 对应 `nighthawk_search`，`NIGHTHAWK_WEB_FETCH_BASE_URL` / `NIGHTHAWK_WEB_FETCH_API_KEY` 对应 `nighthawk_fetch`。`NIGHTHAWK_WEB_SEARCH_BASE_URL` 和 `NIGHTHAWK_WEB_FETCH_BASE_URL` 定义的是独立服务端点，因此文件中持久化的 API 密钥、OAuth 引用和自定义 header 都不会发送给它；该端点需要鉴权时，请同时设置对应的环境变量 API 密钥。只设置环境变量 API 密钥时，配置中的端点和自定义 header 保持不变，但两种配置凭据都会被替换。不写配置段、只通过环境变量设置 base URL 和 API 密钥，也可以启用对应服务。
+`base_url` 和 `api_key` 也可由环境变量提供，环境变量优先于配置文件：`NIGHTHAWK_WEB_SEARCH_BASE_URL` / `NIGHTHAWK_WEB_SEARCH_API_KEY` 对应 `nighthawk_search`，`NIGHTHAWK_WEB_FETCH_BASE_URL` / `NIGHTHAWK_WEB_FETCH_API_KEY` 对应 `nighthawk_fetch`。`NIGHTHAWK_WEB_SEARCH_BASE_URL` 和 `NIGHTHAWK_WEB_FETCH_BASE_URL` 定义的是独立服务端点，因此文件中持久化的 API 密钥和自定义 header 都不会发送给它；该端点需要鉴权时，请同时设置对应的环境变量 API 密钥。只设置环境变量 API 密钥时，配置中的端点和自定义 header 保持不变，但两种配置凭据都会被替换。不写配置段、只通过环境变量设置 base URL 和 API 密钥，也可以启用对应服务。
 
 ```toml
 [services.nighthawk_search]
-base_url = "https://api.kimi.com/coding/v1/search"
+base_url = "https://api.nighthawk.dev/v1/search"
 api_key = "sk-xxx"
 
 [services.nighthawk_fetch]
-base_url = "https://api.kimi.com/coding/v1/fetch"
+base_url = "https://api.nighthawk.dev/v1/fetch"
 api_key = "sk-xxx"
 ```
 

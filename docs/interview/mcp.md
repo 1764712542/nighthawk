@@ -47,9 +47,9 @@ MCP tool 调用失败时：判断错误是否可恢复 → 探测 server livenes
 
 `/mcp-config` 本身是一个 `disableModelInvocation` 的内置 skill：用户用自然语言说"帮我加一个 GitHub MCP server"，agent 读取该 skill 的指令后生成/编辑 `mcp.json`，触发 reload。**把配置文件操作编码成 skill 指令**而不是写死的配置 UI 代码，是"用 agent 的机制解决 agent 自己的问题"的典型案例。
 
-### 5. 认证流（needs-auth 状态）
+### 5. 认证流
 
-OAuth server 未登录时注册 `mcp__<server>__authenticate` 工具，agent 引导用户走授权 URL，登录完成后 server 转为 connected 并重新发现工具。
+Server 未登录时注册 `mcp__<server>__authenticate` 工具，agent 引导用户走授权 URL，登录完成后 server 转为 connected 并重新发现工具。
 
 ## 面试高频追问
 

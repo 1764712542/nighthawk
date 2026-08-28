@@ -35,7 +35,7 @@ Two paths when adding:
 - **Custom registry (api.json)**: paste a custom registry URL and Bearer token; the CLI automatically creates the `providers` / `models` entries. On later startup, providers from the same registry URL are refreshed together, so upstream provider additions, removals, and model metadata changes are synced.
 
 ::: warning
-NightHawk OAuth managed accounts do not appear in `/provider`. Use the provider manager to add and manage them.
+NightHawk managed accounts do not appear in `/provider`. Use the provider manager to add and manage them.
 :::
 
 The same operations are also available in non-interactive environments via the shell command: [`nighthawk provider`](../reference/nighthawk-command.md#nighthawk-provider).
@@ -44,18 +44,18 @@ The same operations are also available in non-interactive environments via the s
 
 For connecting to NightHawk AI's OpenAI-compatible interface, including the NightHawk managed service and NightHawk Platform API keys.
 
-- Default `base_url`: `https://api.kimi.com/coding/v1`
+- Default `base_url`: `https://api.nighthawk.dev/v1`
 - Credential key names: `NIGHTHAWK_API_KEY`, `NIGHTHAWK_BASE_URL`
 - Additional capability: supports video upload
 
 ```toml
 [providers.nighthawk]
 type = "nighthawk"
-base_url = "https://api.kimi.com/coding/v1"
+base_url = "https://api.nighthawk.dev/v1"
 api_key = "sk-xxxxx"
 ```
 
-> When using the NightHawk managed service, OAuth credentials are automatically configured — no manual setup needed.
+> When using the NightHawk managed service, credentials are automatically configured — no manual setup needed.
 
 ## `anthropic`
 
@@ -152,9 +152,7 @@ nighthawk
 
 To route Vertex requests through a custom (e.g. proxied) endpoint, set `base_url` (or the `GOOGLE_VERTEX_BASE_URL` env var); when omitted, the SDK default regional `*-aiplatform.googleapis.com` host is used. As with `google-genai`, give the host root only — the SDK appends `/v1beta1/publishers/google/models/…` itself.
 
-## OAuth and credential injection
 
-The NightHawk managed service uses OAuth rather than static API keys. The built-in authentication toolchain automatically writes and refreshes credentials — no manual configuration is needed in `config.toml` for this.
 
 ## Next steps
 

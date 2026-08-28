@@ -18,9 +18,31 @@ normal/yolo/auto 模式；`--yolo` 跳过常规审批，`--auto` 不问用户。
 
 `packages/agent-core-v2/docs/Permission.md` 详细解释了为什么不引入 Casbin。
 
+## 专业实现要点（开发流程视角）
+
+### 需求分析
+
+Feature 是自包含能力单元，必须能整体安装/卸载而不污染其他模块。
+
+### 设计决策
+
+用 `Feature` 基类组合 Service、Tool、Profile、Config、Command 贡献点；静态契约留在静态注册通道。
+
+### 实现步骤
+
+在 `src/features/<name>/` 写领域代码 → 写 `<name>Feature.ts` → 在 `src/index.ts` 精确导入 → 编写测试。
+
+### 验证方式
+
+通过 `test/features/feature.test.ts` 验证装配/卸载；通过 DI 视图观察 unit 状态。
+
+### 维护注意
+
+不要把所有能力塞进一个 Feature；配置段、wire 事件等静态契约必须保持可重放。
+
 ## 核心实现细节（源码导出）
 
-以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数、类与方法：
 
   - `packages/agent-core/src/agent/permission//` 目录下源码文件示例：
     - `packages/agent-core/src/agent/permission/index.ts`
@@ -43,6 +65,7 @@ normal/yolo/auto 模式；`--yolo` 跳过常规审批，`--auto` 不问用户。
     - `packages/agent-core/src/agent/permission/policies/swarm-mode-agent-swarm-approve.ts`
     - `packages/agent-core/src/agent/permission/policies/user-configured-rules.ts`
     - `packages/agent-core/src/agent/permission/policies/yolo-mode-approve.ts`
+    - `packages/agent-core/src/agent/permission/types.ts`
   - `packages/agent-core-v2/src/agent/permissionPolicy//` 目录下源码文件示例：
     - `packages/agent-core-v2/src/agent/permissionPolicy/permissionPolicy.ts`
     - `packages/agent-core-v2/src/agent/permissionPolicy/permissionPolicyService.ts`

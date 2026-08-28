@@ -113,8 +113,7 @@ nighthawk -c
 
 `/provider` 支持以下方式添加供应商：
 
-- **NightHawk（OAuth）** — 验证码流程，在任意设备打开链接、登录并输入验证码即可授权
-- **NightHawk Platform API 密钥** — 输入来自 `platform.kimi.com` 或 `platform.kimi.ai` 的 API 密钥
+- **NightHawk Platform API 密钥** — 输入你的 NightHawk Platform API 密钥
 
 ::: tip 使用其他 AI 供应商
 如果你想接入 Anthropic、OpenAI、Google 等其他供应商，需要直接编辑 `~/.nighthawk/config.toml` 配置 API 密钥，详见[平台与模型](../configuration/providers.md)。配置项完整说明见[配置文件](../configuration/config-files.md)、[环境变量](../configuration/env-vars.md)和[配置覆盖](../configuration/overrides.md)。

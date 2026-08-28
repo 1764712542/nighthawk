@@ -31,7 +31,7 @@ telemetry = true
 
 [providers."managed:nighthawk"]
 type = "nighthawk"
-base_url = "https://api.kimi.com/coding/v1"
+base_url = "https://api.nighthawk.dev/v1"
 api_key = ""
 
 [models."nighthawk/k3"]
@@ -69,11 +69,11 @@ max_running_tasks = 4
 keep_alive_on_exit = false
 
 [services.nighthawk_search]
-base_url = "https://api.kimi.com/coding/v1/search"
+base_url = "https://api.nighthawk.dev/v1/search"
 api_key = ""
 
 [services.nighthawk_fetch]
-base_url = "https://api.kimi.com/coding/v1/fetch"
+base_url = "https://api.nighthawk.dev/v1/fetch"
 api_key = ""
 
 [[permission.rules]]
@@ -128,7 +128,6 @@ Each entry in the `providers` table defines an API provider, keyed by a unique n
 | `type` | `string` | Yes | Provider type: `nighthawk`, `anthropic`, `openai`, `openai_responses`, `google-genai`, `vertexai` |
 | `api_key` | `string` | No | API key, written in plain text in the config file |
 | `base_url` | `string` | No | API base URL |
-| `oauth` | `table` | No | OAuth credential reference (`storage` and `key` fields); injected automatically by the login flow — normally no need to write this by hand |
 | `env` | `table<string, string>` | No | Fallback source for provider credentials; see below |
 | `custom_headers` | `table<string, string>` | No | Custom HTTP headers attached to each request |
 
@@ -137,7 +136,7 @@ Each entry in the `providers` table defines an API provider, keyed by a unique n
 ```toml
 [providers.nighthawk.env]
 NIGHTHAWK_API_KEY = "sk-xxx"
-NIGHTHAWK_BASE_URL = "https://api.kimi.com/coding/v1"
+NIGHTHAWK_BASE_URL = "https://api.nighthawk.dev/v1"
 ```
 
 Priority: `api_key` field > `env` sub-table key > if both are absent, startup fails with an error.
@@ -407,7 +406,7 @@ Both fields can be set through the `NIGHTHAWK_IDENTITY_NAME` and `NIGHTHAWK_IDEN
 
 A name that contains no ASCII letters or digits (for example a purely Chinese name) leaves nothing to derive a slug from and falls back to `agent`; write `slug` explicitly if you need a specific protocol token.
 
-The identity is resolved once at startup and holds for the life of the process — it is announced to MCP servers and providers when connections are made, so it cannot change midway. Edits to this section take effect on the next start, for new sessions: a resumed session keeps the system prompt it was recorded with, since its past turns already speak under that identity. Likewise, an MCP OAuth authorization keeps the client registration it was granted under; reset that server's authentication to register under the new identity.
+The identity is resolved once at startup and holds for the life of the process — it is announced to MCP servers and providers when connections are made, so it cannot change midway. Edits to this section take effect on the next start, for new sessions: a resumed session keeps the system prompt it was recorded with, since its past turns already speak under that identity. Likewise, an MCP authorization keeps the client registration it was granted under; reset that server's authentication to register under the new identity.
 
 This section is read by the default `agent-core-v2` engine. It is ignored by the legacy `nighthawk` / `nighthawk -p` path selected with `NIGHTHAWK_LEGACY_FLAG=1`.
 
@@ -460,18 +459,17 @@ Like the `tools` / `disallowedTools` fields of an agent file, this section shape
 | --- | --- | --- | --- |
 | `base_url` | `string` | No | Service API URL |
 | `api_key` | `string` | No | API key |
-| `oauth` | `table` | No | OAuth credential reference, same structure as `providers.*.oauth` |
 | `custom_headers` | `table<string, string>` | No | Custom HTTP headers attached to each request |
 
-`base_url` and `api_key` can also come from environment variables, which take priority over the config file: `NIGHTHAWK_WEB_SEARCH_BASE_URL` / `NIGHTHAWK_WEB_SEARCH_API_KEY` for `nighthawk_search`, and `NIGHTHAWK_WEB_FETCH_BASE_URL` / `NIGHTHAWK_WEB_FETCH_API_KEY` for `nighthawk_fetch`. An env base URL defines a separate service endpoint, so the persisted API key, OAuth reference, and custom headers are not forwarded to it; set the matching env API key when that endpoint requires authentication. An env API key without an env base URL keeps the configured endpoint and custom headers but replaces both configured credential forms. Setting the base URL and API key through env without any config section also enables the service.
+`base_url` and `api_key` can also come from environment variables, which take priority over the config file: `NIGHTHAWK_WEB_SEARCH_BASE_URL` / `NIGHTHAWK_WEB_SEARCH_API_KEY` for `nighthawk_search`, and `NIGHTHAWK_WEB_FETCH_BASE_URL` / `NIGHTHAWK_WEB_FETCH_API_KEY` for `nighthawk_fetch`. An env base URL defines a separate service endpoint, so the persisted API key and custom headers are not forwarded to it; set the matching env API key when that endpoint requires authentication. An env API key without an env base URL keeps the configured endpoint and custom headers but replaces both configured credential forms. Setting the base URL and API key through env without any config section also enables the service.
 
 ```toml
 [services.nighthawk_search]
-base_url = "https://api.kimi.com/coding/v1/search"
+base_url = "https://api.nighthawk.dev/v1/search"
 api_key = "sk-xxx"
 
 [services.nighthawk_fetch]
-base_url = "https://api.kimi.com/coding/v1/fetch"
+base_url = "https://api.nighthawk.dev/v1/fetch"
 api_key = "sk-xxx"
 ```
 

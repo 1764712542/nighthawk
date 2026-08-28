@@ -14,7 +14,7 @@
 | --- | --- | --- | --- |
 | `/provider` | — | 打开交互式供应商管理器，查看、添加和删除已配置的供应商。详见[平台与模型 — `/provider` 与供应商管理](../configuration/providers.md#provider-—-交互式供应商管理) | 是 |
 | `/login` | `/connect` | 登录 NightHawk 托管服务：验证码流程授权 | 否 |
-| `/logout` | — | 移除已配置的供应商，或清除当前账户的 OAuth 凭证 | 否 |
+| `/logout` | — | 移除已配置的供应商，或清除当前账户的登录凭证 | 否 |
 | `/model` | — | 切换当前会话使用的 LLM 模型 | 是 |
 | `/secondary-model` | `/subagent-model` | 选择 subagent 的默认模型（写入 `[secondary_model] default_model`，详见[subagent 模型池](../configuration/config-files.md#subagent-模型池)）。在 subagent 模型池实验功能启用时可见 | 是 |
 | `/settings` | `/config` | 打开 TUI 内的设置面板 | 是 |
@@ -141,7 +141,7 @@ NightHawk CLI 随包内置了一组 Skill，直接以 `/<name>` 形式出现在�
 
 | 命令 | 说明 |
 | --- | --- |
-| `/mcp-config` | 配置 MCP server 并处理 MCP OAuth 登录。详见 [MCP](../customization/mcp.md) |
+| `/mcp-config` | 配置 MCP server 并处理 MCP 认证登录。详见 [MCP](../customization/mcp.md) |
 | `/custom-theme [<text>]` | 创建或编辑自定义 TUI 配色主题。详见 [主题](../customization/themes.md) |
 | `/update-config` | 查看或编辑 `config.toml`（模型、供应商、权限、hooks）和 `tui.toml`（主题、编辑器、通知、自动更新） |
 | `/check-nighthawk-docs` | 依据官方文档回答 NightHawk 产品问题（CLI 用法、配置、会员、错误码） |

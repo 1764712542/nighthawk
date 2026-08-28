@@ -14,7 +14,7 @@ Environment variables fall into three categories by function and cannot be colla
 
 1. **Locating the config file**: `NIGHTHAWK_HOME` sets the data root directory, making the config file path `$NIGHTHAWK_HOME/config.toml`. This step runs before all other resolution and is not a fallback for individual parameters.
 2. **Runtime switches**: A small set of variables like `NIGHTHAWK_DISABLE_TELEMETRY` directly shut down the corresponding subsystem — even if `config.toml` has `telemetry = true`, setting this variable to a truthy value disables telemetry. The semantics are "additionally disable", not "ordinary override".
-3. **Runtime endpoints and diagnostics**: Variables like `NIGHTHAWK_OAUTH_HOST`, `NIGHTHAWK_BASE_URL`, and `NIGHTHAWK_LOG_LEVEL` are read when the OAuth or logging subsystems initialize. For the full list, see [Environment variables](./env-vars.md).
+3. **Runtime endpoints and diagnostics**: Variables like `NIGHTHAWK_LOG_LEVEL` are read when the logging subsystem initializes. For the full list, see [Environment variables](./env-vars.md).
 
 ## Priority for ordinary runtime parameters
 

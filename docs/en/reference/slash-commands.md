@@ -14,7 +14,7 @@ Some commands are only available in the idle state. Executing these commands whi
 | --- | --- | --- | --- |
 | `/provider` | — | Open the interactive provider manager to view, add, and remove configured providers. See [Platforms & Models — `/provider` and provider management](../configuration/providers.md#provider-—-interactive-provider-management) | Yes |
 | `/login` | `/connect` | Login to a model provider: mainstream providers and custom endpoints via API key | No |
-| `/logout` | — | Remove a configured provider or clear OAuth credentials for the currently selected account | No |
+| `/logout` | — | Remove a configured provider or clear credentials for the currently selected account | No |
 | `/model` | — | Switch the LLM model used in the current session | Yes |
 | `/secondary-model` | `/subagent-model` | Pick the default model for subagents (writes `[secondary_model] default_model`; see the [subagent model pool](../configuration/config-files.md#subagent-model-pool)). Visible when the subagent model pool experiment is enabled | Yes |
 | `/settings` | `/config` | Open the settings panel inside the TUI | Yes |
@@ -143,7 +143,7 @@ NightHawk CLI ships with a set of built-in Skills that appear directly as `/<nam
 
 | Command | Description |
 | --- | --- |
-| `/mcp-config` | Configure MCP servers and handle MCP OAuth login. See [MCP](../customization/mcp.md) |
+| `/mcp-config` | Configure MCP servers and handle MCP auth login. See [MCP](../customization/mcp.md) |
 | `/custom-theme [<text>]` | Create or edit a custom TUI color theme. See [Themes](../customization/themes.md) |
 | `/update-config` | Inspect or edit `config.toml` (model, provider, permission, hooks) and `tui.toml` (theme, editor, notifications, auto-update) |
 | `/check-nighthawk-docs` | Answer NightHawk product questions (CLI usage, configuration, membership, error codes) against the official docs |

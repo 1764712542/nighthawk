@@ -62,7 +62,7 @@ HTTP 状态码几乎总是 200，业务结果以 `code` 为准。例外情况：
 | 段位 | 含义 | 示例 |
 | --- | --- | --- |
 | `0` | 成功 | |
-| `400xx` | 请求参数错误 | `40001` 校验失败（`details` 逐字段说明）、`40003` 供应商由 OAuth 托管 |
+| `400xx` | 请求参数错误 | `40001` 校验失败（`details` 逐字段说明）、`40003` 供应商由托管服务管理 |
 | `401xx` | 鉴权与就绪状态 | `40101` 未授权、`40110` 未配置供应商、`40113` 模型未解析 |
 | `404xx` | 资源不存在 | `40401` 会话、`40408` MCP 服务、`40409` 文件路径 |
 | `409xx` | 状态冲突 | `40901` 会话忙、`40902` 审批已解决、`40922` 分页条件与 `page_token` 不符 |
@@ -121,94 +121,6 @@ HTTP 状态码几乎总是 200，业务结果以 `code` 为准。例外情况：
 请求服务优雅退出。响应先发出，随后立即执行关闭，因此调用方可以信任收到的响应。该路由仅在 loopback 绑定时挂载——非 loopback 绑定时它根本不会被注册（请求得到 404），除非服务以 `--allow-remote-shutdown` 启动。
 
 成功时 `data` 为 `{ "ok": true }`。
-
-### 登录与用量
-
-这组端点驱动托管 NightHawk OAuth 登录的生命周期，并暴露账号级信息。托管供应商名为 `managed:nighthawk`；下面每个端点上可选的 `provider` 参数都默认取它。
-
-| 方法与路径 | 说明 |
-| --- | --- |
-| `GET /api/v1/auth` | 鉴权就绪状态快照 |
-| `POST /api/v1/oauth/login` | 发起 OAuth device-code 登录流程 |
-| `GET /api/v1/oauth/login` | 轮询登录流程状态 |
-| `DELETE /api/v1/oauth/login` | 取消进行中的登录流程 |
-| `POST /api/v1/oauth/logout` | 登出托管供应商 |
-| `GET /api/v1/oauth/usage` | 套餐用量与限额 |
-| `GET /api/v1/oauth/userinfo` | 账号资料 |
-| `GET /api/v1/oauth/region` | 解析客户端所属区域（`mainland-cn` / `global`） |
-
-#### `GET /api/v1/auth`
-
-鉴权就绪状态快照：服务是否具备可用的模型配置，以及托管供应商的登录状态。当至少配置了一个供应商、设置了默认模型、且托管供应商（如存在）未被吊销时，`ready` 为 `true`。
-
-成功时 `data` 携带 `ready`（布尔值）、`providers_count`（已配置供应商数量）、`default_model`（全局默认模型别名，或 `null`）与 `managed_provider`（`null`，或 `{ name, status }`，其中 `status` 为 `authenticated` / `expired` / `revoked` / `unauthenticated` 之一）。
-
-#### `POST /api/v1/oauth/login`
-
-为托管供应商发起 OAuth device-code 登录流程；发起新流程会中止同一供应商进行中的流程。账号已登录时无需用户交互，响应会立即报告 `authenticated`。
-
-| 参数 | 位置 | 类型 | 说明 |
-| --- | --- | --- | --- |
-| `provider` | body | string | 托管供应商名称。默认 `managed:nighthawk` |
-| `region` | body | string | `mainland-cn` 或 `global`；覆盖 `GET /api/v1/oauth/region` 一节描述的区域解析结果，仅对本次流程生效 |
-
-成功时 `data` 有两种形态。进行中的流程——`{ flow_id, provider, status: "pending", verification_uri, verification_uri_complete, user_code, expires_in, interval, expires_at }`：打开 `verification_uri_complete`（或打开 `verification_uri` 并输入 `user_code`），然后每隔 `interval` 秒轮询 `GET /api/v1/oauth/login`，直到流程完结或超过 `expires_at`（`expires_in` 是以秒表示的同一时限）。已登录的快速路径——`{ flow_id, provider, status: "authenticated" }`。
-
-#### `GET /api/v1/oauth/login`
-
-轮询某供应商的登录流程状态。尚未发起过流程时返回 `null`。
-
-| 参数 | 位置 | 类型 | 说明 |
-| --- | --- | --- | --- |
-| `provider` | query | string | 托管供应商名称。默认 `managed:nighthawk` |
-
-成功时 `data` 为 `null` 或流程快照：`{ flow_id, provider, status, verification_uri, verification_uri_complete, user_code, expires_in, expires_at, interval }`，其中 `status` 为 `pending` / `authenticated` / `denied` / `expired` / `cancelled`。流程离开 `pending` 后，`resolved_at` 记录其到达终态的时间，`error_message` 描述失败的流程。
-
-#### `DELETE /api/v1/oauth/login`
-
-取消某供应商进行中的登录流程。没有进行中的流程时，该调用为空操作，返回最近一次已知状态。
-
-| 参数 | 位置 | 类型 | 说明 |
-| --- | --- | --- | --- |
-| `provider` | query | string | 托管供应商名称。默认 `managed:nighthawk` |
-
-成功时 `data` 为 `{ cancelled, status }`：只有确实中止了一个 `pending` 流程时 `cancelled` 才为 `true`，`status` 为调用后的流程状态。
-
-#### `POST /api/v1/oauth/logout`
-
-登出托管供应商：丢弃已存储的 OAuth 凭据、中止进行中的登录流程，并把托管供应商从配置中移除。OAuth 托管的供应商拒绝手动编辑与删除（见下文 `PUT` / `DELETE /api/v1/providers/{provider_id}`），因此要移除它需先登出。
-
-| 参数 | 位置 | 类型 | 说明 |
-| --- | --- | --- | --- |
-| `provider` | body | string | 托管供应商名称。默认 `managed:nighthawk` |
-
-成功时 `data` 为 `{ logged_out: true, provider }`。
-
-#### `GET /api/v1/oauth/usage`
-
-托管账号的套餐用量与限额，实时取自账号服务。上游失败不会让信封失败——它以 `kind: "error"` 的形式带内返回。
-
-| 参数 | 位置 | 类型 | 说明 |
-| --- | --- | --- | --- |
-| `provider` | query | string | 托管供应商名称。默认 `managed:nighthawk` |
-
-成功时 `data` 为 `{ kind: "ok", summary, limits, extra_usage }` 或 `{ kind: "error", message, status? }`，其中 `status` 为上游 HTTP 状态码（如存在）。在 `ok` 形态中，`summary`（可空）是主配额行，`limits` 列出每个配额窗口；一行的结构为 `{ name?, window?, used, limit, reset_at? }`，其中 `window` 为 `{ duration, unit }`，`unit` 为 `minute` / `hour` / `day` / `week` 之一。`extra_usage`（可空）是按量付费钱包：`{ balance_cents, total_cents, monthly_charge_limit_enabled, monthly_charge_limit_cents, monthly_used_cents, currency }`。
-
-#### `GET /api/v1/oauth/userinfo`
-
-托管账号的资料，带内 `kind: "error"` 约定与 `GET /api/v1/oauth/usage` 相同。
-
-| 参数 | 位置 | 类型 | 说明 |
-| --- | --- | --- | --- |
-| `provider` | query | string | 托管供应商名称。默认 `managed:nighthawk` |
-
-成功时 `data` 为 `{ kind: "ok", userInfo }` 或 `{ kind: "error", message, status? }`。`userInfo` 始终携带 `userId`、`nickname`、`status`、`region`、`userLevel`、`userLevelName`、`domain`、`domainName`，并可能附加 `globalId`、`bio`、`avatar`、`username`、`email`、`phone`（`{ countryCode, number }`）、`createdTime` 与 `lastLoginTime`。
-
-#### `GET /api/v1/oauth/region`
-
-解析该客户端所属的 NightHawk 区域。结果在本地推导，不经网络探测：优先取环境变量或配置固定的 OAuth host，其次是已配置的 OAuth key，再次是 home 目录中的区域标记文件；默认为 `mainland-cn`。
-
-成功时 `data` 为 `{ region }`，`region` 为 `mainland-cn` / `global` 之一。
 
 ### 配置
 
@@ -292,7 +204,7 @@ HTTP 状态码几乎总是 200，业务结果以 `code` 为准。例外情况：
 | `PUT /api/v1/providers/{provider_id}` | 整体替换供应商配置 |
 | `DELETE /api/v1/providers/{provider_id}` | 删除供应商（204） |
 | `POST /api/v1/providers/{provider_id}:refresh` | 刷新该供应商的模型元数据 |
-| `POST /api/v1/providers:{action}` | 集合级动作：`refresh` / `refresh_oauth` / `import_catalog` / `import_registry` |
+| `POST /api/v1/providers:{action}` | 集合级动作：`refresh` / `import_catalog` / `import_registry` |
 | `GET /api/v1/catalog/providers` | 浏览 models.dev 目录（服务端代理） |
 | `GET /api/v1/catalog/providers/{catalog_id}` | 读取目录中单个条目 |
 
@@ -328,7 +240,7 @@ HTTP 状态码几乎总是 200，业务结果以 `code` 为准。例外情况：
 | `base_url` | string | API 基础 URL，如已设置 |
 | `default_model` | string | 该供应商的默认模型别名，如已设置 |
 | `has_api_key` | boolean | 是否已存储凭据 |
-| `status` | string | 存在 API 密钥或缓存的 OAuth token 时为 `connected`，否则为 `unconfigured`（`error` 在 schema 中保留） |
+| `status` | string | 存在 API 密钥或缓存的凭据时为 `connected`，否则为 `unconfigured`（`error` 在 schema 中保留） |
 | `models` | array | 该供应商的模型别名 id |
 
 #### `POST /api/v1/providers`
@@ -389,7 +301,7 @@ HTTP 状态码几乎总是 200，业务结果以 `code` 为准。例外情况：
 成功时 `data` 为 `{ provider }`，即保存后的供应商条目。
 
 - `40001`：重命名后的别名 id 会与其他供应商的别名冲突
-- `40003`：供应商由 OAuth 托管——请改用 `POST /api/v1/oauth/logout` 登出
+- `40003`：供应商由托管服务管理——请改用登出操作
 - `40412`：供应商不存在
 - `40921`：`new_id` 已被占用
 
@@ -403,7 +315,7 @@ HTTP 状态码几乎总是 200，业务结果以 `code` 为准。例外情况：
 
 成功时服务应答 204 且无响应体——状态行本身即表示删除成功（见 [响应信封](#响应信封)）。
 
-- `40003`：供应商由 OAuth 托管——请改用 `POST /api/v1/oauth/logout` 登出
+- `40003`：供应商由托管服务管理——请改用登出操作
 - `40412`：供应商不存在
 
 #### `POST /api/v1/providers/{provider_id}:refresh`
@@ -425,12 +337,6 @@ HTTP 状态码几乎总是 200，业务结果以 `code` 为准。例外情况：
 
 成功时 `data` 为与 `POST /api/v1/providers/{provider_id}:refresh` 相同的刷新报告（`changed` / `unchanged` / `failed`）。
 
-#### `POST /api/v1/providers:refresh_oauth`
-
-与 `POST /api/v1/providers:refresh` 相同的刷新，仅限 OAuth 凭据的供应商。请求体可选且被忽略。
-
-成功时 `data` 为刷新报告（`changed` / `unchanged` / `failed`）。
-
 #### `POST /api/v1/providers:import_catalog`
 
 把一个 models.dev 目录条目导入为已配置供应商；响应为 HTTP 201 加标准信封。通信协议与端点来自目录解析，目录中的每个模型都写为一个别名。导入已存在的 id 等同于刷新——供应商条目及其别名按目录重写，省略 `api_key` 表示保留已存密钥。全局默认指针绝不被修改，仅在完全未配置默认模型时，以第一个导入的模型播种 `default_model`。
@@ -445,7 +351,7 @@ HTTP 状态码几乎总是 200，业务结果以 `code` 为准。例外情况：
 成功时 `data` 为 `{ provider, models_imported }`——供应商条目与写入的别名数量。
 
 - `40001`：缺少 `catalog_id` 或其他请求体校验失败
-- `40003`：目标供应商已存在且由 OAuth 托管
+- `40003`：目标供应商已存在且由托管服务管理
 - `40004`：条目无法导入（被拒绝、要求 `base_url`、没有可导入的模型，或其 id 不能用作供应商 id）
 - `40417`：不存在该 `catalog_id` 的目录条目
 - `50004`：models.dev 目录不可用
@@ -462,7 +368,7 @@ HTTP 状态码几乎总是 200，业务结果以 `code` 为准。例外情况：
 成功时 `data` 为 `{ providers, models_imported }`——供应商条目数组与写入的别名总数。
 
 - `40001`：缺少 `url` 或其他请求体校验失败
-- `40003`：某个列出的供应商已存在且由 OAuth 托管
+- `40003`：某个列出的供应商已存在且由托管服务管理
 - `40005`：注册表无法获取或解析，或未列出可导入的供应商
 
 #### `GET /api/v1/catalog/providers`
@@ -626,7 +532,7 @@ schema 还接受 `agent_config` 内的 `system_prompt`、`tools`、`mcp_servers`
 
 #### `POST /api/v1/sessions/{session_id}/title/generate`
 
-通过托管供应商的 `chat_title` 工具根据会话的提示词生成标题并应用，同时广播 `session.meta.updated`。生成需要托管 OAuth 登录和 `auto_session_title` 实验开关；未提供 `force` 时，已有自定义标题或已生成标题的会话会上报为不可用，而不会被覆盖。
+通过托管供应商的 `chat_title` 工具根据会话的提示词生成标题并应用，同时广播 `session.meta.updated`。生成需要托管服务登录和 `auto_session_title` 实验开关；未提供 `force` 时，已有自定义标题或已生成标题的会话会上报为不可用，而不会被覆盖。
 
 | 参数 | 位置 | 类型 | 说明 |
 | --- | --- | --- | --- |
@@ -637,7 +543,7 @@ schema 还接受 `agent_config` 内的 `system_prompt`、`tools`、`mcp_servers`
 成功时，`data` 为 `{ title }`——当前应用到会话的标题。
 
 - `40401`：会话不存在
-- `40923`：生成不可用——开关未开启、没有托管 OAuth 登录或尚无任何提示词内容、已有标题但未提供 `force`，或后端请求失败
+- `40923`：生成不可用——开关未开启、没有托管服务登录或尚无任何提示词内容、已有标题但未提供 `force`，或后端请求失败
 
 #### `POST /api/v1/sessions/{session_id}:{action}`
 
@@ -2140,7 +2046,7 @@ PTY 终端接口；仅在 loopback 绑定时挂载（非 loopback 绑定会跳�
 
 ### MCP 管理（`/api/v2/mcp`）
 
-`/api/v2/mcp/*` 路由是服务的统一 MCP 管理面：独立于任何会话，直接管理 MCP server 注册表本身——全局（用户级）CRUD 与逐条校验、连接测试探测、locator 寻址的检查目录、按 server 的授权状态列表，以及完整的 OAuth 流程生命周期。
+`/api/v2/mcp/*` 路由是服务的统一 MCP 管理面：独立于任何会话，直接管理 MCP server 注册表本身——全局（用户级）CRUD 与逐条校验、连接测试探测、locator 寻址的检查目录、按 server 的授权状态列表，以及完整的认证流程生命周期。
 
 | 方法与路径 | 说明 |
 | --- | --- |
@@ -2151,15 +2057,15 @@ PTY 终端接口；仅在 loopback 绑定时挂载（非 loopback 绑定会跳�
 | `DELETE /api/v2/mcp/servers/{name}` | 删除一个用户级条目 |
 | `POST /api/v2/mcp/servers:test` | 对单个 server 发起真实连接探测 |
 | `POST /api/v2/mcp/servers:inspect` | locator 寻址的目录及批量连接探测 |
-| `GET /api/v2/mcp/auth-statuses` | 目录中各 server 的 OAuth 状态 |
-| `POST /api/v2/mcp/auth:begin` | 开始一次交互式 OAuth 流程 |
-| `POST /api/v2/mcp/auth:complete` | 等待浏览器回调并完成 code 交换 |
-| `POST /api/v2/mcp/auth:cancel` | 终止已开始的 OAuth 流程 |
+| `GET /api/v2/mcp/auth-statuses` | 目录中各 server 的认证状态 |
+| `POST /api/v2/mcp/auth:begin` | 开始一次交互式认证流程 |
+| `POST /api/v2/mcp/auth:complete` | 等待浏览器回调并完成凭证交换 |
+| `POST /api/v2/mcp/auth:cancel` | 终止已开始的认证流程 |
 | `POST /api/v2/mcp/auth:reset` | 清除某个 server 已存储的凭据 |
 
-该管理面有两种寻址方式。CRUD 路由与 `servers:test` 使用普通的运行时 `name`；检查与 OAuth 路由使用 **locator**——文件层条目用 `{ "source": "global", "name" }`，插件清单条目用 `{ "source": "plugin", "pluginId", "serverName" }`——因为插件条目和文件条目可能共用同一个运行时名称。检查条目还带有一个稳定的 `serverId` 线上标识：`global:<name>` 或 `plugin:<pluginId>:<serverName>`（URL 编码）。
+该管理面有两种寻址方式。CRUD 路由与 `servers:test` 使用普通的运行时 `name`；检查与认证路由使用 **locator**——文件层条目用 `{ "source": "global", "name" }`，插件清单条目用 `{ "source": "plugin", "pluginId", "serverName" }`——因为插件条目和文件条目可能共用同一个运行时名称。检查条目还带有一个稳定的 `serverId` 线上标识：`global:<name>` 或 `plugin:<pluginId>:<serverName>`（URL 编码）。
 
-大多数路由接受可选的 `cwd`（查询参数，`:`-action 路由则为请求体字段）。不传时目录只覆盖用户级文件与插件清单；传入后，该目录的项目根层与项目本地层会并入——但仅当工作区受信任时，否则项目层会被跳过。对 stdio server 执行 `servers:test` 时，`cwd` 同时是子进程的工作目录。连接探测与 OAuth 调用会等待服务配置加载完成后再执行。
+大多数路由接受可选的 `cwd`（查询参数，`:`-action 路由则为请求体字段）。不传时目录只覆盖用户级文件与插件清单；传入后，该目录的项目根层与项目本地层会并入——但仅当工作区受信任时，否则项目层会被跳过。对 stdio server 执行 `servers:test` 时，`cwd` 同时是子进程的工作目录。连接探测与认证调用会等待服务配置加载完成后再执行。
 
 #### `GET /api/v2/mcp/servers` 与 `GET /api/v2/mcp/servers/{name}`
 
@@ -2205,40 +2111,40 @@ PTY 终端接口；仅在 loopback 绑定时挂载（非 loopback 绑定会跳�
 
 #### `POST /api/v2/mcp/servers:inspect`
 
-locator 寻址的目录（脱敏配置），外加对每个 OAuth 候选的批量真实连接探测。
+locator 寻址的目录（脱敏配置），外加对每个候选的批量真实连接探测。
 
 | 参数 | 位置 | 类型 | 说明 |
 | --- | --- | --- | --- |
 | `targets` | body | array | 缩小目录范围的 locator 数组；不传则检查全部 server |
 | `cwd` | body | string | 并入该（受信任）目录的项目层 |
 
-成功时 `data` 是检查结果数组，每项为 `{ serverId, locator, runtimeName, canonicalUrl?, origin, config, enabled, editable, authStatus, checkedAt?, error? }`：`canonicalUrl` 是远程 server 的凭据 URL，`config` 为脱敏视图，`authStatus` 取值为 `not-applicable` / `bearer-token` / `oauth-required` / `oauth-authorized` / `oauth-expired` / `unavailable` 之一。运行时名称被多个启用的 server 共用时无法无歧义地探测，会报告 `unavailable` 并在 `error` 中给出说明。探测遇到过期授权时，可能刷新或作废已存储的凭据。
+成功时 `data` 是检查结果数组，每项为 `{ serverId, locator, runtimeName, canonicalUrl?, origin, config, enabled, editable, authStatus, checkedAt?, error? }`：`canonicalUrl` 是远程 server 的凭据 URL，`config` 为脱敏视图，`authStatus` 取值为 `not-applicable` / `bearer-token` / `auth-required` / `authorized` / `expired` / `unavailable` 之一。运行时名称被多个启用的 server 共用时无法无歧义地探测，会报告 `unavailable` 并在 `error` 中给出说明。探测遇到过期授权时，可能刷新或作废已存储的凭据。
 
 - `40001`：校验失败
 - `40408`：`targets` 中有 locator 未匹配到任何条目
 
 #### `GET /api/v2/mcp/auth-statuses`
 
-注册表目录中各 server 的 OAuth 状态——只需要授权维度时，这是比 `servers:inspect` 更轻量的选择。
+注册表目录中各 server 的认证状态——只需要授权维度时，这是比 `servers:inspect` 更轻量的选择。
 
 | 参数 | 位置 | 类型 | 说明 |
 | --- | --- | --- | --- |
 | `cwd` | query | string | 并入该（受信任）目录的项目层 |
-| `verify` | query | string | `true` 对每个 OAuth 候选发起真实连接验证；`false` 完全离线（仅凭配置与已存储 token 分类）；缺省保留隐式 OAuth 探测，只探测未固定且没有已存储凭据的远程 server |
+| `verify` | query | string | `true` 对每个候选发起真实连接验证；`false` 完全离线（仅凭配置与已存储 token 分类）；缺省保留隐式探测，只探测未固定且没有已存储凭据的远程 server |
 
 成功时 `data` 是 `{ name, authStatus }` 数组，`authStatus` 取值与 `servers:inspect` 相同。验证探测可能刷新或作废已存储的凭据。
 
 #### `POST /api/v2/mcp/auth:begin` / `:complete` / `:cancel` / `:reset`
 
-远程 server 的 OAuth 流程生命周期。`auth:begin` 接受 locator 请求体（外加可选的 `cwd` 查询参数），返回 `data` 为 `{ status: "authorization-required", flowId, authorizationUrl }`——在浏览器中打开该 URL 完成授权——或当授权已存在时返回 `{ status: "already-authorized" }`。目标 server 必须使用远程传输（`http` / `sse`）且不含静态 bearer token；静态请求头仅当配置显式设置 `auth: "oauth"` 时允许。
+远程 server 的认证流程生命周期。`auth:begin` 接受 locator 请求体（外加可选的 `cwd` 查询参数），返回 `data` 为 `{ status: "authorization-required", flowId, authorizationUrl }`——在浏览器中打开该 URL 完成授权——或当授权已存在时返回 `{ status: "already-authorized" }`。目标 server 必须使用远程传输（`http` / `sse`）且不含静态 bearer token；静态请求头仅当配置显式设置 `auth: "oauth"` 时允许。
 
-`auth:complete` 等待已开始流程的浏览器回调并完成 code 交换。请求体为 `{ flowId, timeoutMs? }`：等待默认 15 分钟（`timeoutMs` 可覆盖），空闲流程无论如何都会在 15 分钟后过期，关闭 HTTP 连接会中止等待。成功时 `data` 为 `null`。
+`auth:complete` 等待已开始流程的浏览器回调并完成凭证交换。请求体为 `{ flowId, timeoutMs? }`：等待默认 15 分钟（`timeoutMs` 可覆盖），空闲流程无论如何都会在 15 分钟后过期，关闭 HTTP 连接会中止等待。成功时 `data` 为 `null`。
 
 `auth:cancel` 在未完成的情况下终止已开始的流程（`{ flowId }`）；未知流程会被忽略。`auth:reset` 接受 locator 请求体，清除该 server 已存储的凭据——失效事件会送达存活的会话。
 
-- `40001`：校验失败——包括 `:complete` 的 `flowId` 未知，或 `:begin` 的 server 无法使用 OAuth（stdio 传输、静态 bearer token，或未设置 `auth: "oauth"` 的静态请求头）
+- `40001`：校验失败——包括 `:complete` 的 `flowId` 未知，或 `:begin` 的 server 无法使用认证（stdio 传输、静态 bearer token，或未设置 `auth: "oauth"` 的静态请求头）
 - `40408`：（`:begin` / `:reset`）locator 未匹配到任何条目
-- `40929`：OAuth 流程本身失败
+- `40929`：认证流程本身失败
 
 ## WebSocket 协议
 

@@ -17,7 +17,7 @@ If you are migrating from the legacy version, follow the steps below — a singl
 
 There are two ways to migrate.
 
-The **first time you run `nighthawk`** after installing nighthawk, it automatically checks whether legacy-cli data exists under `~/.kimi/`. If it finds any, a migration prompt appears, and you can choose to migrate now, do it later, or never be asked again.
+The **first time you run `nighthawk`** after installing nighthawk, it automatically checks whether legacy-cli data exists under the legacy home directory. If it finds any, a migration prompt appears, and you can choose to migrate now, do it later, or never be asked again.
 
 You can also **run it manually at any time**:
 
@@ -31,10 +31,10 @@ You can choose whether to migrate chat sessions as well. If you don't need the h
 
 **What gets migrated**: configuration (`config.toml`), MCP server configuration, input history, and whichever chat sessions you chose to migrate.
 
-**What does not get migrated**: OAuth credentials and MCP service authorizations are not copied, so you will need to re-authorize MCP servers after migrating. legacy-cli plugins are also out of scope.
+**What does not get migrated**: MCP service authorizations are not copied, so you will need to re-authorize MCP servers after migrating. legacy-cli plugins are also out of scope.
 
 ::: tip
-Migration **never modifies or deletes** any of the old data under `~/.kimi/`. legacy-cli keeps working as before, and the two do not interfere with each other. Migration can also be run repeatedly — sessions that have already been migrated are not imported again.
+Migration **never modifies or deletes** any of the old data under the legacy home directory. legacy-cli keeps working as before, and the two do not interfere with each other. Migration can also be run repeatedly — sessions that have already been migrated are not imported again.
 :::
 
 After migration, sessions imported from legacy-cli are tagged with `[imported]` in the session picker so you can tell them apart from new ones.

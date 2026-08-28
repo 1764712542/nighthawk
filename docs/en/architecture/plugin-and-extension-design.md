@@ -40,7 +40,7 @@ Markdown + YAML frontmatter (`name` / `description` / `whenToUse` / `type` / `di
 
 ### 2. MCP — capability extension
 
-Any MCP server (stdio / sse / http transport) connects through `McpConnectionManager`, and tools register under the namespace `mcp__<server>__<tool>`. A `needs-auth` state machine guides OAuth.
+Any MCP server (stdio / sse / http transport) connects through `McpConnectionManager`, and tools register under the namespace `mcp__<server>__<tool>`.
 
 ### 3. Plugin manifest — packaged distribution
 

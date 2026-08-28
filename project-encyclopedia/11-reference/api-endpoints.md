@@ -18,9 +18,31 @@ kap-server `/api/v1` 的主要端点。
 
 approvals、questions、files、fs、terminals、plugins、search、transcript、snapshot、tasks。
 
+## 专业实现要点（开发流程视角）
+
+### 需求分析
+
+参考手册要支持用户快速查找参数、命令、API、协议。
+
+### 设计决策
+
+以表格和代码块为主，保持条目化、可复制。
+
+### 实现步骤
+
+从 CLI 定义、protocol schema、SDK 类型和路由源码提取事实。
+
+### 验证方式
+
+运行 `nighthawk --help`、`pnpm doctor` 或对照 schema 测试。
+
+### 维护注意
+
+参考内容随代码变更同步更新。
+
 ## 核心实现细节（源码导出）
 
-以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数、类与方法：
 
   - `packages/kap-server/src/routes//` 目录下源码文件示例：
     - `packages/kap-server/src/routes/action-dispatch.ts`
@@ -43,6 +65,10 @@ approvals、questions、files、fs、terminals、plugins、search、transcript�
     - `packages/kap-server/src/routes/registerApiV1Routes.ts`
     - `packages/kap-server/src/routes/registerApiV2Routes.ts`
     - `packages/kap-server/src/routes/runtime.ts`
+    - `packages/kap-server/src/routes/search.ts`
+    - `packages/kap-server/src/routes/sessionAgentConfig.ts`
+    - `packages/kap-server/src/routes/sessionExport.ts`
+    - `packages/kap-server/src/routes/sessionMedia.ts`
   - `packages/kap-server/src/protocol//` 目录下源码文件示例：
     - `packages/kap-server/src/protocol/approval.ts`
     - `packages/kap-server/src/protocol/asyncapi.ts`
@@ -64,6 +90,10 @@ approvals、questions、files、fs、terminals、plugins、search、transcript�
     - `packages/kap-server/src/protocol/rest-guiStore.ts`
     - `packages/kap-server/src/protocol/rest-message.ts`
     - `packages/kap-server/src/protocol/rest-meta.ts`
+    - `packages/kap-server/src/protocol/rest-modelCatalog.ts`
+    - `packages/kap-server/src/protocol/rest-oauth.ts`
+    - `packages/kap-server/src/protocol/rest-plugin.ts`
+    - `packages/kap-server/src/protocol/rest-prompt.ts`
 
 ## 证据与代码位置
 

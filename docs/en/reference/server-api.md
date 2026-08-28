@@ -62,7 +62,7 @@ Error codes are grouped by band:
 | Band | Meaning | Examples |
 | --- | --- | --- |
 | `0` | Success | |
-| `400xx` | Bad request | `40001` validation failed (`details` lists each field), `40003` provider is OAuth-managed |
+| `400xx` | Bad request | `40001` validation failed (`details` lists each field), `40003` provider is managed |
 | `401xx` | Auth and readiness | `40101` unauthorized, `40110` no provider configured, `40113` model not resolved |
 | `404xx` | Not found | `40401` session, `40408` MCP server, `40409` file path |
 | `409xx` | State conflict | `40901` session busy, `40902` approval already resolved, `40922` page conditions mismatch `page_token` |
@@ -121,94 +121,6 @@ On success, `data` carries:
 Asks the server to shut down gracefully. The reply is sent first and the shutdown runs immediately after, so the caller can trust the response it received. The route is mounted only on loopback binds — on a non-loopback bind it is not registered at all (requests hit a 404) unless the server was started with `--allow-remote-shutdown`.
 
 On success, `data` is `{ "ok": true }`.
-
-### Login and usage
-
-These endpoints drive the managed NightHawk OAuth login lifecycle and expose account-level information. The managed provider is named `managed:nighthawk`; the optional `provider` parameter on every endpoint below defaults to it.
-
-| Method and path | Description |
-| --- | --- |
-| `GET /api/v1/auth` | Auth readiness snapshot |
-| `POST /api/v1/oauth/login` | Start the OAuth device-code login flow |
-| `GET /api/v1/oauth/login` | Poll the login flow state |
-| `DELETE /api/v1/oauth/login` | Cancel a pending login flow |
-| `POST /api/v1/oauth/logout` | Log out the managed provider |
-| `GET /api/v1/oauth/usage` | Plan usage and limits |
-| `GET /api/v1/oauth/userinfo` | Account profile |
-| `GET /api/v1/oauth/region` | Resolve the client region (`mainland-cn` / `global`) |
-
-#### `GET /api/v1/auth`
-
-Auth readiness snapshot: whether the server has a usable model configuration, plus the managed provider's login state. `ready` is `true` when at least one provider is configured, a default model is set, and the managed provider (when present) is not revoked.
-
-On success, `data` carries `ready` (boolean), `providers_count` (number of configured providers), `default_model` (the global default model alias, or `null`), and `managed_provider` (`null`, or `{ name, status }` with `status` one of `authenticated` / `expired` / `revoked` / `unauthenticated`).
-
-#### `POST /api/v1/oauth/login`
-
-Starts an OAuth device-code login flow for the managed provider; starting a new flow aborts any pending flow for the same provider. When the account is already authenticated, no user interaction is needed and the response reports `authenticated` immediately.
-
-| Parameter | In | Type | Description |
-| --- | --- | --- | --- |
-| `provider` | body | string | Managed provider name. Default `managed:nighthawk` |
-| `region` | body | string | `mainland-cn` or `global`; overrides the region resolution described under `GET /api/v1/oauth/region` for this flow |
-
-On success, `data` has one of two shapes. A pending flow — `{ flow_id, provider, status: "pending", verification_uri, verification_uri_complete, user_code, expires_in, interval, expires_at }`: open `verification_uri_complete` (or `verification_uri` and enter `user_code`), then poll `GET /api/v1/oauth/login` every `interval` seconds until the flow resolves or `expires_at` passes (`expires_in` is the same deadline in seconds). The already-authenticated fast path — `{ flow_id, provider, status: "authenticated" }`.
-
-#### `GET /api/v1/oauth/login`
-
-Polls the login flow state for a provider. Returns `null` when no flow has been started.
-
-| Parameter | In | Type | Description |
-| --- | --- | --- | --- |
-| `provider` | query | string | Managed provider name. Default `managed:nighthawk` |
-
-On success, `data` is `null` or a flow snapshot: `{ flow_id, provider, status, verification_uri, verification_uri_complete, user_code, expires_in, expires_at, interval }`, where `status` is `pending` / `authenticated` / `denied` / `expired` / `cancelled`. Once the flow leaves `pending`, `resolved_at` records when it reached its terminal state and `error_message` describes a failed flow.
-
-#### `DELETE /api/v1/oauth/login`
-
-Cancels the pending login flow for a provider. When no flow is pending, the call is a no-op that reports the last known state.
-
-| Parameter | In | Type | Description |
-| --- | --- | --- | --- |
-| `provider` | query | string | Managed provider name. Default `managed:nighthawk` |
-
-On success, `data` is `{ cancelled, status }`: `cancelled` is `true` only when a `pending` flow was actually aborted, and `status` is the flow state after the call.
-
-#### `POST /api/v1/oauth/logout`
-
-Logs out the managed provider: discards the stored OAuth credential, aborts any pending login flow, and removes the managed provider from the configuration. OAuth-managed providers reject manual edit and delete (see `PUT` / `DELETE /api/v1/providers/{provider_id}` below), so log out first to remove one.
-
-| Parameter | In | Type | Description |
-| --- | --- | --- | --- |
-| `provider` | body | string | Managed provider name. Default `managed:nighthawk` |
-
-On success, `data` is `{ logged_out: true, provider }`.
-
-#### `GET /api/v1/oauth/usage`
-
-Plan usage and limits of the managed account, fetched live from the account service. An upstream failure does not fail the envelope — it comes back in-band with `kind: "error"`.
-
-| Parameter | In | Type | Description |
-| --- | --- | --- | --- |
-| `provider` | query | string | Managed provider name. Default `managed:nighthawk` |
-
-On success, `data` is `{ kind: "ok", summary, limits, extra_usage }` or `{ kind: "error", message, status? }`, where `status` is the upstream HTTP status when one exists. In the `ok` shape, `summary` (nullable) is the primary quota row and `limits` lists every quota window; a row is `{ name?, window?, used, limit, reset_at? }` with `window` as `{ duration, unit }`, `unit` one of `minute` / `hour` / `day` / `week`. `extra_usage` (nullable) is the pay-as-you-go wallet: `{ balance_cents, total_cents, monthly_charge_limit_enabled, monthly_charge_limit_cents, monthly_used_cents, currency }`.
-
-#### `GET /api/v1/oauth/userinfo`
-
-Profile of the managed account, with the same in-band `kind: "error"` convention as `GET /api/v1/oauth/usage`.
-
-| Parameter | In | Type | Description |
-| --- | --- | --- | --- |
-| `provider` | query | string | Managed provider name. Default `managed:nighthawk` |
-
-On success, `data` is `{ kind: "ok", userInfo }` or `{ kind: "error", message, status? }`. `userInfo` always carries `userId`, `nickname`, `status`, `region`, `userLevel`, `userLevelName`, `domain`, and `domainName`, and may add `globalId`, `bio`, `avatar`, `username`, `email`, `phone` (`{ countryCode, number }`), `createdTime`, and `lastLoginTime`.
-
-#### `GET /api/v1/oauth/region`
-
-Resolves which NightHawk region this client belongs to. The answer is derived locally, not probed over the network: an OAuth host pinned by environment or config wins first, then the configured OAuth key, then the region marker file in the home directory; the default is `mainland-cn`.
-
-On success, `data` is `{ region }` with `region` one of `mainland-cn` / `global`.
 
 ### Config
 
@@ -292,7 +204,7 @@ These endpoints manage the two halves of model configuration — the [providers]
 | `PUT /api/v1/providers/{provider_id}` | Replace a provider |
 | `DELETE /api/v1/providers/{provider_id}` | Delete a provider (204) |
 | `POST /api/v1/providers/{provider_id}:refresh` | Refresh one provider's model metadata |
-| `POST /api/v1/providers:{action}` | Collection actions: `refresh` / `refresh_oauth` / `import_catalog` / `import_registry` |
+| `POST /api/v1/providers:{action}` | Collection actions: `refresh` / `import_catalog` / `import_registry` |
 | `GET /api/v1/catalog/providers` | Browse the models.dev directory (server-proxied) |
 | `GET /api/v1/catalog/providers/{catalog_id}` | Read one directory entry |
 
@@ -328,7 +240,7 @@ On success, `data.items` is an array of:
 | `base_url` | string | API base URL, when set |
 | `default_model` | string | The provider's default model alias, when set |
 | `has_api_key` | boolean | Whether a credential is stored |
-| `status` | string | `connected` when an API key or cached OAuth token exists, `unconfigured` otherwise (`error` is reserved in the schema) |
+| `status` | string | `connected` when an API key or cached credential exists, `unconfigured` otherwise (`error` is reserved in the schema) |
 | `models` | array | The provider's model alias ids |
 
 #### `POST /api/v1/providers`
@@ -389,7 +301,7 @@ Replaces a provider in one save: `type`, `base_url`, and the model list are rewr
 On success, `data` is `{ provider }` with the saved provider item.
 
 - `40001`: a renamed alias id would collide with another provider's alias
-- `40003`: provider is OAuth-managed — log out via `POST /api/v1/oauth/logout` instead
+- `40003`: provider is managed — log out instead
 - `40412`: provider not found
 - `40921`: `new_id` is already taken
 
@@ -403,7 +315,7 @@ Deletes a provider and all of its model aliases; the subagent secondary-model po
 
 On success the server answers 204 with no body — the status line itself reports the delete (see [Response envelope](#response-envelope)).
 
-- `40003`: provider is OAuth-managed — log out via `POST /api/v1/oauth/logout` instead
+- `40003`: provider is managed — log out instead
 - `40412`: provider not found
 
 #### `POST /api/v1/providers/{provider_id}:refresh`
@@ -425,12 +337,6 @@ Refreshes model metadata for every provider. The body is optional and ignored.
 
 On success, `data` is the same refresh report as `POST /api/v1/providers/{provider_id}:refresh` (`changed` / `unchanged` / `failed`).
 
-#### `POST /api/v1/providers:refresh_oauth`
-
-Same refresh as `POST /api/v1/providers:refresh`, limited to OAuth-backed providers. The body is optional and ignored.
-
-On success, `data` is the refresh report (`changed` / `unchanged` / `failed`).
-
 #### `POST /api/v1/providers:import_catalog`
 
 Imports one models.dev directory entry as a configured provider; the reply is HTTP 201 with the standard envelope. The wire protocol and endpoint come from the catalog resolution, and every catalogued model is written as an alias. Importing an id that already exists is a refresh — the provider entry and its aliases are rewritten from the catalog, and an omitted `api_key` keeps the stored key. The global default pointers are never modified, except that `default_model` is seeded from the first imported model when none is configured at all.
@@ -445,7 +351,7 @@ Imports one models.dev directory entry as a configured provider; the reply is HT
 On success, `data` is `{ provider, models_imported }` — the provider item and the number of aliases written.
 
 - `40001`: `catalog_id` missing or another body validation failure
-- `40003`: the target provider exists and is OAuth-managed
+- `40003`: the target provider exists and is managed
 - `40004`: the entry cannot be imported (rejected, requires a `base_url`, has no importable models, or its id is unusable as a provider id)
 - `40417`: no directory entry with that `catalog_id`
 - `50004`: the models.dev directory is unavailable
@@ -462,7 +368,7 @@ Imports a models.dev-shaped private registry — an `api.json` URL plus an optio
 On success, `data` is `{ providers, models_imported }` — an array of provider items and the total number of aliases written.
 
 - `40001`: `url` missing or another body validation failure
-- `40003`: a listed provider exists and is OAuth-managed
+- `40003`: a listed provider exists and is managed
 - `40005`: the registry cannot be fetched or parsed, or lists no importable providers
 
 #### `GET /api/v1/catalog/providers`
@@ -626,7 +532,7 @@ On success, `data` is the updated [session object](#the-session-object).
 
 #### `POST /api/v1/sessions/{session_id}/title/generate`
 
-Generates a title from the session's prompts through the managed provider's `chat_title` tool and applies it, broadcasting `session.meta.updated`. Generation requires the managed OAuth login and the `auto_session_title` experimental flag; without `force`, a session that already has a custom or generated title is reported unavailable instead of being overwritten.
+Generates a title from the session's prompts through the managed provider's `chat_title` tool and applies it, broadcasting `session.meta.updated`. Generation requires the managed login and the `auto_session_title` experimental flag; without `force`, a session that already has a custom or generated title is reported unavailable instead of being overwritten.
 
 | Parameter | In | Type | Description |
 | --- | --- | --- | --- |
@@ -637,7 +543,7 @@ Generates a title from the session's prompts through the managed provider's `cha
 On success, `data` is `{ title }` — the title now applied to the session.
 
 - `40401`: session not found
-- `40923`: generation unavailable — the flag is off, there is no managed OAuth login or no prompt content yet, an existing title without `force`, or the backend request failed
+- `40923`: generation unavailable — the flag is off, there is no managed login or no prompt content yet, an existing title without `force`, or the backend request failed
 
 #### `POST /api/v1/sessions/{session_id}:{action}`
 
@@ -2140,7 +2046,7 @@ Only a body validation failure fails the whole request (`40001`). Otherwise the 
 
 ### MCP management (`/api/v2/mcp`)
 
-The `/api/v2/mcp/*` routes are the server's unified MCP management plane: they manage the MCP server registry itself, independent of any session — global (user-level) CRUD with per-entry validation, connection-test probes, a locator-addressed inspection catalog, per-server auth-status listing, and the full OAuth flow lifecycle.
+The `/api/v2/mcp/*` routes are the server's unified MCP management plane: they manage the MCP server registry itself, independent of any session — global (user-level) CRUD with per-entry validation, connection-test probes, a locator-addressed inspection catalog, per-server auth-status listing, and the full auth flow lifecycle.
 
 | Method and path | Description |
 | --- | --- |
@@ -2151,15 +2057,15 @@ The `/api/v2/mcp/*` routes are the server's unified MCP management plane: they m
 | `DELETE /api/v2/mcp/servers/{name}` | Remove a user-level entry |
 | `POST /api/v2/mcp/servers:test` | Probe a real connection to one server |
 | `POST /api/v2/mcp/servers:inspect` | Locator-addressed catalog with a batched connection probe |
-| `GET /api/v2/mcp/auth-statuses` | Per-server OAuth state over the catalog |
-| `POST /api/v2/mcp/auth:begin` | Begin an interactive OAuth flow |
-| `POST /api/v2/mcp/auth:complete` | Await the browser callback and finish the code exchange |
-| `POST /api/v2/mcp/auth:cancel` | Tear down a begun OAuth flow |
+| `GET /api/v2/mcp/auth-statuses` | Per-server auth state over the catalog |
+| `POST /api/v2/mcp/auth:begin` | Begin an interactive auth flow |
+| `POST /api/v2/mcp/auth:complete` | Await the browser callback and finish the credential exchange |
+| `POST /api/v2/mcp/auth:cancel` | Tear down a begun auth flow |
 | `POST /api/v2/mcp/auth:reset` | Clear a server's stored credentials |
 
-Two addressing schemes appear on this plane. The CRUD routes and `servers:test` take a plain runtime `name`; the inspection and OAuth routes take a **locator** — `{ "source": "global", "name" }` for a file-layer entry or `{ "source": "plugin", "pluginId", "serverName" }` for a plugin-manifest entry — because a plugin entry and a file entry can share one runtime name. Inspection items additionally carry a stable `serverId` wire id: `global:<name>` or `plugin:<pluginId>:<serverName>` (URL-encoded).
+Two addressing schemes appear on this plane. The CRUD routes and `servers:test` take a plain runtime `name`; the inspection and auth routes take a **locator** — `{ "source": "global", "name" }` for a file-layer entry or `{ "source": "plugin", "pluginId", "serverName" }` for a plugin-manifest entry — because a plugin entry and a file entry can share one runtime name. Inspection items additionally carry a stable `serverId` wire id: `global:<name>` or `plugin:<pluginId>:<serverName>` (URL-encoded).
 
-Most routes accept an optional `cwd` (a query parameter, or a body field on the `:`-action routes). Without it the catalog covers the user-level file and plugin manifests only; with it, the project-root and project-local layers of that directory join in — but only when the workspace is trusted, otherwise the project layers are skipped. For `servers:test` on a stdio server, `cwd` is also the child process's working directory. Connection probes and OAuth calls wait for the server's configuration to finish loading before acting.
+Most routes accept an optional `cwd` (a query parameter, or a body field on the `:`-action routes). Without it the catalog covers the user-level file and plugin manifests only; with it, the project-root and project-local layers of that directory join in — but only when the workspace is trusted, otherwise the project layers are skipped. For `servers:test` on a stdio server, `cwd` is also the child process's working directory. Connection probes and auth calls wait for the server's configuration to finish loading before acting.
 
 #### `GET /api/v2/mcp/servers` and `GET /api/v2/mcp/servers/{name}`
 
@@ -2205,40 +2111,40 @@ On success, `data` is `{ success, output }`: when the connection succeeds, `outp
 
 #### `POST /api/v2/mcp/servers:inspect`
 
-The locator-addressed catalog (redacted configs) plus a batched real-connection probe of every OAuth candidate.
+The locator-addressed catalog (redacted configs) plus a batched real-connection probe of every candidate.
 
 | Parameter | In | Type | Description |
 | --- | --- | --- | --- |
 | `targets` | body | array | Locators narrowing the catalog; omitted inspects all servers |
 | `cwd` | body | string | Include the project layers of this (trusted) directory |
 
-On success, `data` is an array of inspections, each `{ serverId, locator, runtimeName, canonicalUrl?, origin, config, enabled, editable, authStatus, checkedAt?, error? }`: `canonicalUrl` is the credential URL of a remote server, `config` is the redacted view, and `authStatus` is one of `not-applicable` / `bearer-token` / `oauth-required` / `oauth-authorized` / `oauth-expired` / `unavailable`. A runtime name shared by multiple enabled servers cannot be probed unambiguously and reports `unavailable` with an explanatory `error`. A probe that hits an expired grant may refresh or invalidate the stored credentials.
+On success, `data` is an array of inspections, each `{ serverId, locator, runtimeName, canonicalUrl?, origin, config, enabled, editable, authStatus, checkedAt?, error? }`: `canonicalUrl` is the credential URL of a remote server, `config` is the redacted view, and `authStatus` is one of `not-applicable` / `bearer-token` / `auth-required` / `authorized` / `expired` / `unavailable`. A runtime name shared by multiple enabled servers cannot be probed unambiguously and reports `unavailable` with an explanatory `error`. A probe that hits an expired grant may refresh or invalidate the stored credentials.
 
 - `40001`: validation failure
 - `40408`: a `targets` locator matches nothing
 
 #### `GET /api/v2/mcp/auth-statuses`
 
-Per-server OAuth state over the registry catalog — the lightweight alternative to `servers:inspect` when only the auth dimension is needed.
+Per-server auth state over the registry catalog — the lightweight alternative to `servers:inspect` when only the auth dimension is needed.
 
 | Parameter | In | Type | Description |
 | --- | --- | --- | --- |
 | `cwd` | query | string | Include the project layers of this (trusted) directory |
-| `verify` | query | string | `true` probes every OAuth candidate through a real connection; `false` is fully offline (config and stored tokens only); omitted preserves implicit OAuth detection, probing only unpinned remote servers without stored credentials |
+| `verify` | query | string | `true` probes every candidate through a real connection; `false` is fully offline (config and stored tokens only); omitted preserves implicit detection, probing only unpinned remote servers without stored credentials |
 
 On success, `data` is an array of `{ name, authStatus }` with the same `authStatus` enum as `servers:inspect`. Verification probes may refresh or invalidate stored credentials.
 
 #### `POST /api/v2/mcp/auth:begin` / `:complete` / `:cancel` / `:reset`
 
-The OAuth flow lifecycle for remote servers. `auth:begin` takes a locator body (plus the optional `cwd` query) and answers `data` `{ status: "authorization-required", flowId, authorizationUrl }` — open the URL in a browser to grant access — or `{ status: "already-authorized" }` when a grant already exists. The target server must use a remote transport (`http` / `sse`) and must not carry a static bearer token; static headers are allowed only when the config explicitly sets `auth: "oauth"`.
+The auth flow lifecycle for remote servers. `auth:begin` takes a locator body (plus the optional `cwd` query) and answers `data` `{ status: "authorization-required", flowId, authorizationUrl }` — open the URL in a browser to grant access — or `{ status: "already-authorized" }` when a grant already exists. The target server must use a remote transport (`http` / `sse`) and must not carry a static bearer token; static headers are allowed only when the config explicitly sets `auth: "oauth"`.
 
-`auth:complete` waits for the browser callback of a begun flow and finishes the code exchange. Its body is `{ flowId, timeoutMs? }`: the wait defaults to 15 minutes (`timeoutMs` overrides it), an idle flow expires after 15 minutes regardless, and closing the HTTP connection aborts the wait. `data` is `null` on success.
+`auth:complete` waits for the browser callback of a begun flow and finishes the credential exchange. Its body is `{ flowId, timeoutMs? }`: the wait defaults to 15 minutes (`timeoutMs` overrides it), an idle flow expires after 15 minutes regardless, and closing the HTTP connection aborts the wait. `data` is `null` on success.
 
 `auth:cancel` tears down a begun flow (`{ flowId }`) without finishing it; unknown flows are ignored. `auth:reset` takes a locator body and clears the server's stored credentials — the invalidation event reaches live sessions.
 
-- `40001`: validation failure — including an unknown `flowId` on `:complete`, or a server that cannot do OAuth (stdio transport, a static bearer token, or static headers without `auth: "oauth"`) on `:begin`
+- `40001`: validation failure — including an unknown `flowId` on `:complete`, or a server that cannot use auth (stdio transport, a static bearer token, or static headers without `auth: "oauth"`) on `:begin`
 - `40408`: (`:begin` / `:reset`) the locator matches nothing
-- `40929`: the OAuth flow itself failed
+- `40929`: the auth flow itself failed
 
 ## WebSocket protocol
 

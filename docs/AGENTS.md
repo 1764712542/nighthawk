@@ -84,7 +84,6 @@ Term mapping (Chinese <-> English, and proper noun handling):
 | API 密钥 | API key | yes | no |
 | JSON | JSON | yes | yes |
 | JSONL | JSONL | yes | yes |
-| OAuth | OAuth | yes | yes |
 | macOS | macOS | yes | yes |
 | TypeScript | TypeScript | yes | yes |
 | Node.js | Node.js | yes | yes |
@@ -103,22 +102,9 @@ Term mapping (Chinese <-> English, and proper noun handling):
 | Prompt Flow | Prompt Flow | yes | yes |
 | Diff | diff | yes | no |
 
-### Kimi platform rules
+### NightHawk platform endpoints
 
-Two distinct platforms exist and must never be mixed:
-
-| | NightHawk platform | Kimi Open Platform |
-|---|---|---|
-| Audience | Individual developers, subscription-based | Enterprise / product integration, pay-per-token |
-| OpenAI-compatible base URL | `https://api.kimi.com/coding/v1` | `https://api.moonshot.cn/v1` |
-| Anthropic-compatible base URL | `https://api.kimi.com/coding/` | Not supported |
-| API key entry | [NightHawk console](https://www.kimi.com/code/console) | [platform.kimi.com](https://platform.kimi.com) |
-
-Rules:
-- When documenting NightHawk CLI or VS Code: always use `api.kimi.com/coding/…`. Never write `api.moonshot.cn` in this context.
-- When documenting Open Platform integration: use `api.moonshot.cn/v1`.
-- Distinguish context explicitly: "in NightHawk CLI / VS Code" vs "in third-party tools / your own product".
-- Product full names: **NightHawk CLI** and **NightHawk for VS Code**. Do not abbreviate them.
+The NightHawk Platform API is accessed via OpenAI-compatible endpoints. Product full names: **NightHawk CLI** and **NightHawk for VS Code**. Do not abbreviate them.
 
 ## Typography
 
@@ -304,12 +290,11 @@ Run through this before marking any doc change ready for review.
 
 Before shipping, verify these values match the rest of the docs:
 
-- **Base URL**: matches the [Kimi platform rules](#kimi-platform-rules) table above
+- **Base URL**: matches the [NightHawk platform endpoints](#nighthawk-platform-endpoints) section above
 - **Upgrade command**: matches `guides/getting-started.md`
 - **Model ID**: use `nighthawk`, not a versioned model name
 - **Provider command**: use `/provider`
 - **Product full name**: **NightHawk CLI** or **NightHawk for VS Code** — always use the full name
-- **Platform URLs**: `api.kimi.com/coding/…` for NightHawk platform; `api.moonshot.cn/v1` for Open Platform — never mix the two
 
 ## Build and preview
 

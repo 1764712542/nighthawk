@@ -18,9 +18,31 @@ oxlint + sherif + 仓库守卫。
 
 Changesets action 管理版本 PR 和 npm publish。
 
+## 专业实现要点（开发流程视角）
+
+### 需求分析
+
+技术栈选择要支撑大型 monorepo、严格类型、快速构建、可复现环境。
+
+### 设计决策
+
+TypeScript strict + tsdown + pnpm workspace + Nix flake；用 oxlint 而非传统 eslint。
+
+### 实现步骤
+
+先搭 workspace 与 tsconfig，再引入 tsdown/vitest/oxlint/changesets/CI。
+
+### 验证方式
+
+执行 `pnpm lint`、`pnpm typecheck`、`pnpm test`、`pnpm run build`。
+
+### 维护注意
+
+依赖版本锁定在 packageManager；Nix 路径与 pnpm workspace 保持一致。
+
 ## 核心实现细节（源码导出）
 
-以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数与类：
+以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数、类与方法：
 
   - `.github/workflows//`（目录内无 .ts 文件）
   - `AGENTS.md`（非 TS 源码，可直接阅读）

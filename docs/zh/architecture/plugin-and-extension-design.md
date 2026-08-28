@@ -40,7 +40,7 @@ Markdown + YAML frontmatter（`name` / `description` / `whenToUse` / `type` / `d
 
 ### 2. MCP —— 能力扩展
 
-任何 MCP server（stdio / sse / http 传输）经 `McpConnectionManager` 接入，工具以 `mcp__<server>__<tool>` 命名空间注册。`needs-auth` 状态机引导 OAuth。
+任何 MCP server（stdio / sse / http 传输）经 `McpConnectionManager` 接入，工具以 `mcp__<server>__<tool>` 命名空间注册。
 
 ### 3. 插件 manifest —— 打包分发
 
