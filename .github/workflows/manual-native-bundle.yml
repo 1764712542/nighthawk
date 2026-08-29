@@ -2,9 +2,18 @@ name: Manual Native Bundle
 
 on:
   workflow_dispatch:
+    inputs:
+      release-tag:
+        description: 'Existing GitHub Release tag to update'
+        required: true
+        default: 'v0.40.0'
+        type: string
 
 permissions:
-  contents: read
+  contents: write
+
+env:
+  RELEASE_TAG: ${{ inputs.release-tag }}
 
 jobs:
   build:
@@ -12,10 +21,58 @@ jobs:
     with:
       upload-artifact-prefix: nighthawk-native
       retention-days: 3
-      sign-macos: true
-    secrets:
-      APPLE_CERTIFICATE_P12: ${{ secrets.APPLE_CERTIFICATE_P12 }}
-      APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-      APPLE_NOTARIZATION_KEY_P8: ${{ secrets.APPLE_NOTARIZATION_KEY_P8 }}
-      APPLE_NOTARIZATION_KEY_ID: ${{ secrets.APPLE_NOTARIZATION_KEY_ID }}
-      APPLE_NOTARIZATION_ISSUER_ID: ${{ secrets.APPLE_NOTARIZATION_ISSUER_ID }}
+      sign-macos: false
+
+  publish:
+    name: Publish native assets and Homebrew formula
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Download native artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: nighthawk-native-*
+          path: dist-native-release
+          merge-multiple: true
+
+      - name: Produce release manifest
+        run: node apps/nighthawk/scripts/native/produce-manifest.mjs dist-native-release "$RELEASE_TAG"
+
+      - name: Upload native assets to GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$RELEASE_TAG" dist-native-release/* --clobber
+
+      - name: Generate Homebrew formula
+        run: node apps/nighthawk/scripts/native/update-brew-formula.mjs dist-native-release/manifest.json --out nighthawk.rb
+
+      - name: Check Homebrew tap token
+        id: homebrew-token
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          if [[ -n "${HOMEBREW_TAP_TOKEN}" ]]; then
+            echo "available=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "available=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Push formula to Homebrew tap
+        if: steps.homebrew-token.outputs.available == 'true'
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          git clone --depth 1 "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/AliceGoto/homebrew-nighthawk.git" tap
+          mkdir -p tap/Formula
+          cp nighthawk.rb tap/Formula/nighthawk.rb
+          cd tap
+          git config user.name "nighthawk-bot"
+          git config user.email "nighthawk-bot@users.noreply.github.com"
+          git add Formula/nighthawk.rb
+          git diff --cached --quiet || git commit -m "Update NightHawk formula"
+          git push
