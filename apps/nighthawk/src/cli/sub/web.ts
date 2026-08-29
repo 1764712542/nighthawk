@@ -10,6 +10,7 @@
  *   nighthawk web --port 3000 --no-open
  */
 
+import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { extname, join, resolve } from 'node:path';
@@ -24,7 +25,27 @@ import type { Command } from 'commander';
 import { createNighthawkHostIdentity, getVersion } from '#/cli/version';
 import { openUrl } from '#/utils/open-url';
 
-const DIST_WEB_DIR = resolve(import.meta.dirname, '../dist-web');
+function resolveDistWebDir(): string {
+  const candidates = [
+    // Development: from dist/main.mjs -> ../dist-web
+    resolve(import.meta.dirname, '../dist-web'),
+    // Native binary: from extracted dir -> ../../dist-web
+    resolve(import.meta.dirname, '../../dist-web'),
+    // NightHawk home: ~/.nighthawk/dist-web/
+    resolve(resolveNighthawkHome(), 'dist-web'),
+    // Current working directory
+    resolve(process.cwd(), 'dist-web'),
+  ];
+  for (const dir of candidates) {
+    if (existsSync(dir) && existsSync(resolve(dir, 'index.html'))) {
+      return dir;
+    }
+  }
+  // Fallback to the first candidate for a clear error message
+  return candidates[0]!;
+}
+
+const DIST_WEB_DIR = resolveDistWebDir();
 
 interface WritableLike {
   write(chunk: string): boolean;
