@@ -206,28 +206,25 @@ describe('acpMcpServersToConfigs', () => {
     expect(warnSpy).not.toHaveBeenCalled();
   });
 
-  it('warn-drops acp servers (experimental, not supported)', () => {
+  it('converts acp servers to McpServerAcpConfig', () => {
     const out = acpMcpServersToConfigs([acpServer('inner', 'opaque-id')]);
-    expect(out).toEqual({});
-    expect(warnSpy).toHaveBeenCalledTimes(1);
-    expect(warnSpy).toHaveBeenCalledWith(
-      'acp: dropping unsupported MCP server transport',
-      expect.objectContaining({ name: 'inner', type: 'acp' }),
-    );
+    expect(out).toEqual({ inner: { transport: 'acp', serverId: 'opaque-id' } });
+    expect(warnSpy).not.toHaveBeenCalled();
   });
 
-  it('mixes supported + unsupported transports and warn-drops only the unsupported ones', () => {
+  it('mixes supported transports without warn-dropping acp', () => {
     const out = acpMcpServersToConfigs([
       httpServer('docs', 'https://h', [{ name: 'X', value: 'v' }]),
       sseServer('events', 'https://s', [{ name: 'X', value: 'v' }]),
       acpServer('inner', 'opaque-id'),
       stdioServer('fs', '/bin/fs', [], []),
     ]);
-    expect(Object.keys(out)).toEqual(['docs', 'events', 'fs']);
+    expect(Object.keys(out)).toEqual(['docs', 'events', 'inner', 'fs']);
     expect(out['docs']).toMatchObject({ transport: 'http' });
     expect(out['events']).toMatchObject({ transport: 'sse' });
+    expect(out['inner']).toMatchObject({ transport: 'acp', serverId: 'opaque-id' });
     expect(out['fs']).toMatchObject({ transport: 'stdio' });
-    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(warnSpy).not.toHaveBeenCalled();
   });
 });
 

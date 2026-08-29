@@ -2,15 +2,19 @@ import { z } from 'zod';
 
 import { createDecorator } from '#/_base/di/instantiation';
 import { type AgentTool } from '#/tool/toolContract';
-import { type TodoStatus } from '#/features/todo/todoItem';
+import { type TodoPriority, type TodoStatus } from '#/features/todo/todoItem';
 
 const TodoItemSchema = z.object({
   title: z.string().min(1).describe('Short, actionable title for the todo.'),
   status: z.enum(['pending', 'in_progress', 'done']).describe('Current status of the todo.'),
+  priority: z
+    .enum(['high', 'medium', 'low'])
+    .optional()
+    .describe('Priority level of the todo.'),
 });
 
 export interface TodoListInput {
-  todos?: Array<{ title: string; status: TodoStatus }>;
+  todos?: Array<{ title: string; status: TodoStatus; priority?: TodoPriority }>;
 }
 
 export const TodoListInputSchema: z.ZodType<TodoListInput> = z.object({

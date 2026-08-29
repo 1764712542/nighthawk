@@ -48,10 +48,19 @@ export const mcpServerSseConfigSchema = z.object({
   ...mcpServerCommonFields,
 });
 
+export const mcpServerAcpConfigSchema = z.object({
+  transport: z.literal('acp'),
+  serverId: z.string().min(1),
+  ...mcpServerCommonFields,
+});
+
+export type McpServerAcpConfig = z.infer<typeof mcpServerAcpConfigSchema>;
+
 export const mcpServerConfigSchema = z.discriminatedUnion('transport', [
   mcpServerStdioConfigSchema,
   mcpServerHttpConfigSchema,
   mcpServerSseConfigSchema,
+  mcpServerAcpConfigSchema,
 ]);
 
 export type McpServerConfig = z.infer<typeof mcpServerConfigSchema>;

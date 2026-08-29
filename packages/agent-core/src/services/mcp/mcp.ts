@@ -74,6 +74,8 @@ function mapMcpTransport(t: McpServerInfo['transport']): McpServerTransport {
       return 'http';
     case 'sse':
       return 'sse';
+    case 'acp':
+      return 'acp';
   }
 }
 

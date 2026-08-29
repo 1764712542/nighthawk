@@ -294,6 +294,7 @@ export class AcpServer implements Agent {
       mcpCapabilities: {
         http: true,
         sse: true,
+        acp: true,
       },
       sessionCapabilities: {
         list: {},
@@ -317,8 +318,8 @@ export class AcpServer implements Agent {
     // similar fields are wired in Phase 8 (per PLAN D3) — Phase 3.2 keeps
     // the surface minimal. Phase 10.1 adds `mcpServers` forwarding so
     // ACP-supplied servers (Zed config, JetBrains config) are passed
-    // alongside the on-disk config; unsupported ACP-transport servers
-    // are warn-dropped inside the conversion. `mcpServers` is NOT a
+    // alongside the on-disk config; ACP-transport servers are converted
+    // to the engine's McpServerAcpConfig inside the conversion. `mcpServers` is NOT a
     // declared field on `CreateSessionOptions` — the SDK is a
     // transparent passthrough for unknown fields (see
     // `packages/node-sdk/src/nighthawk-harness.ts:createSession` and

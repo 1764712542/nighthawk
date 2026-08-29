@@ -4,7 +4,6 @@ import { tmpdir } from 'node:os';
 import { join } from 'pathe';
 import { describe, expect, it } from 'vitest';
 
-import { Error2 } from '#/errors';
 import { mergeStdioEnv, StdioMcpClient, type StdioMcpClientOptions } from '#/mcpCore/client-stdio';
 import type { McpServerStdioConfig } from '#/mcpCore/config-schema';
 import { HostProcessService } from '#/os/backends/node-local/hostProcessService';
@@ -46,7 +45,7 @@ function createClient(
 }
 
 describe('StdioMcpClient', () => {
-  it('rejects unsupported executor at construction time', () => {
+  it('accepts kaos executor at construction time', () => {
     expect(
       () =>
         createClient({
@@ -54,18 +53,7 @@ describe('StdioMcpClient', () => {
           command: 'true',
           executor: 'kaos',
         }),
-    ).toThrow(
-      expect.objectContaining({ name: 'Error2', code: 'not_implemented' }) as unknown as Error,
-    );
-
-    let thrown: unknown;
-    try {
-      const client = createClient({ transport: 'stdio', command: 'true', executor: 'kaos' });
-      void client;
-    } catch (error) {
-      thrown = error;
-    }
-    expect(thrown).toBeInstanceOf(Error2);
+    ).not.toThrow();
   });
 
   it('uses defaultCwd when config.cwd is omitted', async () => {

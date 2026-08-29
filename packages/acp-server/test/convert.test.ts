@@ -62,9 +62,11 @@ describe('acpMcpServersToConfigRecord', () => {
     });
   });
 
-  it('drops the unstable acp transport and returns undefined when nothing survives', () => {
+  it('converts the acp transport to McpServerAcpConfig', () => {
     const servers = [{ type: 'acp', name: 'nested', serverId: 'srv-1' } as unknown as McpServer];
-    expect(acpMcpServersToConfigRecord(servers)).toBeUndefined();
+    expect(acpMcpServersToConfigRecord(servers)).toEqual({
+      nested: { transport: 'acp', serverId: 'srv-1' },
+    });
   });
 });
 

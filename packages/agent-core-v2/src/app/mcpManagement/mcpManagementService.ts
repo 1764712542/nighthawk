@@ -400,7 +400,7 @@ export class McpManagementService extends Disposable implements IMcpManagementSe
   ): Promise<McpServerAuthState> {
     const server = entry.config;
     if (server.enabled === false) return 'not-applicable';
-    if (server.transport === 'stdio') return 'not-applicable';
+    if (server.transport === 'stdio' || server.transport === 'acp') return 'not-applicable';
     if (server.bearerTokenEnvVar !== undefined) return 'bearer-token';
     if (server.headers !== undefined && server.auth !== 'oauth') return 'not-applicable';
     if (server.transport !== 'http' && server.auth !== 'oauth') return 'not-applicable';
@@ -530,10 +530,10 @@ function mcpConfigWithoutName(server: GlobalMcpServerConfig): McpServerConfig {
   return config;
 }
 
-type McpRemoteServerConfig = Exclude<McpServerConfig, { readonly transport: 'stdio' }>;
+type McpRemoteServerConfig = Exclude<McpServerConfig, { readonly transport: 'stdio' } | { readonly transport: 'acp' }>;
 
 function requireRemoteMcpConfig(name: string, config: McpServerConfig): McpRemoteServerConfig {
-  if (config.transport !== 'stdio') return config;
+  if (config.transport === 'http' || config.transport === 'sse') return config;
   throw new Error2(
     ErrorCodes.REQUEST_INVALID,
     `MCP server "${name}" does not use a remote transport`,
@@ -587,7 +587,9 @@ function serverDescriptor(entry: McpRegistryEntry): McpServerRuntimeDescriptor {
     canonicalUrl:
       entry.config.transport === 'stdio'
         ? undefined
-        : canonicalMcpOAuthResource(entry.config.url),
+        : entry.config.transport === 'acp'
+          ? undefined
+          : canonicalMcpOAuthResource(entry.config.url),
     origin: entry.source,
     config: entry.config,
     enabled: entry.config.enabled !== false,
@@ -616,7 +618,7 @@ function configuredMcpAuthState(
   server: McpServerRuntimeDescriptor,
 ): McpServerAuthState | undefined {
   if (!server.enabled || server.config.enabled === false) return 'not-applicable';
-  if (server.config.transport === 'stdio') return 'not-applicable';
+  if (server.config.transport === 'stdio' || server.config.transport === 'acp') return 'not-applicable';
   if (server.config.bearerTokenEnvVar !== undefined) return 'bearer-token';
   if (server.config.headers !== undefined && server.config.auth !== 'oauth') {
     return 'not-applicable';

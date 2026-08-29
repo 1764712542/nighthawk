@@ -4,7 +4,7 @@ import { AgentEvent2, type AgentDomainTrait } from '#/app/event/event2';
 
 export interface McpServerStatusPayload {
   readonly name: string;
-  readonly transport: 'stdio' | 'http' | 'sse';
+  readonly transport: 'stdio' | 'http' | 'sse' | 'acp';
   readonly status: 'pending' | 'connected' | 'failed' | 'disabled' | 'needs-auth' | 'removed';
   readonly toolCount: number;
   readonly error?: string;

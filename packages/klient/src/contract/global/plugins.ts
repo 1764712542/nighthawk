@@ -110,7 +110,7 @@ export const pluginMcpServerInfoSchema = z.object({
   name: z.string(),
   runtimeName: z.string(),
   enabled: z.boolean(),
-  transport: z.enum(['stdio', 'http', 'sse']),
+  transport: z.enum(['stdio', 'http', 'sse', 'acp']),
   command: z.string().optional(),
   args: z.array(z.string()).optional(),
   cwd: z.string().optional(),

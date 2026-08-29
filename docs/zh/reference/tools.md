@@ -76,7 +76,7 @@ Plan 模式是一种受约束的工作状态：进入后 `Write` 与 `Edit` 只�
 | --- | --- | --- |
 | `TodoList` | 自动放行 | 管理任务待办列表 |
 
-**`TodoList`** 在多步骤操作中维护一份可见的子任务列表，状态存储在 Agent 会话内。`todos` 参数接受一个数组，每项含 `title` 和 `status`（`pending` / `in_progress` / `done`）；省略 `todos` 则仅查询当前列表，传入空数组则清空列表。
+**`TodoList`** 在多步骤操作中维护一份可见的子任务列表，状态存储在 Agent 会话内。`todos` 参数接受一个数组，每项含 `title` 和 `status`（`pending` / `in_progress` / `done`），以及可选的 `priority`（`high` / `medium` / `low`）；省略 `todos` 则仅查询当前列表，传入空数组则清空列表。
 
 ## 协作类
 

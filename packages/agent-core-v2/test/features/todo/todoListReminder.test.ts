@@ -65,14 +65,14 @@ describe('todoListStaleReminder', () => {
 
   it('injects a reminder after enough assistant turns since the last TodoList write', async () => {
     const todos: TodoItem[] = [
-      { title: 'Read current TodoList implementation', status: 'in_progress' },
+      { title: 'Read current TodoList implementation', status: 'in_progress', priority: 'high' },
       { title: 'Add reminder injector tests', status: 'pending' },
     ];
     const history = [todoListWrite(todos), ...Array.from({ length: 10 }, () => assistantMessage())];
     const result = todoListStaleReminder({ history, todos, active: true });
 
     expect(result).toContain('Current todo list:');
-    expect(result).toContain('1. [in_progress] Read current TodoList implementation');
+    expect(result).toContain('1. [in_progress] [high] Read current TodoList implementation');
     expect(result).toContain('2. [pending] Add reminder injector tests');
   });
 

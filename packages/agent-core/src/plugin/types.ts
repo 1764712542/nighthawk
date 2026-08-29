@@ -62,7 +62,7 @@ export interface PluginMcpServerInfo {
   readonly name: string;
   readonly runtimeName: string;
   readonly enabled: boolean;
-  readonly transport: 'stdio' | 'http' | 'sse';
+  readonly transport: 'stdio' | 'http' | 'sse' | 'acp';
   readonly command?: string;
   readonly args?: readonly string[];
   readonly cwd?: string;

@@ -111,7 +111,7 @@ export class TodoRuntime {
     return this.context.dispatch(new ToolsUpdateStore({
       agentId: this.context.agent.agentId,
       key: 'todo',
-      value: todos.map((todo) => ({ title: todo.title, status: todo.status })),
+      value: todos.map((todo) => ({ title: todo.title, status: todo.status, priority: todo.priority })),
     }));
   }
 
@@ -144,5 +144,6 @@ export const todoAgentRuntimeProvider = defineAgentRuntimeProvider<TodoState, To
   inspect: (snapshot) => (snapshot as TodoActorSnapshot).context.todos.map((todo) => ({
     title: todo.title,
     status: todo.status,
+    priority: todo.priority,
   })),
 });

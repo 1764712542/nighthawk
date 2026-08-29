@@ -100,5 +100,8 @@ function renderTodoListReminder(todos: readonly TodoItem[]): string {
 }
 
 function renderTodoItems(todos: readonly TodoItem[]): string {
-  return todos.map((todo, index) => `${index + 1}. [${todo.status}] ${todo.title}`).join('\n');
+  return todos.map((todo, index) => {
+    const priority = todo.priority !== undefined ? ` [${todo.priority}]` : '';
+    return `${index + 1}. [${todo.status}]${priority} ${todo.title}`;
+  }).join('\n');
 }

@@ -11,10 +11,13 @@
  *     `clientCapabilities.elicitation.form` at `initialize`. Falls back to
  *     `request_permission` when the RPC fails.
  *
- * The `Other` synthetic free-text option is NOT supported on either surface.
- * The permission bridge has no text-input option kind; elicitation form
- * schemas would need an additional `type: 'string'` field with no `oneOf`
- * constraint, which is not implemented yet.
+ * The `Other` synthetic free-text option is supported on both surfaces:
+ *  - `request_permission`: the "Other" option is added as a regular `allow_once`
+ *    option; the selected label is returned as the answer (no free text input
+ *    since the ACP protocol has no feedback field on this surface).
+ *  - `elicitation/create`: an additional `type: 'string'` property is added to
+ *    the schema alongside the enum options; the response value is returned as
+ *    the free text answer.
  *
  * Pure mappers — no IO — so the mappings stay unit-testable without a live
  * connection.
@@ -47,6 +50,10 @@ function skipOptionId(questionIndex: number): string {
   return `q${questionIndex}_skip`;
 }
 
+function otherOptionId(questionIndex: number): string {
+  return `q${questionIndex}_other`;
+}
+
 /**
  * Map a tool-side {@link QuestionItem} into ACP {@link PermissionOption}[].
  *
@@ -71,6 +78,13 @@ export function questionItemToPermissionOptions(
     name: opt.label,
     kind: 'allow_once' as const,
   }));
+  if (question.otherLabel !== undefined && question.otherLabel.length > 0) {
+    options.push({
+      optionId: otherOptionId(questionIndex),
+      name: question.otherLabel,
+      kind: 'allow_once' as const,
+    });
+  }
   options.push({
     optionId: skipOptionId(questionIndex),
     name: 'Skip',
@@ -95,6 +109,13 @@ export function outcomeToQuestionAnswer(
   if (response.outcome.outcome === 'cancelled') return null;
   const optionId = response.outcome.optionId;
   if (optionId === skipOptionId(0)) return null;
+  if (
+    optionId === otherOptionId(0) &&
+    question.otherLabel !== undefined &&
+    question.otherLabel.length > 0
+  ) {
+    return { [question.question]: question.otherLabel };
+  }
   const match = /^q0_opt_(\d+)$/.exec(optionId);
   if (!match) return null;
   const optionIndex = Number(match[1]);
@@ -161,9 +182,11 @@ function titledEnumOptions(question: QuestionItem): EnumOption[] {
  * field is titled by the question's `header` (falling back to the full
  * question text) and described by its `body`.
  *
- * The synthetic "Other" free-text option (`otherLabel`) has no elicitation
- * equivalent without an extra text field; it stays unsupported for now,
- * matching the `request_permission` bridge.
+ * The synthetic "Other" free-text option (`otherLabel`) is supported: when
+ * present, an additional `type: 'string'` property is added to the schema
+ * alongside the enum options, titled by the `otherLabel` and described by
+ * `otherDescription`. The response value for this property is returned as
+ * the free text answer.
  *
  * Known boundary: `multiSelect` questions are fully supported in form mode,
  * but the permission bridge degrades them to single-select (the engine's
@@ -195,6 +218,17 @@ export function questionRequestToElicitationParams(
             description: q.body,
             oneOf: titledEnumOptions(q),
           };
+    // Add synthetic "Other" free-text property when the question has an
+    // otherLabel. The free-text field is separate from the enum options
+    // so the client can type a custom answer alongside the presets.
+    if (q.otherLabel !== undefined && q.otherLabel.length > 0) {
+      const otherKey = `${key}_other`;
+      properties[otherKey] = {
+        type: 'string',
+        title: q.otherLabel,
+        description: q.otherDescription,
+      };
+    }
   });
   return {
     sessionId,
@@ -223,7 +257,15 @@ export function elicitationResponseToQuestionAnswers(
   if (content === null || content === undefined) return null;
   const answers: QuestionAnswers = {};
   questions.forEach((q, i) => {
-    const value = content[questionPropertyKey(i)];
+    const key = questionPropertyKey(i);
+    const otherKey = `${key}_other`;
+    const otherValue = content[otherKey];
+    // "Other" free text takes priority over preset options when present.
+    if (typeof otherValue === 'string' && otherValue.length > 0) {
+      answers[q.question] = otherValue;
+      return;
+    }
+    const value = content[key];
     if (q.multiSelect === true) {
       if (!Array.isArray(value)) return;
       const picked = q.options

@@ -21,7 +21,7 @@ function makeTodo(initial: readonly TodoItem[] = []): {
     runtime: {
       get: () => todos,
       replace: async (next) => {
-        todos = next.map((todo) => ({ title: todo.title, status: todo.status }));
+        todos = next.map((todo) => ({ title: todo.title, status: todo.status, priority: todo.priority }));
       },
       clear: async () => { todos = []; },
       onDidChange: () => ({ dispose: () => {} }),
@@ -117,6 +117,45 @@ describe('TodoListTool', () => {
     expect(result).toMatchObject({ isError: false });
     expect(result.output).toContain('[done] shipped');
     expect(result.output).not.toContain('[completed]');
+  });
+
+  it('renders priority when present in the todo item', async () => {
+    const { tool } = makeTool([
+      { title: 'urgent task', status: 'in_progress', priority: 'high' },
+      { title: 'backlog', status: 'pending', priority: 'low' },
+    ]);
+
+    const result = await executeTool(tool, {
+      turnId: 1,
+      toolCallId: 'call_1',
+      args: {},
+      signal,
+    });
+
+    expect(result).toMatchObject({ isError: false });
+    expect(result.output).toContain('[in_progress] [high] urgent task');
+    expect(result.output).toContain('[pending] [low] backlog');
+  });
+
+  it('preserves priority when writing todos', async () => {
+    const { tool, getTodos } = makeTool();
+    const todos: TodoItem[] = [
+      { title: 'top', status: 'pending', priority: 'high' },
+      { title: 'normal', status: 'in_progress' },
+    ];
+
+    const result = await executeTool(tool, {
+      turnId: 1,
+      toolCallId: 'call_1',
+      args: { todos },
+      signal,
+    });
+
+    expect(result).toMatchObject({ isError: false });
+    expect(getTodos()).toEqual([
+      { title: 'top', status: 'pending', priority: 'high' },
+      { title: 'normal', status: 'in_progress', priority: undefined },
+    ]);
   });
 
   it('clear mode empties the list without adding the progress-tracking reminder', async () => {

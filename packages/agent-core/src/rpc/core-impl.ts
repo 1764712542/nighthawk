@@ -1135,7 +1135,7 @@ export class NighthawkCore implements PromisableMethods<CoreAPI> {
       locator,
       runtimeName: entry.name,
       canonicalUrl:
-        entry.config.transport === 'stdio'
+        entry.config.transport === 'stdio' || entry.config.transport === 'acp'
           ? undefined
           : canonicalMcpOAuthResource(entry.config.url),
       origin: locator.source,
@@ -1370,7 +1370,7 @@ export class NighthawkCore implements PromisableMethods<CoreAPI> {
     // A disabled server never participates in OAuth; keep the historical
     // classification instead of reporting oauth-required or probing it.
     if (server.enabled === false) return 'not-applicable';
-    if (server.transport === 'stdio') return 'not-applicable';
+    if (server.transport === 'stdio' || server.transport === 'acp') return 'not-applicable';
     if (server.bearerTokenEnvVar !== undefined) return 'bearer-token';
     // Keep status classification aligned with the existing connection manager:
     // unmarked static headers are not treated as OAuth credentials.
@@ -2076,7 +2076,7 @@ export class NighthawkCore implements PromisableMethods<CoreAPI> {
 }
 
 function requireRemoteMcpConfig(name: string, config: McpServerConfig): McpRemoteServerConfig {
-  if (config.transport !== 'stdio') return config;
+  if (config.transport === 'http' || config.transport === 'sse') return config;
   throw new NighthawkError(
     ErrorCodes.REQUEST_INVALID,
     `MCP server "${name}" does not use a remote transport`,
@@ -2134,7 +2134,7 @@ function configuredMcpAuthState(
   server: AppMcpServerRuntimeDescriptor,
 ): GlobalMcpServerAuthState | undefined {
   if (!server.enabled || server.config.enabled === false) return 'not-applicable';
-  if (server.config.transport === 'stdio') return 'not-applicable';
+  if (server.config.transport === 'stdio' || server.config.transport === 'acp') return 'not-applicable';
   if (server.config.bearerTokenEnvVar !== undefined) return 'bearer-token';
   if (server.config.headers !== undefined && server.config.auth !== 'oauth') {
     return 'not-applicable';

@@ -1,4 +1,3 @@
-import { ErrorCodes, NighthawkError } from '#/errors';
 import type { McpServerStdioConfig } from '#/config/schema';
 import { proxyEnvForChild, reconcileChildNoProxy } from '#/utils/proxy';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
@@ -59,9 +58,6 @@ export class StdioMcpClient implements MCPClient {
   static readonly stderrBufferCapacity = STDERR_BUFFER_CAPACITY;
 
   constructor(config: McpServerStdioConfig, options: StdioMcpClientOptions = {}) {
-    if (config.executor !== undefined && config.executor !== 'local') {
-      throw new NighthawkError(ErrorCodes.NOT_IMPLEMENTED, `MCP stdio executor '${config.executor}' is not yet implemented`);
-    }
     this.transport = new StdioClientTransport({
       command: config.command,
       args: config.args,

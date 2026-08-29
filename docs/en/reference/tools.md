@@ -76,7 +76,7 @@ Plan mode is a constrained working state: once entered, `Write` and `Edit` are r
 | --- | --- | --- |
 | `TodoList` | Auto-allow | Manage a task to-do list |
 
-**`TodoList`** maintains a visible subtask list across multi-step operations; state is stored within the Agent session. The `todos` parameter accepts an array where each item has a `title` and `status` (`pending` / `in_progress` / `done`). Omitting `todos` queries the current list; passing an empty array clears it.
+**`TodoList`** maintains a visible subtask list across multi-step operations; state is stored within the Agent session. The `todos` parameter accepts an array where each item has a `title` and `status` (`pending` / `in_progress` / `done`), and an optional `priority` (`high` / `medium` / `low`). Omitting `todos` queries the current list; passing an empty array clears it.
 
 ## Collaboration Tools
 

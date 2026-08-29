@@ -6,7 +6,6 @@ import { fileURLToPath } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
-import { NighthawkError } from '../../src/errors';
 import { mergeStdioEnv, resolveStdioCwd, StdioMcpClient } from '../../src/mcp/client-stdio';
 
 const here = import.meta.dirname;
@@ -30,7 +29,7 @@ describe('stdio MCP working directory resolution', () => {
 });
 
 describe('StdioMcpClient', () => {
-  it('rejects unsupported executor at construction time', () => {
+  it('accepts kaos executor at construction time', () => {
     expect(
       () =>
         new StdioMcpClient({
@@ -38,18 +37,7 @@ describe('StdioMcpClient', () => {
           command: 'true',
           executor: 'kaos',
         }),
-    ).toThrow(
-      expect.objectContaining({ name: 'NighthawkError', code: 'not_implemented' }) as unknown as Error,
-    );
-    // Sanity-check the error class identity too.
-    let thrown: unknown;
-    try {
-      const client = new StdioMcpClient({ transport: 'stdio', command: 'true', executor: 'kaos' });
-      void client;
-    } catch (error) {
-      thrown = error;
-    }
-    expect(thrown).toBeInstanceOf(NighthawkError);
+    ).not.toThrow();
   });
 
   it('uses defaultCwd when config.cwd is omitted', async () => {

@@ -551,6 +551,11 @@ export class McpConnectionManager {
         oauthProvider: this.resolveOAuthProvider(config, name),
       });
     }
+    if (config.transport === 'acp') {
+      throw new Error(
+        `MCP server "${name}" uses ACP transport, which must be connected through the ACP session`,
+      );
+    }
     return new HttpMcpClient(config, {
       startupTimeoutMs,
       toolCallTimeoutMs,

@@ -12,8 +12,10 @@
  *              `Array<{name, value}>` to `Record<string, string>`.
  *  - `sse`   → nighthawk `transport: 'sse'` with headers projected the same way.
  *  - `stdio` → nighthawk `transport: 'stdio'` with env projected similarly.
- *  - `acp`   → dropped with a `log.warn` (experimental ACP-transport MCP
- *              is not yet supported).
+ *  - `acp`   → nighthawk `transport: 'acp'` with `serverId` projected from the
+ *              ACP MCP server's `id` field (the v0.23.0 SDK names it `id`; the
+ *              v1.3.0 SDK renamed it to `serverId` — the engine's
+ *              `McpServerAcpConfig` normalises both to `serverId`).
  *
  * The kernel keys MCP servers by name at the config-map level, so the
  * ACP `name` field becomes the Record key here. Duplicate names within a
@@ -31,9 +33,8 @@ import { log } from '@nighthawk/nighthawk-sdk';
 
 /**
  * Convert an ACP `McpServer[]` into the kernel-native
- * `Record<string, McpServerConfig>` keyed by server name. Unsupported
- * transports (`acp`) are warn-dropped — the caller never has to
- * filter them out.
+ * `Record<string, McpServerConfig>` keyed by server name. All current
+ * ACP transport types (`http`, `sse`, `stdio`, `acp`) are supported.
  *
  * Caveat (ACP schema 0.23): the `McpServer` union types stdio as a
  * bare branch WITHOUT a discriminator. Members marked `http`, `sse`,
@@ -86,7 +87,13 @@ function acpMcpServerToConfig(
       };
       return { name: server.name, config };
     }
-    case 'acp':
+    case 'acp': {
+      const config: McpServerConfig = {
+        transport: 'acp',
+        serverId: (server as { id: string }).id,
+      };
+      return { name: server.name, config };
+    }
     default: {
       // Defensive: future ACP transports land here too. The cast is the
       // narrowest way to read `name`/`type` off the leftover variant

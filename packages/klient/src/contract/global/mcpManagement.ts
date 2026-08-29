@@ -10,6 +10,7 @@ import { z } from 'zod';
 
 import { noResult } from '../helpers.js';
 import {
+  mcpServerAcpConfigSchema,
   mcpServerHttpConfigSchema,
   mcpServerSseConfigSchema,
   mcpServerStdioConfigSchema,
@@ -38,6 +39,7 @@ export const globalMcpServerConfigSchema = z.discriminatedUnion('transport', [
   mcpServerStdioConfigSchema.extend({ name: z.string().min(1) }),
   mcpServerHttpConfigSchema.extend({ name: z.string().min(1) }),
   mcpServerSseConfigSchema.extend({ name: z.string().min(1) }),
+  mcpServerAcpConfigSchema.extend({ name: z.string().min(1) }),
 ]);
 
 /**
@@ -51,6 +53,7 @@ export const mcpServerConfigDataSchema = z.discriminatedUnion('transport', [
   mcpServerStdioConfigSchema.extend({ envKeys: z.array(z.string()).optional() }),
   mcpServerHttpConfigSchema.extend({ headerKeys: z.array(z.string()).optional() }),
   mcpServerSseConfigSchema.extend({ headerKeys: z.array(z.string()).optional() }),
+  mcpServerAcpConfigSchema,
 ]);
 
 export const mcpManagedServerSchema = z.object({

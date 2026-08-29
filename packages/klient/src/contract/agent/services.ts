@@ -104,7 +104,7 @@ export const agentPlanContract = {
 /** `McpServerEntry` from the engine's `mcpCore/connection-manager`. */
 export const mcpServerEntrySchema = z.object({
   name: z.string(),
-  transport: z.enum(['stdio', 'http', 'sse']),
+  transport: z.enum(['stdio', 'http', 'sse', 'acp']),
   status: z.enum(['pending', 'connected', 'failed', 'disabled', 'needs-auth', 'removed']),
   toolCount: z.number(),
   error: z.string().optional(),

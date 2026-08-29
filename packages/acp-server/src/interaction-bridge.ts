@@ -183,7 +183,10 @@ export class AcpInteractionBridge {
    *  - `multiSelect === true` without form mode → the question is still asked
    *    as single-select. The engine tolerates a single-key answer for a
    *    multi-select prompt.
-   *  - `Other` free-text option is not supported on either surface.
+   *  - `Other` free-text option on the `request_permission` bridge returns the
+   *    label text (no free text input since the ACP protocol has no feedback
+   *    field on this surface). Full free text is supported via the
+   *    `elicitation/create` form mode.
    */
   private async handleQuestion(req: QuestionRequest): Promise<QuestionAnswers | null> {
     const questions = req.questions;

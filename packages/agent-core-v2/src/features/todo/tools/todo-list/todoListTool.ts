@@ -51,6 +51,7 @@ export class TodoListTool implements ITodoListTool {
         const next: readonly TodoItem[] = args.todos.map((todo) => ({
           title: todo.title,
           status: todo.status,
+          priority: todo.priority,
         }));
         await this.todo.replace(next);
         const stored = this.todo.get();

@@ -166,8 +166,10 @@ export async function compressPromptImageParts(
  * discriminated by `type` (absent = stdio) — into the engine's name-keyed
  * {@link McpServerConfig} record. Returns `undefined` for an absent/empty
  * list (or when every entry was dropped) so the engine builds no session
- * overlay. The unstable `type: 'acp'` transport is unsupported and dropped
- * with a warning.
+ * overlay. The unstable `type: 'acp'` transport is supported: the engine
+ * wraps it as an ACP-transport MCP server config that the workspace MCP
+ * management plane can connect through the ACP connection's reverse-RPC
+ * surface (`mcp/connect` / `mcp/message` / `mcp/disconnect`).
  */
 export function acpMcpServersToConfigRecord(
   servers: readonly McpServer[] | undefined,
@@ -193,9 +195,16 @@ export function acpMcpServersToConfigRecord(
       };
       continue;
     }
+    if (server.type === 'acp') {
+      out[server.name] = {
+        transport: 'acp',
+        serverId: server.serverId,
+      };
+      continue;
+    }
     log.warn('acp: dropping unsupported MCP server transport', {
-      name: server.name,
-      type: server.type,
+      name: (server as { name?: string }).name,
+      type: (server as { type?: string }).type,
     });
   }
   return Object.keys(out).length === 0 ? undefined : out;

@@ -423,6 +423,11 @@ export class McpConnectionManager implements McpConnectionView {
         clientName,
       });
     }
+    if (config.transport === 'acp') {
+      throw new Error(
+        `MCP server "${name}" uses ACP transport, which must be connected through the ACP session`,
+      );
+    }
     return new HttpMcpClient(config, {
       startupTimeoutMs,
       toolCallTimeoutMs,

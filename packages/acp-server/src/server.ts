@@ -200,8 +200,8 @@ export class AcpServer {
       },
       // Stdio is the implied baseline in ACP (no capability flag); we also
       // forward http/sse servers to the engine. The unstable ACP transport
-      // is not supported (dropped with a warning — see `./convert`).
-      mcpCapabilities: { http: true, sse: true },
+      // is supported and converted to the engine's McpServerAcpConfig.
+      mcpCapabilities: { http: true, sse: true, acp: true },
       auth: { logout: {} },
     };
 

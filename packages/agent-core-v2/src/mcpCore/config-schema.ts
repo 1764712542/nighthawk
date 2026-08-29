@@ -49,10 +49,19 @@ export const McpServerSseConfigSchema = z.object({
 export type McpServerSseConfig = z.infer<typeof McpServerSseConfigSchema>;
 export type McpRemoteServerConfig = McpServerHttpConfig | McpServerSseConfig;
 
+export const McpServerAcpConfigSchema = z.object({
+  transport: z.literal('acp'),
+  serverId: z.string().min(1),
+  ...McpServerCommonFields,
+});
+
+export type McpServerAcpConfig = z.infer<typeof McpServerAcpConfigSchema>;
+
 const McpServerConfigDiscriminatedSchema = z.discriminatedUnion('transport', [
   McpServerStdioConfigSchema,
   McpServerHttpConfigSchema,
   McpServerSseConfigSchema,
+  McpServerAcpConfigSchema,
 ]);
 
 export const McpServerConfigSchema = z.preprocess((raw) => {

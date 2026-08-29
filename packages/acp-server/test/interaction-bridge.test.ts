@@ -213,6 +213,44 @@ describe('AcpInteractionBridge', () => {
     bridge.dispose();
   });
 
+  it('bridges a question with Other option via request_permission', async () => {
+    const session = makeFakeSession();
+    const { conn, calls } = makeFakeConn(() => ({
+      outcome: { outcome: 'selected', optionId: 'q0_other' },
+    }));
+    const questionInteraction: Interaction = {
+      id: 'question-other-1',
+      kind: 'question',
+      payload: {
+        toolCallId: 'tc_other',
+        turnId: 6,
+        questions: [
+          {
+            question: 'Custom color',
+            options: [{ label: 'Red' }, { label: 'Green' }],
+            otherLabel: 'Other (specify)',
+          },
+        ],
+      },
+      origin: { turnId: 6 },
+      createdAt: 0,
+    };
+    session.setPending([questionInteraction]);
+    const bridge = new AcpInteractionBridge(conn, session.handle, SESSION_ID);
+    await flush();
+
+    expect(calls[0]?.['options']).toEqual([
+      expect.objectContaining({ optionId: 'q0_opt_0', name: 'Red' }),
+      expect.objectContaining({ optionId: 'q0_opt_1', name: 'Green' }),
+      expect.objectContaining({ optionId: 'q0_other', name: 'Other (specify)' }),
+      expect.objectContaining({ optionId: 'q0_skip' }),
+    ]);
+    expect(session.responses).toEqual([
+      { id: 'question-other-1', response: { 'Custom color': 'Other (specify)' } },
+    ]);
+    bridge.dispose();
+  });
+
   it('ignores non-approval/question interactions', async () => {
     const session = makeFakeSession();
     const { conn, calls } = makeFakeConn(() => ({ outcome: { outcome: 'cancelled' } }));

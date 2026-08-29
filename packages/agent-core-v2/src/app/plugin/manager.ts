@@ -674,6 +674,14 @@ function pluginMcpServerInfo(
       headerKeys: config.headers === undefined ? undefined : Object.keys(config.headers).toSorted(),
     };
   }
+  if (config.transport === 'acp') {
+    return {
+      name,
+      runtimeName: pluginMcpRuntimeName(record.id, name),
+      enabled: isMcpServerEnabled(record, name, config),
+      transport: 'acp',
+    };
+  }
   return {
     name,
     runtimeName: pluginMcpRuntimeName(record.id, name),
@@ -701,7 +709,7 @@ function withPluginMcpRuntime(
   pluginRoot: string,
   nighthawkHomeDir: string,
 ): McpServerConfig {
-  if (config.transport === 'http' || config.transport === 'sse') return config;
+  if (config.transport === 'http' || config.transport === 'sse' || config.transport === 'acp') return config;
 
   const env = {
     ...config.env,

@@ -512,7 +512,7 @@ async function normalizePluginMcpServer(input: {
   readonly diagnostics: PluginDiagnostic[];
 }): Promise<McpServerConfig | undefined> {
   const { config } = input;
-  if (config.transport === 'http' || config.transport === 'sse') return config;
+  if (config.transport === 'http' || config.transport === 'sse' || config.transport === 'acp') return config;
 
   let command = config.command;
   if (command.startsWith('./')) {
