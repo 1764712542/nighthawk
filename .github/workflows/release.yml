@@ -132,6 +132,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -156,17 +158,17 @@ jobs:
       - name: Push formula to homebrew-nighthawk tap
         if: env.HOMEBREW_TAP_TOKEN != ''
         env:
-          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
           RELEASE_TAG: ${{ needs.release.outputs.nighthawk_release_tag }}
         run: |
           VERSION="${RELEASE_TAG#*@}"
           VERSION="${VERSION#v}"
           git clone --depth 1 "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/AliceGoto/homebrew-nighthawk.git" tap
-          cp nighthawk.rb "tap/nighthawk.rb"
+          mkdir -p tap/Formula
+          cp nighthawk.rb "tap/Formula/nighthawk.rb"
           cd tap
           git config user.name "nighthawk-bot"
           git config user.email "nighthawk-bot@users.noreply.github.com"
-          git add nighthawk.rb
+          git add Formula/nighthawk.rb
           git diff --cached --quiet || git commit -m "Update NightHawk formula to ${VERSION}"
           git push
         shell: bash
