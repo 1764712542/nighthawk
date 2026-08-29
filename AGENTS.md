@@ -40,6 +40,11 @@ This is a TypeScript monorepo built for agent-assisted development. Keep the roo
 - Keep changes focused. Do not slip in unrelated refactors along the way.
 - When committing, do not add any co-author attribution, and do not reveal the identity of the agent in commit messages, PR descriptions, or any explanatory text.
 
+## Constraint Files
+
+Every source/engineering directory has a local `CONSTRAINTS.md` (root, packages, apps, src, test, scripts, build, docs, plugins, reports, .github, .agents, .changeset, plan, project-encyclopedia). Before modifying files in a directory, read its `CONSTRAINTS.md` and follow it as hard rules. If `CONSTRAINTS.md` conflicts with this file or another instruction, stop and report the conflict instead of silently choosing one.
+
+
 ## Project Map
 
 ### Applications
@@ -130,6 +135,31 @@ This is a TypeScript monorepo built for agent-assisted development. Keep the roo
   - Agent working notes or handoff/summary documents (e.g. `HANDOVER-*.md`, `HANDOFF-*.md`, `handoff.md`).
   - Throwaway UI/UX prototypes or design mockups (e.g. `*-designs.html`, `*-mockup.html`, `*-demo(s).html`) at the repo root or under a `design/` folder. The only tracked `.html` files should be Vite `index.html` entrypoints.
   Before committing or opening a PR, run `git status` and `git diff --staged --stat` and remove anything matching these patterns. Put scratch work under `.tmp/` (gitignored) instead of the repo root or the source tree.
+
+## Release and CI/CD Pipeline
+
+Every push to `main` triggers:
+1. **Docs Deploy**: Builds and deploys VitePress docs to GitHub Pages.
+2. **Manual Native Bundle**: Builds native binaries for all 6 platforms (linux-x64, linux-arm64, darwin-x64, darwin-arm64, win32-x64, win32-arm64), uploads to GitHub Release, updates Homebrew formula at `AliceGoto/homebrew-nighthawk`.
+
+### Release Process
+1. Create a changeset via `pnpm changeset` (or `gen-changesets` skill).
+2. Push to main. The Release workflow will create a Release PR.
+3. Merge the Release PR. Changesets publishes packages and triggers native builds.
+4. The native builds upload binaries to the GitHub Release.
+5. The Homebrew formula is updated automatically.
+6. Docs are deployed automatically.
+
+### Manual Native Build
+```sh
+gh workflow run "Manual Native Bundle" --repo AliceGoto/nighthawk --ref main -f release-tag=v0.41.0
+```
+
+### Homebrew Installation
+```sh
+brew tap AliceGoto/nighthawk
+brew install nighthawk
+```
 
 ## Build and Development Commands
 
