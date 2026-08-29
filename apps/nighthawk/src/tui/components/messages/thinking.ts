@@ -8,8 +8,8 @@
 import { Text, truncateToWidth, type Component, type TUI } from '@nighthawk/pi-tui';
 
 import {
-  BRAILLE_SPINNER_FRAMES,
-  BRAILLE_SPINNER_INTERVAL_MS,
+  MOON_SPINNER_BOUNCE_FRAMES,
+  MOON_SPINNER_BOUNCE_INTERVAL_MS,
   MESSAGE_INDENT,
   THINKING_PREVIEW_LINES,
 } from '#/tui/constant/rendering';
@@ -107,7 +107,7 @@ export class ThinkingComponent implements Component {
           : contentLines;
       const spinner = currentTheme.fg(
         'textDim',
-        `${BRAILLE_SPINNER_FRAMES[this.spinnerFrame] ?? BRAILLE_SPINNER_FRAMES[0]} `,
+        `${MOON_SPINNER_BOUNCE_FRAMES[this.spinnerFrame] ?? MOON_SPINNER_BOUNCE_FRAMES[0]} `,
       );
       rendered = [
         '',
@@ -146,10 +146,10 @@ export class ThinkingComponent implements Component {
   private startSpinner(): void {
     if (this.ui === undefined || this.spinnerInterval !== undefined) return;
     this.spinnerInterval = setInterval(() => {
-      this.spinnerFrame = (this.spinnerFrame + 1) % BRAILLE_SPINNER_FRAMES.length;
+      this.spinnerFrame = (this.spinnerFrame + 1) % MOON_SPINNER_BOUNCE_FRAMES.length;
       this.markRenderDirty();
       this.ui?.requestRender();
-    }, BRAILLE_SPINNER_INTERVAL_MS);
+    }, MOON_SPINNER_BOUNCE_INTERVAL_MS);
   }
 
   private stopSpinner(): void {
