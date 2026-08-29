@@ -80,21 +80,21 @@ export interface ColorPalette {
 }
 
 /**
- * Cosmic Broth dark theme — deep space / sci-fi aesthetic.
+ * Cosmic Broth dark theme — deep space cockpit aesthetic.
  * Inspired by https://www.cosmicbroth.com
- * Background: #000013 extreme dark blue-black (set by terminal emulator).
- * Colors: vibrant sci-fi palette with blue/purple/cyan accents.
+ * High contrast: white (#f3f3f3) on extreme dark (#000013).
+ * Sharp borders, vibrant accents, terminal-style HUD.
  */
 export const darkColors: ColorPalette = {
-  primary: '#6c6cff',
-  accent: '#4aff8a',
+  primary: '#f3f3f3',
+  accent: '#6c6cff',
 
-  text: '#e8e8f0',
+  text: '#f3f3f3',
   textStrong: '#ffffff',
-  textDim: '#8888aa',
-  textMuted: '#555577',
+  textDim: '#9999bb',
+  textMuted: '#666688',
 
-  border: '#2a2a4a',
+  border: '#3a3a5a',
   borderFocus: '#6c6cff',
 
   success: '#4aff8a',
@@ -105,8 +105,8 @@ export const darkColors: ColorPalette = {
   diffRemoved: '#ff4757',
   diffAddedStrong: '#7affaa',
   diffRemovedStrong: '#ff7777',
-  diffGutter: '#555577',
-  diffMeta: '#8888aa',
+  diffGutter: '#666688',
+  diffMeta: '#9999bb',
 
   roleUser: '#4aff8a',
   shellMode: '#6c6cff',
