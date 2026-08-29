@@ -274,6 +274,15 @@ Each plugin entry in the marketplace contains the following fields:
 
 ### Submission Process
 
+There are two ways to submit your plugin:
+
+**Option A — Submit via GitHub Issue (recommended)**
+1. Complete your plugin, ensuring it includes a `nighthawk.plugin.json` manifest.
+2. Publish the plugin repository on GitHub.
+3. Open a [Plugin Submission](https://github.com/AliceGoto/nighthawk/issues/new?template=5-plugin-submission.yml) issue on the NightHawk repository and fill in the required fields.
+4. A maintainer will review your submission. If approved, the plugin will be added to the marketplace.
+
+**Option B — Submit a Pull Request**
 1. Complete your plugin, ensuring it includes a `nighthawk.plugin.json` manifest.
 2. Publish the plugin repository on GitHub.
 3. Submit a Pull Request to the [NightHawk repository](https://github.com/AliceGoto/nighthawk) modifying `plugins/marketplace.json` to add your plugin entry.

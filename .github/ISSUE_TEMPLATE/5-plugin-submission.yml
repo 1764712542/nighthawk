@@ -1,0 +1,88 @@
+name: Plugin Submission
+description: Submit your plugin to the NightHawk marketplace
+labels:
+  - plugin-submission
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for submitting your plugin to the NightHawk marketplace!
+
+        Before submitting, please ensure:
+        1. Your plugin has a valid `nighthawk.plugin.json` manifest at its root.
+        2. Your plugin is functional and passes basic testing.
+        3. The plugin id is globally unique and does not conflict with existing plugins.
+        4. Your plugin source is hosted on GitHub (recommended for community review).
+
+        After submitting, a maintainer will review your plugin. If approved, it will be added to `plugins/marketplace.json` and appear in the marketplace listing.
+
+  - type: input
+    id: plugin-id
+    attributes:
+      label: Plugin ID
+      description: Unique identifier, must match /^[a-z0-9][a-z0-9_-]{0,63}$/
+    validations:
+      required: true
+
+  - type: input
+    id: plugin-name
+    attributes:
+      label: Plugin Display Name
+      description: Human-readable name shown in the marketplace
+    validations:
+      required: true
+
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Version
+      description: Semantic version (e.g. 1.0.0)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: plugin-tier
+    attributes:
+      label: Tier
+      description: Which tier should this plugin be listed under?
+      options:
+        - curated
+        - community
+    validations:
+      required: true
+
+  - type: textarea
+    id: plugin-description
+    attributes:
+      label: Description
+      description: Short description of what your plugin does (1-2 sentences)
+    validations:
+      required: true
+
+  - type: input
+    id: plugin-keywords
+    attributes:
+      label: Keywords
+      description: Comma-separated keywords for search (e.g. "security, network, scanning")
+
+  - type: input
+    id: plugin-homepage
+    attributes:
+      label: Homepage URL
+      description: Project homepage or website
+    validations:
+      required: true
+
+  - type: input
+    id: plugin-source
+    attributes:
+      label: Source URL
+      description: GitHub repository URL (e.g. https://github.com/your-org/your-plugin)
+    validations:
+      required: true
+
+  - type: textarea
+    id: plugin-readme
+    attributes:
+      label: Additional information
+      description: Any other context about your plugin — features, dependencies, special setup instructions, or a link to the README.

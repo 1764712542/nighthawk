@@ -274,6 +274,15 @@ NightHawk 的插件市场由 `plugins/marketplace.json` 管理，包含官方和
 
 ### 提交流程
 
+有两种方式提交你的插件：
+
+**方式 A — 通过 GitHub Issue 提交（推荐）**
+1. 完善插件，确保包含 `nighthawk.plugin.json` manifest 文件。
+2. 在 GitHub 上发布插件仓库。
+3. 在 NightHawk 仓库中打开 [Plugin Submission](https://github.com/AliceGoto/nighthawk/issues/new?template=5-plugin-submission.yml) issue，填写所需字段。
+4. 维护者将审核你的提交。审核通过后，插件将被添加到市场列表中。
+
+**方式 B — 提交 Pull Request**
 1. 完善插件，确保包含 `nighthawk.plugin.json` manifest 文件。
 2. 在 GitHub 上发布插件仓库。
 3. 向 [NightHawk 仓库](https://github.com/AliceGoto/nighthawk) 提交 Pull Request，修改 `plugins/marketplace.json` 添加你的插件条目。
