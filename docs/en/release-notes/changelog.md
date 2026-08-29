@@ -6,6 +6,21 @@ outline: 2
 
 This page documents the changes in each NightHawk CLI release.
 
+## 0.41.0 (2026-08-30)
+
+### New Features
+- Lobe Chat Web UI integration: `nighthawk web --port 3000` launches browser chat
+- Plugin system enhancements: Tool/Profile/Config registration, hot reload, plugin SDK
+- Persona card system: `/personas` command, auto-role matching in AgentSwarm
+- `/swarm-status` command: view real-time swarm sub-task status
+- Cosmic Broth dark theme: space capsule pixel interface
+- Developer docs: bilingual plugin development guide
+
+### Changes
+- Removed all legacy brand/vendor references from docs
+- Cross-platform builds: Windows/Linux/macOS native binaries
+- Logo restored to NIGHTHAWK wordmark with gradient animation
+
 ## 0.40.0 (2026-08-28)
 
 ### New Features

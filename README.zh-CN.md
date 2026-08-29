@@ -120,6 +120,9 @@ node apps/nighthawk/dist/main.mjs
 
 # 无头安全审计
 node apps/nighthawk/dist/main.mjs -p "审计这个仓库的注入和 XSS 风险，按可利用性排序。"
+
+# Web UI（Lobe Chat）
+nighthawk web --port 3000
 ```
 
 在 TUI 中通过 `/login` 配置供应商（API 密钥），或设置 `NIGHTHAWK_API_KEY` / 编辑 `~/.nighthawk/config.toml`。
@@ -134,6 +137,7 @@ node apps/nighthawk/dist/main.mjs -p "审计这个仓库的注入和 XSS 风险�
 - **Skills** —— Markdown 定义的可复用 playbook，按相关性自动加载。
 - **记忆** —— 跨会话复利的持久项目记忆。
 - **子 Agent 与后台任务** —— 并行探索，不污染主上下文。
+- **Web UI** —— `nighthawk web --port 3000` 启动基于浏览器的 Lobe Chat 聊天界面。
 - **会话检查点** —— 长审计可跨重启存活；`-r` 恢复任意会话。
 - **权限与沙箱** —— 工作区信任门、路径策略、按工具配置的审批规则。
 

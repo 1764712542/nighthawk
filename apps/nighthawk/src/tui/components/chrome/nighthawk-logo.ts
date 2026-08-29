@@ -93,6 +93,8 @@ export class NightHawkLogoComponent {
   private timer: ReturnType<typeof setInterval> | null = null;
   private done = false;
   private readonly requestRender: () => void;
+  private readonly ANIMATION_FRAMES = 6;
+  private readonly FRAME_INTERVAL_MS = 150;
 
   constructor(requestRender: () => void) {
     this.requestRender = requestRender;
@@ -103,12 +105,12 @@ export class NightHawkLogoComponent {
     this.done = false;
     this.timer ??= setInterval(() => {
       this.frame += 1;
-      if (this.frame >= MOEBIUS_TOTAL_TICKS) {
+      if (this.frame >= this.ANIMATION_FRAMES) {
         this.done = true;
         this.stop();
       }
       this.requestRender();
-    }, MOEBIUS_INTERVAL_MS);
+    }, this.FRAME_INTERVAL_MS);
     this.requestRender();
   }
 
@@ -125,23 +127,17 @@ export class NightHawkLogoComponent {
 
   invalidate(): void {}
 
-  private renderMoebiusTriangle(colors: ColorPalette): string[] {
-    const frameIndex = this.done ? 0 : (this.frame % MOEBIUS_FRAME_COUNT);
-    const lines = MOEBIUS_TRIANGLE_FRAMES[frameIndex]!;
-    return lines.map((line) => {
+  render(colors: ColorPalette): string[] {
+    const ratio = this.done ? 1 : this.frame / Math.max(1, this.ANIMATION_FRAMES - 1);
+    return NIGHTHAWK_LOGO_LINES.map((line, lineIndex) => {
       const chars = Array.from(line);
-      const styled = chars.map((char, charIndex) => {
+      const styled = chars.map((char) => {
         if (char === ' ') return char;
-        const rowRatio = charIndex / Math.max(1, chars.length - 1);
-        const gradientRatio = rowRatio * 1.3;
-        const color = interpolateGradient(colors.primary, colors.accent, Math.min(1, gradientRatio));
+        const gradientRatio = ratio * 0.8 + 0.2;
+        const color = interpolateGradient(colors.primary, colors.accent, gradientRatio);
         return chalk.hex(color).bold(char);
       });
       return styled.join('');
     });
-  }
-
-  render(colors: ColorPalette): string[] {
-    return this.renderMoebiusTriangle(colors);
   }
 }

@@ -120,6 +120,9 @@ node apps/nighthawk/dist/main.mjs
 
 # headless security audit
 node apps/nighthawk/dist/main.mjs -p "Audit this repo for injection and XSS risks, then rank findings by exploitability."
+
+# web UI (Lobe Chat)
+nighthawk web --port 3000
 ```
 
 Configure a provider (API key) in the TUI via `/login`, or set `NIGHTHAWK_API_KEY` / edit `~/.nighthawk/config.toml`.
@@ -134,6 +137,7 @@ Configure a provider (API key) in the TUI via `/login`, or set `NIGHTHAWK_API_KE
 - **Skills** — markdown-defined reusable playbooks, auto-loaded when relevant.
 - **Memory** — persistent project memory that compounds across sessions.
 - **Sub-agents & background tasks** — parallel exploration without polluting the main context.
+- **Web UI** — `nighthawk web --port 3000` launches a browser-based Lobe Chat interface.
 - **Session checkpoints** — long audits survive restarts; resume any session with `-r`.
 - **Permissions & sandboxing** — workspace trust gate, path policies, approval rules per tool.
 

@@ -393,13 +393,17 @@ function handleModels(res: ServerResponse): void {
 export async function handleWeb(deps: WebDeps, opts: WebOptions): Promise<void> {
   const homeDir = deps.getHomeDir();
   let session: Session | undefined;
+  let sessionPromise: Promise<Session> | undefined;
 
-  try {
-    session = await createWebSession(homeDir);
-  } catch (error) {
-    const msg = error instanceof Error ? error.message : String(error);
-    deps.stderr.write(`Failed to create NightHawk session: ${msg}\n`);
-    return deps.exit(1);
+  async function getSession(): Promise<Session> {
+    if (session !== undefined) return session;
+    if (sessionPromise === undefined) {
+      sessionPromise = createWebSession(homeDir).catch((error) => {
+        sessionPromise = undefined;
+        throw error;
+      });
+    }
+    return sessionPromise;
   }
 
   const server = createServer(async (req, res) => {
@@ -407,7 +411,13 @@ export async function handleWeb(deps: WebDeps, opts: WebOptions): Promise<void> 
 
     // API routes
     if (url === '/v1/chat/completions' || url === '/v1/chat/completions/') {
-      await handleChatCompletions(req, res, session!);
+      const sess = await getSession().catch(() => undefined);
+      if (sess === undefined) {
+        res.writeHead(503, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Session not available. Configure a provider first.' }));
+        return;
+      }
+      await handleChatCompletions(req, res, sess);
       return;
     }
 
@@ -497,10 +507,19 @@ function createDefaultWebDeps(overrides: Partial<WebDeps> = {}): WebDeps {
 
 function waitForSigint(): Promise<void> {
   return new Promise<void>((resolve) => {
+    let resolved = false;
     const onSig = (): void => {
+      if (resolved) return;
+      resolved = true;
       process.off('SIGINT', onSig);
+      process.off('SIGTERM', onSig);
       resolve();
     };
     process.on('SIGINT', onSig);
+    process.on('SIGTERM', onSig);
+    // Also handle stdin close (Ctrl+D)
+    if (process.stdin.isTTY) {
+      process.stdin.on('end', onSig);
+    }
   });
 }
