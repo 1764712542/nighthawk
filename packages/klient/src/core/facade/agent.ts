@@ -102,6 +102,11 @@ export interface AgentFacade {
    * Throws when there is nothing to compact or a turn is active.
    */
   compact(input?: { instruction?: string }): Promise<boolean>;
+  /**
+   * Enable or disable pentest mode on the agent. When enabled, the agent
+   * enters a restricted mode focused on penetration testing tooling.
+   */
+  setPentestMode(enabled: boolean): Promise<void>;
 }
 
 export function createAgentFacade(call: ScopedCaller, scope: ScopeRef): AgentFacade {
@@ -179,5 +184,7 @@ export function createAgentFacade(call: ScopedCaller, scope: ScopeRef): AgentFac
       call(scope, 'agentFullCompactionService', 'begin', [
         { source: 'manual', instruction: input?.instruction },
       ]) as Promise<boolean>,
+    setPentestMode: (enabled) =>
+      call(scope, 'agentPentestModeService', enabled ? 'enter' : 'exit', []) as Promise<void>,
   };
 }

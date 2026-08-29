@@ -124,6 +124,11 @@ export const agentFullCompactionContract = {
   begin: { input: z.tuple([fullCompactionInputSchema]), output: z.boolean() },
 } satisfies ServiceContract;
 
+export const agentPentestModeContract = {
+  enter: { input: z.tuple([]), output: noResult },
+  exit: { input: z.tuple([]), output: noResult },
+} satisfies ServiceContract;
+
 export const agentTaskContract = {
   list: {
     input: z.tuple([z.boolean().optional(), z.number().optional()]),

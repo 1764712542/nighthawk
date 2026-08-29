@@ -47,6 +47,7 @@ import { ISessionUsageService } from '@nighthawk/agent-core-v2/session/usage/ses
 import { IAgentMcpService } from '@nighthawk/agent-core-v2/agent/mcp/mcp';
 import { IAgentFullCompactionService } from '@nighthawk/agent-core-v2/agent/fullCompaction/fullCompaction';
 import { IMcpManagementService } from '@nighthawk/agent-core-v2/app/mcpManagement/mcpManagement';
+import { IAgentPentestModeService } from '@nighthawk/agent-core-v2/agent/pentestMode/pentestMode';
 
 /** Wire service name (decorator id string) → token. */
 export const serviceTokens: Readonly<Record<string, ServiceIdentifier<unknown>>> = {
@@ -87,6 +88,7 @@ export const serviceTokens: Readonly<Record<string, ServiceIdentifier<unknown>>>
   agentTaskService: IAgentTaskService,
   agentMcpService: IAgentMcpService,
   agentFullCompactionService: IAgentFullCompactionService,
+  agentPentestModeService: IAgentPentestModeService,
   mcpManagementService: IMcpManagementService,
 };
 

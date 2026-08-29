@@ -14,6 +14,7 @@ import {
   agentFullCompactionContract,
   agentLoopContract,
   agentMcpContract,
+  agentPentestModeContract,
   agentPermissionModeContract,
   agentPlanContract,
   agentRuntimeBindingContract,
@@ -90,6 +91,7 @@ export const globalContract: KlientContract = {
   agentPlanService: agentPlanContract,
   agentTaskService: agentTaskContract,
   agentMcpService: agentMcpContract,
+  agentPentestModeService: agentPentestModeContract,
   agentFullCompactionService: agentFullCompactionContract,
 };
 
