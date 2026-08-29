@@ -32,6 +32,13 @@ const copy = computed(() => isZh.value
 
 <template>
   <section class="NightHawkHero">
+    <!-- Geometric decorations -->
+    <svg class="NightHawkHero__hex" viewBox="0 0 100 100" aria-hidden="true">
+      <polygon points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.15" />
+    </svg>
+    <svg class="NightHawkHero__hex2" viewBox="0 0 100 100" aria-hidden="true">
+      <polygon points="50,5 95,27.5 95,72.5 50,95 5,72.5 5,27.5" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.1" />
+    </svg>
     <div class="NightHawkHero__halo" aria-hidden="true" />
     <div class="NightHawkHero__inner">
       <div class="NightHawkHero__logo">
@@ -64,6 +71,32 @@ const copy = computed(() => isZh.value
   position: relative;
   padding: clamp(72px, 12vw, 140px) 0 clamp(48px, 8vw, 96px);
   overflow: hidden;
+}
+
+.NightHawkHero__hex {
+  position: absolute;
+  top: 10%;
+  right: 8%;
+  width: 120px;
+  height: 120px;
+  color: var(--nighthawk-brand-1);
+  animation: spin 20s linear infinite;
+  pointer-events: none;
+}
+
+.NightHawkHero__hex2 {
+  position: absolute;
+  bottom: 15%;
+  left: 5%;
+  width: 80px;
+  height: 80px;
+  color: var(--nighthawk-brand-2);
+  animation: spin 25s linear infinite reverse;
+  pointer-events: none;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .NightHawkHero__halo {
