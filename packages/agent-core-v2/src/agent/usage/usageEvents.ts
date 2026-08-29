@@ -9,6 +9,7 @@ export interface AgentStatusUpdatedPayload {
   swarmMode?: boolean;
   towerMode?: boolean;
   planMode?: boolean;
+  pentestMode?: boolean;
   model?: string;
   thinkingEffort?: string;
   maxContextTokens?: number;

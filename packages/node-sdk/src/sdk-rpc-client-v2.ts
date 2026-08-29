@@ -179,6 +179,7 @@ import {
   AgentSkill,
   IAgentSwarmService,
   IAgentTaskService,
+  IAgentPentestModeService,
   ISessionTokenCountingService,
   IAgentToolPolicyService,
   IAgentToolRegistryService,
@@ -2101,7 +2102,14 @@ export class SDKRpcClientV2 extends SDKRpcClientBase {
   }
 
   override async setPentestMode(input: SetSessionPentestModeRpcInput): Promise<void> {
-    void input;
+    const agent = await this.agentScope(input.sessionId);
+    const pentest = agent.accessor.get(IAgentPentestModeService);
+    if (input.enabled) {
+      await pentest.enter();
+    } else {
+      pentest.exit();
+    }
+    await agent.accessor.get(IAgentContextInjectorService).reconcileWhenIdle('pentest_mode');
   }
 
   // -----------------------------------------------------------------------
