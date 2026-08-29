@@ -67,6 +67,7 @@ import {
   configOptionUpdateNotification,
   currentModeUpdateNotification,
   planFromDisplayBlock,
+  planRemovedToSessionUpdate,
   sessionInfoUpdateNotification,
   thinkingDeltaToSessionUpdate,
   toolCallDeltaToSessionUpdate,
@@ -236,6 +237,12 @@ export class AcpSession {
    * captured output; only the client-facing card content is de-duplicated.
    */
   private readonly terminalBackedCalls = new Map<string, string>();
+  /**
+   * Whether the session currently has an active (non-empty) plan on the ACP
+   * client. Tracks the TodoList state across turns so we can emit
+   * `plan_removed` when the list transitions from non-empty to empty.
+   */
+  private hasActivePlan: boolean = false;
   /** Bridges engine approval / ask-user requests to the ACP client. */
   private readonly interactionBridge: AcpInteractionBridge;
 
@@ -780,9 +787,16 @@ export class AcpSession {
         : toolCallStartToSessionUpdate(this.sessionId, mapped),
     );
     if (event.display !== undefined) {
-      this.emit(
-        planFromDisplayBlock(this.sessionId, event.turnId, event.display as ToolInputDisplay),
-      );
+      const display = event.display as ToolInputDisplay;
+      if (display.kind === 'todo_list') {
+        if (display.items.length > 0) {
+          this.hasActivePlan = true;
+          this.emit(planFromDisplayBlock(this.sessionId, event.turnId, display));
+        } else if (this.hasActivePlan) {
+          this.hasActivePlan = false;
+          this.emit(planRemovedToSessionUpdate(this.sessionId));
+        }
+      }
     }
   }
 

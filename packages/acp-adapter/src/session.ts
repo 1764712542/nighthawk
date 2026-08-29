@@ -45,6 +45,7 @@ import {
   assistantDeltaToSessionUpdate,
   configOptionUpdateNotification,
   planFromDisplayBlock,
+  planRemovedToSessionUpdate,
   stringifyArgs,
   thinkingDeltaToSessionUpdate,
   toolCallDeltaToSessionUpdate,
@@ -155,6 +156,13 @@ export class AcpSession {
   // `cancelled` instead of launching. A set (not a single field) so concurrent
   // prompts are all covered rather than only the most recent.
   private readonly pendingPromptAborts = new Set<{ aborted: boolean }>();
+
+  /**
+   * Whether the session currently has an active (non-empty) plan on the ACP
+   * client. Tracks the TodoList state across turns so we can emit
+   * `plan_removed` when the list transitions from non-empty to empty.
+   */
+  private hasActivePlan: boolean = false;
 
   /**
    * The most recent command palette advertised to the ACP client. Used by
@@ -1137,17 +1145,29 @@ export class AcpSession {
               });
           }
           // Phase 9.3: when the tool exposed a structured TodoList
-          // display, additionally fire a `plan` session_update so ACP
-          // clients can render the agent's evolving TODO list. Other
-          // display kinds (diff/file_io/command/…) are already folded
-          // into the tool_call card; only `todo_list` becomes a plan.
-          // The emission is fire-and-forget under the same idle-stream
-          // discipline as the assistant deltas above.
-          if (event.display) {
-            const planNote = planFromDisplayBlock(sessionId, event.turnId, event.display);
-            if (planNote !== null) {
-              conn.sessionUpdate(planNote).catch((err) => {
-                log.warn('acp: failed to push plan', {
+          // display, additionally fire a `plan` or `plan_removed`
+          // session_update so ACP clients can render the agent's
+          // evolving TODO list. State tracking:
+          //   - non-empty items → emit `plan` (create/update)
+          //   - empty items when previously active → emit `plan_removed`
+          //   - empty items when no prior plan → no emission
+          if (event.display && event.display.kind === 'todo_list') {
+            const items = event.display.items;
+            if (items.length > 0) {
+              this.hasActivePlan = true;
+              const planNote = planFromDisplayBlock(sessionId, event.turnId, event.display);
+              if (planNote !== null) {
+                conn.sessionUpdate(planNote).catch((err) => {
+                  log.warn('acp: failed to push plan', {
+                    sessionId,
+                    error: err instanceof Error ? err.message : String(err),
+                  });
+                });
+              }
+            } else if (this.hasActivePlan) {
+              this.hasActivePlan = false;
+              conn.sessionUpdate(planRemovedToSessionUpdate(sessionId)).catch((err) => {
+                log.warn('acp: failed to push plan_removed', {
                   sessionId,
                   error: err instanceof Error ? err.message : String(err),
                 });

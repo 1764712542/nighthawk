@@ -409,10 +409,9 @@ export function toolResultToSessionUpdate(
  *     TodoList does not carry a priority axis today.
  *   - `title` → `content` (ACP names it `content` per :3548).
  *
- * Returns `null` if the items array is empty — there is no useful
- * client-side state in "I emit the plan now, but it's empty" beyond
- * the eventual `plan_removed` story (deferred until nighthawk grows
- * a clear-plan signal).
+ * Returns `null` if the items array is empty — callers that need to
+ * signal plan removal (transition from non-empty to empty) should emit
+ * a separate `plan_removed` notification via {@link planRemovedToSessionUpdate}.
  */
 export function todoListToSessionUpdate(
   sessionId: string,
@@ -470,6 +469,32 @@ export function planFromDisplayBlock(
 ): SessionNotification | null {
   if (display.kind !== 'todo_list') return null;
   return todoListToSessionUpdate(sessionId, turnId, display.items);
+}
+
+/**
+ * The stable plan identifier used for the session-scoped default plan.
+ * NightHawk maintains at most one plan per session (the TodoList), so
+ * a fixed id keeps the wire protocol simple and lets `plan_removed`
+ * address it unambiguously.
+ */
+export const PLAN_ID = 'default';
+
+/**
+ * Build an ACP `plan_removed` session update for the session's default
+ * plan. Emitted when the TodoList transitions from non-empty to empty,
+ * so ACP clients can clear the plan panel.
+ *
+ * Wire shape (`types.gen.d.ts:3679`): `PlanRemoved` requires an `id`
+ * (`PlanId = string`) to identify which plan to remove.
+ */
+export function planRemovedToSessionUpdate(sessionId: string): SessionNotification {
+  return {
+    sessionId,
+    update: {
+      sessionUpdate: 'plan_removed',
+      id: PLAN_ID,
+    },
+  };
 }
 
 /**

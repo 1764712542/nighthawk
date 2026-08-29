@@ -14,6 +14,7 @@ import type {
 
 import type { Environment } from './environment';
 import { KaosError, KaosFileExistsError, KaosValueError } from './errors';
+import { resolveOsKind } from './environment';
 import { BufferedReadable, decodeTextWithErrors, globPatternToRegex } from './internal';
 import type { Kaos } from './kaos';
 import type { KaosProcess } from './process';
@@ -427,6 +428,23 @@ function clientExec(client: Client, command: string): Promise<ClientChannel> {
   });
 }
 
+// ── channel output reader ─────────────────────────────────────────────
+
+function readChannelOutput(channel: ClientChannel): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    channel.stdout.on('data', (chunk: Buffer) => {
+      chunks.push(chunk);
+    });
+    channel.on('close', () => {
+      resolve(Buffer.concat(chunks).toString('utf-8'));
+    });
+    channel.on('error', (err: Error) => {
+      reject(err);
+    });
+  });
+}
+
 // ── SSHKaos ────────────────────────────────────────────────────────────
 
 /**
@@ -440,13 +458,10 @@ export class SSHKaos implements Kaos {
   private _home: string;
   private _cwd: string;
   private readonly _envLayers: readonly Record<string, string>[];
+  private readonly _osEnv: Environment;
 
-  // Stub: real wiring (probing the remote host via `uname` / `$SHELL` over the
-  // SSH transport) is deferred.
   get osEnv(): Environment {
-    throw new KaosError(
-      'SSHKaos.osEnv is not yet wired — remote environment probing is not implemented.',
-    );
+    return this._osEnv;
   }
 
   private constructor(
@@ -454,21 +469,23 @@ export class SSHKaos implements Kaos {
     sftp: SFTPWrapper,
     home: string,
     cwd: string,
-    envLayers: readonly Record<string, string>[] = [],
+    envLayers: readonly Record<string, string>[],
+    osEnv: Environment,
   ) {
     this._client = client;
     this._sftp = sftp;
     this._home = home;
     this._cwd = cwd;
     this._envLayers = envLayers;
+    this._osEnv = osEnv;
   }
 
   withCwd(cwd: string): SSHKaos {
-    return new SSHKaos(this._client, this._sftp, this._home, cwd, this._envLayers);
+    return new SSHKaos(this._client, this._sftp, this._home, cwd, this._envLayers, this._osEnv);
   }
 
   withEnv(env: Record<string, string>): SSHKaos {
-    return new SSHKaos(this._client, this._sftp, this._home, this._cwd, [...this._envLayers, env]);
+    return new SSHKaos(this._client, this._sftp, this._home, this._cwd, [...this._envLayers, env], this._osEnv);
   }
 
   private _resolvePath(path: string): string {
@@ -535,7 +552,51 @@ export class SSHKaos implements Kaos {
         }
       }
 
-      return new SSHKaos(client, sftp, home, cwd);
+      // Probe remote environment via uname and $SHELL
+      const probeChannel = await clientExec(
+        client,
+        'uname -s && uname -m && uname -r && echo "$SHELL"',
+      );
+      let output: string;
+      try {
+        output = await readChannelOutput(probeChannel);
+      } catch (err) {
+        client.end();
+        throw new KaosConnectionError(
+          `Remote environment probe failed: ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
+      const probeLines = output.trim().split('\n');
+      if (probeLines.length < 4 || probeLines.some((l) => l.trim() === '')) {
+        client.end();
+        throw new KaosConnectionError(
+          'Remote environment probe returned incomplete output',
+        );
+      }
+
+      const unameSys = probeLines[0]!.trim().toLowerCase();
+      const unameMachine = probeLines[1]!.trim();
+      const unameRelease = probeLines[2]!.trim();
+      let shellPath = probeLines[3]!.trim();
+      if (shellPath === '') {
+        shellPath = '/bin/sh';
+      }
+      const shellName = shellPath.endsWith('/bash') ? ('bash' as const) : ('sh' as const);
+
+      const platform = unameSys === 'darwin' ? 'darwin'
+        : unameSys === 'linux' ? 'linux'
+        : unameSys === 'windowsnt' ? 'win32'
+        : unameSys;
+
+      const osEnv: Environment = {
+        osKind: resolveOsKind(platform),
+        osArch: unameMachine,
+        osVersion: unameRelease,
+        shellName,
+        shellPath,
+      };
+
+      return new SSHKaos(client, sftp, home, cwd, [], osEnv);
     } catch (error) {
       client.end();
       throw error;

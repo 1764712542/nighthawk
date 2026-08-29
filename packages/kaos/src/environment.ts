@@ -59,7 +59,7 @@ const MINGW_PREFIX_SET: ReadonlySet<string> = new Set([
   'clangarm64',
 ]);
 
-function resolveOsKind(platform: string): OsKind {
+export function resolveOsKind(platform: string): OsKind {
   switch (platform) {
     case 'darwin':
       return 'macOS';

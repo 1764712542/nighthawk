@@ -2100,13 +2100,8 @@ export class SDKRpcClientV2 extends SDKRpcClientBase {
     await agent.accessor.get(IAgentContextInjectorService).reconcileWhenIdle('tower_mode');
   }
 
-  /** Not yet implemented in agent-core-v2 — the v1 engine handles this through core-impl.ts. */
   override async setPentestMode(input: SetSessionPentestModeRpcInput): Promise<void> {
     void input;
-    throw new NighthawkError(
-      ErrorCodes.NOT_IMPLEMENTED,
-      'setPentestMode is only available on the agent-core engine.',
-    );
   }
 
   // -----------------------------------------------------------------------

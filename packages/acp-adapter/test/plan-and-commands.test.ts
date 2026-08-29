@@ -21,6 +21,7 @@ import { AUTHED_STATUS } from './_helpers/harness-stubs';
 import {
   availableCommandsUpdateNotification,
   planFromDisplayBlock,
+  planRemovedToSessionUpdate,
   todoListToSessionUpdate,
 } from '../src/events-map';
 
@@ -77,6 +78,38 @@ function makeScriptedSession(sessionId: string, script: readonly Event[]): Sessi
   const session = {
     id: sessionId,
     prompt: async (_input: unknown) => {
+      for (const ev of script) {
+        for (const fn of listeners) fn(ev);
+      }
+    },
+    cancel: async () => undefined,
+    onEvent: (fn: (event: Event) => void) => {
+      listeners.add(fn);
+      return () => {
+        listeners.delete(fn);
+      };
+    },
+  } as unknown as Session;
+  return session;
+}
+
+/**
+ * Create a session whose `prompt` replays a different script slice on each
+ * call. The `scripts` array is consumed sequentially — the first `prompt()`
+ * fires `scripts[0]`, the second fires `scripts[1]`, etc. This lets
+ * multi-turn tests drive distinct event sequences per prompt.
+ */
+function makeMultiPromptSession(
+  sessionId: string,
+  scripts: readonly (readonly Event[])[],
+): Session {
+  const listeners = new Set<(event: Event) => void>();
+  let callIndex = 0;
+  const session = {
+    id: sessionId,
+    prompt: async (_input: unknown) => {
+      const script = scripts[callIndex] ?? [];
+      callIndex += 1;
       for (const ev of script) {
         for (const fn of listeners) fn(ev);
       }
@@ -166,6 +199,19 @@ describe('Phase 9.3 unit · planFromDisplayBlock', () => {
         after: 'b',
       }),
     ).toBeNull();
+  });
+});
+
+describe('plan_removed unit · planRemovedToSessionUpdate', () => {
+  it('builds a plan_removed session_update with the default plan id', () => {
+    const note = planRemovedToSessionUpdate('sess-z');
+    expect(note).toEqual({
+      sessionId: 'sess-z',
+      update: {
+        sessionUpdate: 'plan_removed',
+        id: 'default',
+      },
+    });
   });
 });
 
@@ -357,5 +403,197 @@ describe('Phase 9.3 e2e · todo_list display block becomes a plan session_update
       (n) => (n.update as { sessionUpdate: string }).sessionUpdate === 'plan',
     );
     expect(planUpdates).toHaveLength(0);
+  });
+});
+
+describe('plan_removed e2e · TodoList transitions', () => {
+  it('emits plan when items go from empty to non-empty, then plan_removed when they go back to empty', async () => {
+    const sessionId = 'sess-plan-removed';
+    const session = makeMultiPromptSession(sessionId, [
+      // Prompt 1: TodoList with items → plan emitted
+      [
+        {
+          type: 'tool.call.started',
+          sessionId,
+          agentId: 'main',
+          turnId: 1,
+          toolCallId: 'tc-1',
+          name: 'TodoList',
+          args: {},
+          display: {
+            kind: 'todo_list',
+            items: [{ title: 'step 1', status: 'pending' }],
+          },
+        } as Event,
+        { type: 'turn.ended', sessionId, agentId: 'main', turnId: 1, reason: 'completed' } as Event,
+      ],
+      // Prompt 2: TodoList with empty items → plan_removed emitted
+      [
+        {
+          type: 'tool.call.started',
+          sessionId,
+          agentId: 'main',
+          turnId: 2,
+          toolCallId: 'tc-2',
+          name: 'TodoList',
+          args: {},
+          display: {
+            kind: 'todo_list',
+            items: [],
+          },
+        } as Event,
+        { type: 'turn.ended', sessionId, agentId: 'main', turnId: 2, reason: 'completed' } as Event,
+      ],
+    ]);
+    const harness = {
+      auth: { status: async () => AUTHED_STATUS },
+      createSession: async () => session,
+    } as unknown as NighthawkHarness;
+
+    const { agentStream, clientStream } = makeInMemoryStreamPair();
+    new AgentSideConnection((c) => new AcpServer(harness, c), agentStream);
+    const collecting = new CollectingClient();
+    const client = new ClientSideConnection(() => collecting, clientStream);
+
+    await client.newSession({ cwd: '/tmp/x', mcpServers: [] });
+    await client.prompt({ sessionId, prompt: [textBlock('start')] });
+    await client.prompt({ sessionId, prompt: [textBlock('clear')] });
+    await flushNdjson();
+
+    const planUpdates = collecting.updates.filter(
+      (n) => (n.update as { sessionUpdate: string }).sessionUpdate === 'plan',
+    );
+    const planRemovedUpdates = collecting.updates.filter(
+      (n) => (n.update as { sessionUpdate: string }).sessionUpdate === 'plan_removed',
+    );
+
+    expect(planUpdates).toHaveLength(1);
+    expect(planRemovedUpdates).toHaveLength(1);
+    expect(planRemovedUpdates[0]?.sessionId).toBe(sessionId);
+    expect(planRemovedUpdates[0]?.update).toEqual({
+      sessionUpdate: 'plan_removed',
+      id: 'default',
+    });
+  });
+
+  it('does NOT emit plan_removed when items were never non-empty', async () => {
+    const sessionId = 'sess-no-plan-removed';
+    const session = makeScriptedSession(sessionId, [
+      // Turn 1: empty TodoList → no plan, no plan_removed
+      {
+        type: 'tool.call.started',
+        sessionId,
+        agentId: 'main',
+        turnId: 1,
+        toolCallId: 'tc-1',
+        name: 'TodoList',
+        args: {},
+        display: {
+          kind: 'todo_list',
+          items: [],
+        },
+      } as Event,
+      { type: 'turn.ended', sessionId, agentId: 'main', turnId: 1, reason: 'completed' } as Event,
+    ]);
+    const harness = {
+      auth: { status: async () => AUTHED_STATUS },
+      createSession: async () => session,
+    } as unknown as NighthawkHarness;
+
+    const { agentStream, clientStream } = makeInMemoryStreamPair();
+    new AgentSideConnection((c) => new AcpServer(harness, c), agentStream);
+    const collecting = new CollectingClient();
+    const client = new ClientSideConnection(() => collecting, clientStream);
+
+    await client.newSession({ cwd: '/tmp/x', mcpServers: [] });
+    await client.prompt({ sessionId, prompt: [textBlock('start')] });
+    await flushNdjson();
+
+    const planRemovedUpdates = collecting.updates.filter(
+      (n) => (n.update as { sessionUpdate: string }).sessionUpdate === 'plan_removed',
+    );
+    expect(planRemovedUpdates).toHaveLength(0);
+  });
+
+  it('emits plan again when items go from empty (after removal) back to non-empty', async () => {
+    const sessionId = 'sess-plan-reappear';
+    const session = makeMultiPromptSession(sessionId, [
+      // Prompt 1: items → plan
+      [
+        {
+          type: 'tool.call.started',
+          sessionId,
+          agentId: 'main',
+          turnId: 1,
+          toolCallId: 'tc-1',
+          name: 'TodoList',
+          args: {},
+          display: {
+            kind: 'todo_list',
+            items: [{ title: 'step 1', status: 'pending' }],
+          },
+        } as Event,
+        { type: 'turn.ended', sessionId, agentId: 'main', turnId: 1, reason: 'completed' } as Event,
+      ],
+      // Prompt 2: empty → plan_removed
+      [
+        {
+          type: 'tool.call.started',
+          sessionId,
+          agentId: 'main',
+          turnId: 2,
+          toolCallId: 'tc-2',
+          name: 'TodoList',
+          args: {},
+          display: {
+            kind: 'todo_list',
+            items: [],
+          },
+        } as Event,
+        { type: 'turn.ended', sessionId, agentId: 'main', turnId: 2, reason: 'completed' } as Event,
+      ],
+      // Prompt 3: items again → plan
+      [
+        {
+          type: 'tool.call.started',
+          sessionId,
+          agentId: 'main',
+          turnId: 3,
+          toolCallId: 'tc-3',
+          name: 'TodoList',
+          args: {},
+          display: {
+            kind: 'todo_list',
+            items: [{ title: 'step 2', status: 'in_progress' }],
+          },
+        } as Event,
+        { type: 'turn.ended', sessionId, agentId: 'main', turnId: 3, reason: 'completed' } as Event,
+      ],
+    ]);
+    const harness = {
+      auth: { status: async () => AUTHED_STATUS },
+      createSession: async () => session,
+    } as unknown as NighthawkHarness;
+
+    const { agentStream, clientStream } = makeInMemoryStreamPair();
+    new AgentSideConnection((c) => new AcpServer(harness, c), agentStream);
+    const collecting = new CollectingClient();
+    const client = new ClientSideConnection(() => collecting, clientStream);
+
+    await client.newSession({ cwd: '/tmp/x', mcpServers: [] });
+    await client.prompt({ sessionId, prompt: [textBlock('go')] });
+    await client.prompt({ sessionId, prompt: [textBlock('clear')] });
+    await client.prompt({ sessionId, prompt: [textBlock('again')] });
+    await flushNdjson();
+
+    const planUpdates = collecting.updates.filter(
+      (n) => (n.update as { sessionUpdate: string }).sessionUpdate === 'plan',
+    );
+    const planRemovedUpdates = collecting.updates.filter(
+      (n) => (n.update as { sessionUpdate: string }).sessionUpdate === 'plan_removed',
+    );
+
+    expect(planUpdates).toHaveLength(2);
+    expect(planRemovedUpdates).toHaveLength(1);
   });
 });

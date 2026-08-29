@@ -10,6 +10,7 @@ interface CreateHarnessState {
   connectConfigs: ConnectConfig[];
   endCalls: number;
   readFileCalls: string[];
+  execCommands: string[];
 }
 
 interface CreateHarnessOptions {
@@ -17,6 +18,8 @@ interface CreateHarnessOptions {
   readFileValues?: Record<string, string>;
   sftp?: SFTPWrapper;
   sftpError?: Error;
+  execOutput?: string;
+  execError?: Error;
 }
 
 function makeStats(isDirectory: boolean): SFTPStats {
@@ -66,6 +69,7 @@ async function loadSSHModule(options: CreateHarnessOptions = {}): Promise<{
     connectConfigs: [],
     endCalls: 0,
     readFileCalls: [],
+    execCommands: [],
   };
 
   class MockClient extends EventEmitter {
@@ -84,6 +88,34 @@ async function loadSSHModule(options: CreateHarnessOptions = {}): Promise<{
       state.endCalls += 1;
       queueMicrotask(() => {
         this.emit('close');
+      });
+    }
+
+    exec(command: string, callback: (err: Error | undefined, channel: any) => void): void {
+      state.execCommands.push(command);
+      const channel = new EventEmitter();
+      const stdout = new EventEmitter();
+      (channel as any).stdout = stdout;
+      (channel as any).stderr = new EventEmitter();
+      (channel as any).close = vi.fn(() => {
+        stdout.emit('close');
+        channel.emit('close');
+      });
+
+      if (options.execError) {
+        queueMicrotask(() => {
+          callback(options.execError, undefined);
+        });
+        return;
+      }
+
+      const output = options.execOutput ?? 'Linux\nx86_64\n6.1.0\n/bin/bash\n';
+      queueMicrotask(() => {
+        callback(undefined, channel);
+        queueMicrotask(() => {
+          stdout.emit('data', Buffer.from(output));
+          (channel as any).close();
+        });
       });
     }
 
@@ -371,5 +403,89 @@ describe('SSHKaos.create()', () => {
     });
 
     expect(yielded).toEqual(['publickey', 'password']);
+  });
+
+  it('osEnv returns the correct Environment object', async () => {
+    const { SSHKaos } = await loadSSHModule();
+
+    const ssh = await SSHKaos.create({
+      host: 'example.com',
+      username: 'tester',
+    });
+
+    expect(ssh.osEnv).toEqual({
+      osKind: 'Linux',
+      osArch: 'x86_64',
+      osVersion: '6.1.0',
+      shellName: 'bash',
+      shellPath: '/bin/bash',
+    });
+  });
+
+  it('withCwd() preserves the same osEnv', async () => {
+    const { SSHKaos } = await loadSSHModule();
+
+    const ssh = await SSHKaos.create({
+      host: 'example.com',
+      username: 'tester',
+    });
+
+    const withCwd = ssh.withCwd('/tmp');
+    expect(withCwd.osEnv).toBe(ssh.osEnv);
+  });
+
+  it('withEnv() preserves the same osEnv', async () => {
+    const { SSHKaos } = await loadSSHModule();
+
+    const ssh = await SSHKaos.create({
+      host: 'example.com',
+      username: 'tester',
+    });
+
+    const withEnv = ssh.withEnv({ FOO: 'bar' });
+    expect(withEnv.osEnv).toBe(ssh.osEnv);
+  });
+
+  it('throws KaosConnectionError when exec fails during env probe', async () => {
+    const { SSHKaos, state } = await loadSSHModule({
+      execError: new Error('exec failed'),
+    });
+
+    await expect(
+      SSHKaos.create({
+        host: 'example.com',
+        username: 'tester',
+      }),
+    ).rejects.toThrow(/exec failed/);
+    expect(state.endCalls).toBe(1);
+  });
+
+  it('throws KaosConnectionError on incomplete probe output', async () => {
+    const { SSHKaos } = await loadSSHModule({
+      execOutput: 'Linux\nx86_64\n',
+    });
+
+    await expect(
+      SSHKaos.create({
+        host: 'example.com',
+        username: 'tester',
+      }),
+    ).rejects.toThrow(/incomplete output/);
+  });
+
+  it('maps macOS uname output to osKind macOS', async () => {
+    const { SSHKaos } = await loadSSHModule({
+      execOutput: 'Darwin\narm64\n23.0.0\n/bin/zsh\n',
+    });
+
+    const ssh = await SSHKaos.create({
+      host: 'example.com',
+      username: 'tester',
+    });
+
+    expect(ssh.osEnv.osKind).toBe('macOS');
+    expect(ssh.osEnv.osArch).toBe('arm64');
+    expect(ssh.osEnv.shellName).toBe('sh');
+    expect(ssh.osEnv.shellPath).toBe('/bin/zsh');
   });
 });

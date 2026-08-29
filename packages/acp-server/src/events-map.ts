@@ -443,6 +443,29 @@ export function planFromDisplayBlock(
 }
 
 /**
+ * The stable plan identifier used for the session-scoped default plan.
+ * NightHawk maintains at most one plan per session (the TodoList), so a fixed
+ * id keeps the wire protocol simple and lets `plan_removed` address it
+ * unambiguously.
+ */
+export const PLAN_ID = 'default';
+
+/**
+ * Build an ACP `plan_removed` session update for the session's default plan.
+ * Emitted when the TodoList transitions from non-empty to empty, so ACP
+ * clients can clear the plan panel.
+ */
+export function planRemovedToSessionUpdate(sessionId: string): SessionNotification {
+  return {
+    sessionId,
+    update: {
+      sessionUpdate: 'plan_removed',
+      planId: PLAN_ID,
+    },
+  };
+}
+
+/**
  * Build a one-shot ACP `available_commands_update` session notification.
  */
 export function availableCommandsUpdateNotification(
