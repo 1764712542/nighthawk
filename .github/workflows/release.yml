@@ -132,8 +132,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    env:
-      HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -156,8 +154,9 @@ jobs:
         run: node apps/nighthawk/scripts/native/update-brew-formula.mjs dist-native-release/manifest.json --out nighthawk.rb
 
       - name: Push formula to homebrew-nighthawk tap
-        if: env.HOMEBREW_TAP_TOKEN != ''
+        if: ${{ secrets.HOMEBREW_TAP_TOKEN != '' }}
         env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
           RELEASE_TAG: ${{ needs.release.outputs.nighthawk_release_tag }}
         run: |
           VERSION="${RELEASE_TAG#*@}"
