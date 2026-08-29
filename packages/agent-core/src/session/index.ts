@@ -565,8 +565,12 @@ export class Session {
       await this.cancelActiveTurnsOnClose();
       await this.stopBackgroundTasksOnExit();
       await this.drainBackgroundTaskWrites();
-      await this.flushMetadata();
-      await this.triggerSessionEnd('exit');
+      // 跳过空会话（没有任何 turn）的持久化
+      const hasTurns = Array.from(this.readyAgents()).some((a: Agent) => a.turn.currentId !== undefined);
+      if (hasTurns) {
+        await this.flushMetadata();
+        await this.triggerSessionEnd('exit');
+      }
     } finally {
       try {
         await this.mcp.shutdown();

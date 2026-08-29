@@ -277,6 +277,13 @@ export const BUILTIN_SLASH_COMMANDS = [
     normalOnly: true,
   },
   {
+    name: 'session-delete',
+    aliases: ['del-session'],
+    description: 'Delete the current session · 删除当前会话',
+    priority: 80,
+    normalOnly: true,
+  },
+  {
     name: 'tasks',
     aliases: ['task'],
     description: 'Browse background tasks · 浏览后台任务',
