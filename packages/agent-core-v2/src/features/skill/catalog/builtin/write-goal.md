@@ -1,6 +1,6 @@
 ---
 name: write-goal
-description: Help the user craft a well-specified `/goal` objective for goal mode — turn a rough intention into a completion contract with a clear finish line, proof, boundaries, and stop rule. Use when the user asks for help writing, refining, or improving a goal.
+description: 帮助用户为目标模式编写一个规范的 `/goal` 目标——将粗略的意图转化为一个包含明确完成标准、验证方式、边界和停止规则的完成契约。当用户寻求帮助编写、完善或改进目标时使用。
 ---
 
 # Write a good goal (write-goal)

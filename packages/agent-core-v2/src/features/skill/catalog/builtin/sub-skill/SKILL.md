@@ -1,6 +1,6 @@
 ---
 name: sub-skill
-description: Discover and reorganize the skill inventory into hierarchical sub-skill bundles. Use when the user asks to review, group, or consolidate skills into a parent bundle.
+description: 使用子代理处理子任务——将复杂工作分解为独立的子任务，由专门的子代理并行处理。
 disable-model-invocation: true
 has-sub-skill: true
 ---

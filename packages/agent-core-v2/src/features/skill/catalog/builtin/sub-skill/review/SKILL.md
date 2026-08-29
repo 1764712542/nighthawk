@@ -1,6 +1,6 @@
 ---
 name: review
-description: Analyze the available skill set and recommend candidate groups that could be consolidated into sub-skill bundles. Read-only — proposes a plan, does not move files.
+description: 审查代码变更——分析 diff、检查风格、安全性和逻辑错误。
 disable-model-invocation: true
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: update-config
-description: Inspect or edit nighthawk's own config — `config.toml` (model, provider, permission, hooks) and `tui.toml` (theme, editor, notifications, auto-update). Use when the user asks what a setting does, wants to change one, or needs to fix a deprecated config key / environment variable warning.
+description: 查看或编辑 nighthawk 的配置文件——`config.toml`（模型、提供商、权限、钩子）和 `tui.toml`（主题、编辑器、通知、自动更新）。当用户询问设置的用途、想要更改设置、或需要修复已弃用的配置键/环境变量警告时使用。
 ---
 
 # Configure nighthawk (update-config)

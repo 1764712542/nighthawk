@@ -1,6 +1,6 @@
 ---
 name: consolidate
-description: Apply an approved sub-skill grouping by moving user-specified skills into a parent bundle, with timestamped backups of every modified directory.
+description: 整合子代理结果——将多个子代理的输出合并为连贯的最终输出。
 disable-model-invocation: true
 ---
 
