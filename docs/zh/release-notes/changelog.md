@@ -10,6 +10,7 @@ outline: 2
 
 ### 新功能
 - Lobe Chat Web UI 集成：`nighthawk web --port 3000` 启动浏览器聊天界面
+- Web UI 聊天界面：侧边栏对话管理、消息气泡、代码高亮
 - 插件系统增强：Tool/Profile/Config 注册、热加载、插件 SDK
 - 角色卡片系统：`/personas` 命令，AgentSwarm 自动匹配角色
 - `/swarm-status` 命令：查看集群子任务实时状态
@@ -19,7 +20,10 @@ outline: 2
 ### 变更
 - 去除文档中所有旧品牌/旧供应商字样
 - 全平台构建支持：Windows/Linux/macOS 原生二进制
-- Logo 恢复为 NIGHTHAWK 字母，带渐变动画
+- TUI Logo 恢复为 NH 紧凑字母，带渐变动画
+
+### 修复
+- Ctrl+C 正常退出 web 服务
 
 ## 0.40.0（2026-08-28）
 
