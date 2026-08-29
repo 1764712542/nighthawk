@@ -81,35 +81,35 @@ export interface ColorPalette {
 
 /**
  * Cosmic Broth dark theme — deep space / sci-fi aesthetic.
- * The background (#000013 extreme dark blue-black) is set by the terminal
- * emulator; this palette shifts toward deep blue, gray, and white, with
- * green tones removed entirely.
+ * Inspired by https://www.cosmicbroth.com
+ * Background: #000013 extreme dark blue-black (set by terminal emulator).
+ * Colors: vibrant sci-fi palette with blue/purple/cyan accents.
  */
 export const darkColors: ColorPalette = {
-  primary: '#f3f3f3',
-  accent: '#888888',
+  primary: '#6c6cff',
+  accent: '#4aff8a',
 
-  text: '#e0e0e0',
-  textStrong: '#f3f3f3',
-  textDim: '#888888',
-  textMuted: '#555555',
+  text: '#e8e8f0',
+  textStrong: '#ffffff',
+  textDim: '#8888aa',
+  textMuted: '#555577',
 
-  border: '#333355',
-  borderFocus: '#f3f3f3',
+  border: '#2a2a4a',
+  borderFocus: '#6c6cff',
 
-  success: '#4a9eff',
+  success: '#4aff8a',
   warning: '#ffb84d',
-  error: '#ff4444',
+  error: '#ff4757',
 
-  diffAdded: '#4a9eff',
-  diffRemoved: '#ff4444',
-  diffAddedStrong: '#7ab8ff',
+  diffAdded: '#4aff8a',
+  diffRemoved: '#ff4757',
+  diffAddedStrong: '#7affaa',
   diffRemovedStrong: '#ff7777',
-  diffGutter: '#555555',
-  diffMeta: '#888888',
+  diffGutter: '#555577',
+  diffMeta: '#8888aa',
 
-  roleUser: '#f3f3f3',
-  shellMode: '#888888',
+  roleUser: '#4aff8a',
+  shellMode: '#6c6cff',
 };
 
 export const lightColors: ColorPalette = {
