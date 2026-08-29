@@ -637,6 +637,9 @@ importers:
       '@mozilla/readability':
         specifier: ^0.6.0
         version: 0.6.0
+      '@nighthawk/kaos':
+        specifier: workspace:^
+        version: link:../kaos
       '@nighthawk/minidb':
         specifier: workspace:^
         version: link:../minidb

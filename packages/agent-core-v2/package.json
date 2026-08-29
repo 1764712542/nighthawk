@@ -60,6 +60,7 @@
     "@jsquash/webp": "^1.5.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@nighthawk/nighthawk-oauth": "workspace:^",
+    "@nighthawk/kaos": "workspace:^",
     "@nighthawk/minidb": "workspace:^",
     "@nighthawk/protocol": "workspace:^",
     "@nighthawk/tree-sitter-bash": "workspace:^",

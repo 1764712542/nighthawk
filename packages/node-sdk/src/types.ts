@@ -100,11 +100,12 @@ export type PermissionMode = 'yolo' | 'manual' | 'auto';
  */
 export interface WorkspaceTrustMcpServerInfo {
   readonly name: string;
-  readonly transport: 'stdio' | 'http' | 'sse';
+  readonly transport: 'stdio' | 'http' | 'sse' | 'acp';
   readonly command?: string;
   readonly args?: readonly string[];
   readonly cwd?: string;
   readonly url?: string;
+  readonly serverId?: string;
 }
 
 export interface WorkspaceTrustInfo {

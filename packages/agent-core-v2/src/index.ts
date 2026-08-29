@@ -40,6 +40,7 @@ export * from '#/runtime/runtimeProvider';
 export * from '#/runtime/runtimeUnitHost';
 export * from '#/runtime/localRuntime';
 export * from '#/runtime/standaloneRuntime';
+export * from '#/runtime/kaosRuntime';
 export * from '#/program/program';
 export * from '#/workspace/workspaceInstance/workspaceInstance';
 export * from '#/workspace/workspaceInstance/workspaceInstanceManager';

@@ -126,14 +126,18 @@
  *   recomposed over the `setSwarmMode` + `prompt` overrides; `setTowerMode` →
  *   the agent scope's `IAgentTowerService` (v2-only — the base class throws
  *   `not_implemented`).
- *   `createSessionWithKaos` / `resumeSessionWithKaos` deliberately keep the
- *   base class's kaos-ignoring degradation (the v2 engine has no kaos
- *   injection point — see the session-lifecycle section header), and
- *   `toolCall` keeps the base class's "not supported" answer, which the
- *   interaction bridge already relies on.
+ *   `createSessionWithKaos` / `resumeSessionWithKaos` are overridden to
+ *   inject the Kaos execution environment: the Kaos instance is adapted into
+ *   v2 host services (`IHostFileSystem`/`IHostProcessService`) and
+ *   registered as a runtime in the workspace's RuntimeRegistry, and the main
+ *   agent's runtime binding is switched to it. `toolCall` keeps the base
+ *   class's "not supported" answer, which the interaction bridge already
+ *   relies on.
  */
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
+
+import type { Kaos } from '@nighthawk/kaos';
 
 import {
   ensureConfigFile,
@@ -163,6 +167,7 @@ import {
   ensureMainAgent,
   agentContextOf,
   IAgentActivityView,
+  IAgentRuntimeBindingService,
   IAgentContextInjectorService,
   IAgentContextMemoryService,
   AgentCron,
@@ -210,6 +215,7 @@ import {
   ISessionActivityView,
   IWorkspaceInstanceManager,
   closeSessionById,
+  createRuntimeFromKaos,
   followSessionLifecycles,
   getLiveSessionById,
   isError2,
@@ -846,15 +852,66 @@ export class SDKRpcClientV2 extends SDKRpcClientBase {
   // session id, a resume, or a workspace command goes through the
   // `engineAccessor` escape hatch (named per method below).
   //
-  // `createSessionWithKaos` / `resumeSessionWithKaos` are deliberately NOT
-  // overridden: agent-core-v2 has no kaos injection point (its fs/process
-  // abstraction is the engine-internal hostFs domain, resolved at bootstrap),
-  // so the base class's degradation — ignore the kaos arguments and run a
-  // plain local create/resume — is the honest behavior, the same one every
-  // daemon-transport client settles for. Failing loudly instead would break
-  // hosts that pass kaos opportunistically (the harness forwards it whenever
-  // the host supplies one).
+  // `createSessionWithKaos` / `resumeSessionWithKaos` are overridden below
+  // to inject the Kaos execution environment into the v2 engine: the Kaos
+  // instance is adapted into v2 host services and registered as a runtime
+  // in the workspace's RuntimeRegistry, and the main agent's runtime binding
+  // is switched to the Kaos runtime.
   // -----------------------------------------------------------------------
+
+  override async createSessionWithKaos(
+    input: CreateSessionOptions,
+    kaos: Kaos,
+    persistenceKaos?: Kaos,
+  ): Promise<SessionSummary> {
+    void persistenceKaos;
+    const workDir = normalizeRequiredWorkDir('createSessionWithKaos', input.workDir);
+    const workspaces = this.engineAccessor.get(IWorkspaceInstanceManager);
+    const workspace = await workspaces.getOrCreate({ root: workDir });
+    const runtime = createRuntimeFromKaos(kaos, workspace.id);
+    workspace.runtimes.register(runtime);
+    const summary = await this.createSession(input);
+    const session = this.liveSession(summary.id);
+    if (session !== undefined) {
+      await ensureMainAgent(session, { runtimeId: runtime.identity.runtimeId });
+      const agentLifecycle = session.accessor.get(IAgentLifecycleService);
+      const main = agentLifecycle.handleOf(MAIN_AGENT_ID);
+      if (main !== undefined) {
+        main.accessor.get(IAgentRuntimeBindingService).switch(runtime.identity.runtimeId);
+      }
+    }
+    return summary;
+  }
+
+  override async resumeSessionWithKaos(
+    input: ResumeSessionInput,
+    kaos: Kaos,
+    persistenceKaos?: Kaos,
+  ): Promise<ResumedSessionSummary> {
+    void persistenceKaos;
+    return this.runSessionAccess(input.id, async () => {
+      const summary = await this.engineAccessor.get(ISessionIndex).get(input.id);
+      const workDir = summary?.cwd;
+      if (workDir === undefined) {
+        throw SDKRpcClientV2.sessionNotFound(input.id);
+      }
+      const workspaces = this.engineAccessor.get(IWorkspaceInstanceManager);
+      const workspace = await workspaces.getOrCreate({ root: workDir });
+      const runtime = createRuntimeFromKaos(kaos, workspace.id);
+      workspace.runtimes.register(runtime);
+      const resumed = await this.resumeSession(input);
+      const session = this.liveSession(input.id);
+      if (session !== undefined) {
+        await ensureMainAgent(session, { runtimeId: runtime.identity.runtimeId });
+        const agentLifecycle = session.accessor.get(IAgentLifecycleService);
+        const main = agentLifecycle.handleOf(MAIN_AGENT_ID);
+        if (main !== undefined) {
+          main.accessor.get(IAgentRuntimeBindingService).switch(runtime.identity.runtimeId);
+        }
+      }
+      return resumed;
+    });
+  }
 
   private liveSession(sessionId: string): ISessionScopeHandle | undefined {
     return getLiveSessionById(this.engineAccessor, sessionId);
@@ -2754,6 +2811,9 @@ function describeWorkspaceMcpServer(
       args: config.args,
       cwd: config.cwd,
     };
+  }
+  if (config.transport === 'acp') {
+    return { name, transport: config.transport, serverId: config.serverId };
   }
   return { name, transport: config.transport, url: config.url };
 }
