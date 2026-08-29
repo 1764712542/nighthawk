@@ -67,7 +67,7 @@ flowchart LR
 以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数、类与方法：
 
   - `apps/nighthawk/AGENTS.md`（非 TS 源码，可直接阅读）
-  - `apps/nighthawk/scripts/check-web-assets.mjs`（路径不存在，请以仓库实际文件为准）
+  - `apps/nighthawk/scripts/check-web-assets.mjs`（未发现直接 export 符号，可能以副作用注册为主）
   - `package.json`（非 TS 源码，可直接阅读）
 
 ## 证据与代码位置

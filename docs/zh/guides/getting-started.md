@@ -44,10 +44,11 @@ irm https://cdn.jsdelivr.net/gh/AliceGoto/nighthawk@main/install.ps1 | iex
 如果你使用 [Homebrew](https://brew.sh/)，可通过 NightHawk tap 安装：
 
 ```sh
+brew tap AliceGoto/nighthawk
 brew install AliceGoto/nighthawk/nighthawk
 ```
 
-Formula 会从 GitHub Release 下载对应平台的二进制，并以常规 Homebrew 公式方式安装。
+如果 `brew install` 暂时找不到 formula，请先手动执行 `brew tap`。Formula 会从 GitHub Release 下载对应平台的二进制，并以常规 Homebrew 公式方式安装。
 
 ### npm 安装
 

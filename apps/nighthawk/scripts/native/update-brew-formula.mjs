@@ -60,20 +60,20 @@ const formula = `class Nighthawk < Formula
 
   on_macos do
     if Hardware::CPU.arm?
-      url "https://github.com/AliceGoto/nighthawk/releases/download/#{version}/nighthawk-darwin-arm64.zip"
+      url "https://github.com/AliceGoto/nighthawk/releases/download/v#{version}/nighthawk-darwin-arm64.zip"
       sha256 "${sha.darwinArm64}"
     else
-      url "https://github.com/AliceGoto/nighthawk/releases/download/#{version}/nighthawk-darwin-x64.zip"
+      url "https://github.com/AliceGoto/nighthawk/releases/download/v#{version}/nighthawk-darwin-x64.zip"
       sha256 "${sha.darwinX64}"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm?
-      url "https://github.com/AliceGoto/nighthawk/releases/download/#{version}/nighthawk-linux-arm64.zip"
+      url "https://github.com/AliceGoto/nighthawk/releases/download/v#{version}/nighthawk-linux-arm64.zip"
       sha256 "${sha.linuxArm64}"
     else
-      url "https://github.com/AliceGoto/nighthawk/releases/download/#{version}/nighthawk-linux-x64.zip"
+      url "https://github.com/AliceGoto/nighthawk/releases/download/v#{version}/nighthawk-linux-x64.zip"
       sha256 "${sha.linuxX64}"
     end
   end

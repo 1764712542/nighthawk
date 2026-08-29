@@ -44,10 +44,11 @@ The script automatically downloads the latest release, verifies the checksum, an
 If you use [Homebrew](https://brew.sh/), install from the NightHawk tap:
 
 ```sh
+brew tap AliceGoto/nighthawk
 brew install AliceGoto/nighthawk/nighthawk
 ```
 
-The formula downloads the platform binary from the GitHub Release and installs it as a regular Homebrew formula.
+If `brew install` cannot find the formula yet, run `brew tap` explicitly first. The formula downloads the platform binary from the GitHub Release and installs it as a regular Homebrew formula.
 
 ### npm installation
 

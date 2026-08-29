@@ -24,12 +24,21 @@ curl -fsSL https://cdn.jsdelivr.net/gh/AliceGoto/nighthawk@main/install.sh | bas
 irm https://cdn.jsdelivr.net/gh/AliceGoto/nighthawk@main/install.ps1 | iex
 ```
 
+You can also install with Homebrew:
+
+```sh
+brew tap AliceGoto/nighthawk
+brew install AliceGoto/nighthawk/nighthawk
+```
+
+Official releases automatically update the Homebrew formula in the `AliceGoto/homebrew-nighthawk` tap.
+
 > On Windows, install [Git for Windows](https://gitforwindows.org/) before first launch because NightHawk CLI uses the bundled Git Bash as its shell environment. If Git Bash is installed in a custom location, set `NIGHTHAWK_SHELL_PATH` to the absolute path of `bash.exe`.
 
 Then run it with a new Terminal session:
 
 ```sh
-kimi --version
+nighthawk --version
 ```
 
 ### Alternative: npm
@@ -54,10 +63,10 @@ Open a project and start the interactive UI:
 
 ```sh
 cd your-project
-kimi
+nighthawk
 ```
 
-On first launch, run `/login` inside NightHawk CLI and choose either NightHawk OAuth or a Kimi Platform API key. After login, try a first task:
+On first launch, run `/connect` inside NightHawk CLI and add a provider by API key. After that, try a first task:
 
 ```
 Take a look at this project and explain the main directories.
