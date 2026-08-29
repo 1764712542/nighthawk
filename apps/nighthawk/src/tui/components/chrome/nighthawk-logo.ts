@@ -4,16 +4,10 @@ import type { ColorPalette } from '#/tui/theme/colors';
 
 const GLYPHS: Record<string, readonly string[]> = {
   N: ['███╗   ██╗', '████╗  ██║', '██╔██╗ ██║', '██║╚██╗██║', '██║ ╚████║'],
-  I: ['██╗', '██║', '██║', '██║', '╚═╝'],
-  G: [' ██████╗', '██╔════╝', '██║  ███╗', '██║   ██║', '╚██████╔╝'],
   H: ['██╗  ██╗', '██║  ██║', '███████║', '██╔══██║', '██║  ██║'],
-  T: ['████████╗', '╚══██╔══╝', '   ██║', '   ██║', '   ██║'],
-  A: [' █████╗', '██╔══██╗', '███████║', '██╔══██║', '██║  ██║'],
-  W: ['██╗    ██╗', '██║    ██║', '██║ █╗ ██║', '██║███╗██║', '╚███╔███╔╝'],
-  K: ['██╗  ██╗', '██║ ██╔╝', '█████╔╝', '██╔═██╗', '██║  ██╗'],
 };
 
-export const NIGHTHAWK_WORDMARK = 'NIGHTHAWK';
+export const NIGHTHAWK_WORDMARK = 'NH';
 
 export const NIGHTHAWK_LOGO_LINES: readonly string[] = Array.from({ length: 5 }, (_, row) =>
   NIGHTHAWK_WORDMARK.split('')
