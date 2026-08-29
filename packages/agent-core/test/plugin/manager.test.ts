@@ -1058,6 +1058,60 @@ describe('PluginManager', () => {
     await manager.install(root);
     expect(manager.summaries()[0]?.commandCount).toBe(2);
   });
+it('parses tools, profiles, configSections from manifest', async () => {
+    const home = await makeNighthawkHome();
+    const root = await mkdtemp(path.join(tmpdir(), 'plugin-extended-'));
+    await mkdir(path.join(root, 'tools'), { recursive: true });
+    await mkdir(path.join(root, 'profiles'), { recursive: true });
+    await mkdir(path.join(root, 'config-sections'), { recursive: true });
+    await writeFile(
+      path.join(root, 'nighthawk.plugin.json'),
+      JSON.stringify({
+        name: 'extended',
+        version: '1.0.0',
+        tools: './tools',
+        profiles: './profiles',
+        configSections: './config-sections',
+      }),
+      'utf8',
+    );
+    const manager = new PluginManager({ nighthawkHomeDir: home });
+    await manager.load();
+    const record = await manager.install(root);
+    const managedRoot = record.root;
+
+    expect(record.manifest?.tools).toEqual([path.join(managedRoot, 'tools')]);
+    expect(record.manifest?.profiles).toEqual([path.join(managedRoot, 'profiles')]);
+    expect(record.manifest?.configSections).toEqual([path.join(managedRoot, 'config-sections')]);
+    expect(manager.pluginToolRoots()).toEqual([path.join(managedRoot, 'tools')]);
+    expect(manager.pluginProfileRoots()).toEqual([path.join(managedRoot, 'profiles')]);
+    expect(manager.pluginConfigSectionRoots()).toEqual([path.join(managedRoot, 'config-sections')]);
+  });
+
+  it('reloadOne re-parses a single plugin manifest', async () => {
+    const home = await makeNighthawkHome();
+    const pluginRoot = await makePlugin('demo', { version: '1.0.0' });
+    const manager = new PluginManager({ nighthawkHomeDir: home });
+    await manager.load();
+    const record = await manager.install(pluginRoot);
+    expect(record.manifest?.version).toBe('1.0.0');
+
+    // Update the manifest version
+    const managedRoot = record.root;
+    await writeFile(
+      path.join(managedRoot, 'nighthawk.plugin.json'),
+      JSON.stringify({ name: 'demo', version: '2.0.0' }),
+      'utf8',
+    );
+
+    const updated = await manager.reloadOne('demo');
+    expect(updated).toBeDefined();
+    expect(updated!.manifest?.version).toBe('2.0.0');
+
+    // reloadOne returns undefined for non-installed plugins
+    const missing = await manager.reloadOne('nonexistent');
+    expect(missing).toBeUndefined();
+  });
 });
 
 interface MockGithubFetchOptions {

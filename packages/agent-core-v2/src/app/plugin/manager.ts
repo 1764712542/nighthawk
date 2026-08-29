@@ -269,6 +269,35 @@ export class PluginManager {
     return { added, removed, errors };
   }
 
+  /**
+   * Hot-reload a single plugin by re-parsing its manifest.
+   * Returns the updated record, or undefined if the plugin is not installed.
+   */
+  async reloadOne(id: string): Promise<PluginRecord | undefined> {
+    const key = normalizePluginId(id);
+    const current = this.records.get(key);
+    if (current === undefined) return undefined;
+    const parsed = await parseManifest(current.root);
+    const updated = await recordFrom({
+      id: current.id,
+      root: current.root,
+      enabled: current.enabled,
+      installedAt: current.installedAt,
+      updatedAt: new Date().toISOString(),
+      originalSource: current.originalSource,
+      capabilities: current.capabilities,
+      github: current.github,
+      source: current.source,
+      parsed,
+      discoverSkills: this.discoverSkills,
+    });
+    const next = new Map(this.records);
+    next.set(key, updated);
+    await this.persist(next);
+    this.records = next;
+    return updated;
+  }
+
   enabledHooks(): readonly HookDef[] {
     const out: HookDef[] = [];
     for (const record of this.records.values()) {
@@ -326,6 +355,39 @@ export class PluginManager {
       if (!record.enabled || record.state !== 'ok' || record.manifest === undefined) continue;
       for (const dir of record.manifest.agents ?? []) {
         roots.push({ path: dir, source: 'plugin' });
+      }
+    }
+    return roots;
+  }
+
+  pluginToolRoots(): readonly string[] {
+    const roots: string[] = [];
+    for (const record of this.records.values()) {
+      if (!record.enabled || record.state !== 'ok' || record.manifest === undefined) continue;
+      for (const dir of record.manifest.tools ?? []) {
+        roots.push(dir);
+      }
+    }
+    return roots;
+  }
+
+  pluginProfileRoots(): readonly string[] {
+    const roots: string[] = [];
+    for (const record of this.records.values()) {
+      if (!record.enabled || record.state !== 'ok' || record.manifest === undefined) continue;
+      for (const dir of record.manifest.profiles ?? []) {
+        roots.push(dir);
+      }
+    }
+    return roots;
+  }
+
+  pluginConfigSectionRoots(): readonly string[] {
+    const roots: string[] = [];
+    for (const record of this.records.values()) {
+      if (!record.enabled || record.state !== 'ok' || record.manifest === undefined) continue;
+      for (const dir of record.manifest.configSections ?? []) {
+        roots.push(dir);
       }
     }
     return roots;

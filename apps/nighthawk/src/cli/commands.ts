@@ -8,6 +8,7 @@ import { registerDoctorCommand } from './sub/doctor';
 import { registerExportCommand } from './sub/export';
 import { registerProviderCommand } from './sub/provider';
 import { registerVisCommand } from './sub/vis';
+import { registerWebCommand } from './sub/web';
 
 export type MainCommandHandler = (opts: CLIOptions) => void;
 export type MigrateCommandHandler = () => void;
@@ -118,6 +119,7 @@ export function createProgram(
   registerAcpCommand(program);
   registerDoctorCommand(program);
   registerVisCommand(program);
+  registerWebCommand(program);
   registerMigrateCommand(program, onMigrate);
   program
     .command('upgrade')

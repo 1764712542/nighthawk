@@ -60,7 +60,6 @@ export const PLUGIN_SYSTEM_PROMPT_MAX_BYTES = 32 * 1024;
 // NightHawk CLI). We do not run them; emit an info diagnostic so plugin authors and
 // users can see why a field is silently ignored.
 const UNSUPPORTED_RUNTIME_FIELDS = [
-  'tools',
   'apps',
   'inject',
   'configFile',
@@ -171,6 +170,10 @@ export async function parseManifest(pluginRoot: string): Promise<ParsedManifestR
 
   const systemPrompt = await readSystemPrompt(pluginRoot, raw, diagnostics);
 
+  const tools = await resolveDirListField(pluginRoot, 'tools', raw['tools'], diagnostics);
+  const profiles = await resolveDirListField(pluginRoot, 'profiles', raw['profiles'], diagnostics);
+  const configSections = await resolveDirListField(pluginRoot, 'configSections', raw['configSections'], diagnostics);
+
   recordUnsupportedRuntimeFields(raw, diagnostics);
 
   const manifest: PluginManifest = {
@@ -191,6 +194,9 @@ export async function parseManifest(pluginRoot: string): Promise<ParsedManifestR
     interface: readInterface(raw['interface']),
     skillInstructions,
     systemPrompt,
+    tools: tools.length === 0 ? undefined : tools,
+    profiles: profiles.length === 0 ? undefined : profiles,
+    configSections: configSections.length === 0 ? undefined : configSections,
   };
 
   return { manifest, manifestKind, manifestPath, shadowedManifestPath, diagnostics };

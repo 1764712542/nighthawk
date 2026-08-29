@@ -205,6 +205,18 @@ export class PluginService extends Service implements IPluginService {
     return this.runConsumptionRead([], async () => this.manager.pluginAgentRoots());
   }
 
+  pluginToolRoots(): Promise<readonly string[]> {
+    return this.runConsumptionRead([], async () => this.manager.pluginToolRoots());
+  }
+
+  pluginProfileRoots(): Promise<readonly string[]> {
+    return this.runConsumptionRead([], async () => this.manager.pluginProfileRoots());
+  }
+
+  pluginConfigSectionRoots(): Promise<readonly string[]> {
+    return this.runConsumptionRead([], async () => this.manager.pluginConfigSectionRoots());
+  }
+
   enabledSessionStarts(): Promise<readonly EnabledPluginSessionStart[]> {
     return this.runConsumptionRead([], async () => this.manager.enabledSessionStarts());
   }

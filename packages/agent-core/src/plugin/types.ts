@@ -48,6 +48,12 @@ export interface PluginManifest {
   readonly interface?: PluginInterface;
   readonly skillInstructions?: string;
   readonly systemPrompt?: string;
+  /** Tool definitions contributed by the plugin. Each entry is a resolved absolute path to a tool file. */
+  readonly tools?: readonly string[];
+  /** Agent profile files contributed by the plugin. Each entry is a resolved absolute path to a profile file. */
+  readonly profiles?: readonly string[];
+  /** Config section files contributed by the plugin. Each entry is a resolved absolute path to a config section definition file. */
+  readonly configSections?: readonly string[];
 }
 
 export interface PluginMcpServerState {
@@ -199,6 +205,25 @@ export interface ReloadSummary {
   readonly added: readonly string[];
   readonly removed: readonly string[];
   readonly errors: ReadonlyArray<{ readonly id: string; readonly message: string }>;
+}
+
+export interface PluginToolInfo {
+  readonly name: string;
+  readonly path: string;
+  readonly pluginId: string;
+  readonly description?: string;
+}
+
+export interface PluginProfileInfo {
+  readonly name: string;
+  readonly path: string;
+  readonly pluginId: string;
+}
+
+export interface PluginConfigSectionInfo {
+  readonly name: string;
+  readonly path: string;
+  readonly pluginId: string;
 }
 
 export const PLUGIN_NAME_REGEX = /^[a-z0-9][a-z0-9_-]{0,63}$/;

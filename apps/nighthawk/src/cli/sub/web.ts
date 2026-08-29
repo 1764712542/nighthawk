@@ -1,0 +1,383 @@
+/**
+ * `nighthawk web` sub-command.
+ *
+ * Starts a local HTTP server that serves the NightHawk Web UI from `dist-web/`
+ * and exposes an OpenAI-compatible API proxy (`/v1/chat/completions`) that
+ * forwards requests to the local NightHawk engine.
+ *
+ * Usage:
+ *   nighthawk web --port 3000
+ *   nighthawk web --port 3000 --no-open
+ */
+
+import { readFile } from 'node:fs/promises';
+import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
+import { extname, join, resolve } from 'node:path';
+
+import {
+  createNighthawkHarness,
+  resolveNighthawkHome,
+  type Session,
+} from '@nighthawk/nighthawk-sdk';
+import type { Command } from 'commander';
+
+import { createNighthawkHostIdentity, getVersion } from '#/cli/version';
+import { openUrl } from '#/utils/open-url';
+
+const DIST_WEB_DIR = resolve(import.meta.dirname, '../../dist-web');
+
+interface WritableLike {
+  write(chunk: string): boolean;
+}
+
+export interface WebDeps {
+  readonly getHomeDir: () => string;
+  readonly getVersion: () => string;
+  readonly openUrl: (url: string) => Promise<void>;
+  readonly waitForShutdown: () => Promise<void>;
+  readonly stdout: WritableLike;
+  readonly stderr: WritableLike;
+  readonly exit: (code: number) => never;
+}
+
+export interface WebOptions {
+  readonly port: number;
+  readonly host: string;
+  readonly open: boolean;
+}
+
+const MIME_MAP: Record<string, string> = {
+  '.html': 'text/html',
+  '.css': 'text/css',
+  '.js': 'application/javascript',
+  '.mjs': 'application/javascript',
+  '.json': 'application/json',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+  '.ttf': 'font/ttf',
+  '.riv': 'application/octet-stream',
+};
+
+async function serveStaticFile(
+  req: IncomingMessage,
+  res: ServerResponse,
+): Promise<boolean> {
+  let urlPath = req.url ?? '/';
+  // Strip query string
+  const qIndex = urlPath.indexOf('?');
+  if (qIndex !== -1) urlPath = urlPath.slice(0, qIndex);
+
+  // Default to index.html
+  if (urlPath === '/') urlPath = '/index.html';
+
+  const filePath = join(DIST_WEB_DIR, urlPath);
+
+  // Prevent directory traversal
+  if (!filePath.startsWith(DIST_WEB_DIR)) {
+    res.writeHead(403);
+    res.end('Forbidden');
+    return true;
+  }
+
+  try {
+    const content = await readFile(filePath);
+    const ext = extname(filePath);
+    const contentType = MIME_MAP[ext] ?? 'application/octet-stream';
+    res.writeHead(200, { 'Content-Type': contentType });
+    res.end(content);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Create a session for the web chat completions proxy.
+ */
+async function createWebSession(homeDir: string): Promise<Session> {
+  const identity = createNighthawkHostIdentity(getVersion());
+  const harness = createNighthawkHarness({ identity, uiMode: 'web' });
+  const session = await harness.createSession({ workDir: process.cwd(), permission: 'auto' });
+  return session;
+}
+
+/**
+ * Handle an OpenAI-compatible chat completions request.
+ */
+async function handleChatCompletions(
+  req: IncomingMessage,
+  res: ServerResponse,
+  session: Session,
+): Promise<void> {
+  if (req.method !== 'POST') {
+    res.writeHead(405, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Method not allowed' }));
+    return;
+  }
+
+  let body = '';
+  try {
+    for await (const chunk of req) {
+      body += chunk;
+    }
+  } catch {
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Failed to read request body' }));
+    return;
+  }
+
+  let parsed: { messages?: Array<{ role: string; content: string }>; stream?: boolean };
+  try {
+    parsed = JSON.parse(body);
+  } catch {
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'Invalid JSON body' }));
+    return;
+  }
+
+  const messages = parsed.messages;
+  if (!Array.isArray(messages) || messages.length === 0) {
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'messages is required and must be a non-empty array' }));
+    return;
+  }
+
+  const userMessage = messages.find((m) => m.role === 'user')?.content ?? '';
+  if (userMessage.length === 0) {
+    res.writeHead(400, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: 'No user message found' }));
+    return;
+  }
+
+  const isStream = parsed.stream === true;
+
+  if (isStream) {
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+    });
+  }
+
+  try {
+    const text = await new Promise<string>((resolve, reject) => {
+      const parts: string[] = [];
+      const timeout = setTimeout(() => {
+        unsubscribe();
+        resolve(parts.join(''));
+      }, 120_000);
+
+      const unsubscribe = session.onEvent((event) => {
+        if (event.type === 'assistant.delta') {
+          const payload = event as { delta: string };
+          parts.push(payload.delta);
+        }
+        if (event.type === 'turn.ended') {
+          clearTimeout(timeout);
+          unsubscribe();
+          resolve(parts.join(''));
+        }
+      });
+
+      session.prompt(userMessage).catch((error: Error) => {
+        clearTimeout(timeout);
+        unsubscribe();
+        reject(error);
+      });
+    });
+
+    if (isStream) {
+      const chunk = JSON.stringify({
+        id: 'chatcmpl-default',
+        object: 'chat.completion.chunk',
+        created: Math.floor(Date.now() / 1000),
+        model: 'nighthawk',
+        choices: [
+          {
+            index: 0,
+            delta: { role: 'assistant', content: text },
+            finish_reason: 'stop',
+          },
+        ],
+      });
+      res.write(`data: ${chunk}\n\n`);
+      res.write('data: [DONE]\n\n');
+      res.end();
+    } else {
+      const response = {
+        id: 'chatcmpl-default',
+        object: 'chat.completion',
+        created: Math.floor(Date.now() / 1000),
+        model: 'nighthawk',
+        choices: [
+          {
+            index: 0,
+            message: { role: 'assistant', content: text },
+            finish_reason: 'stop',
+          },
+        ],
+        usage: {
+          prompt_tokens: 0,
+          completion_tokens: 0,
+          total_tokens: 0,
+        },
+      };
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(response));
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (isStream) {
+      const errChunk = JSON.stringify({
+        id: 'chatcmpl-default',
+        object: 'chat.completion.chunk',
+        created: Math.floor(Date.now() / 1000),
+        model: 'nighthawk',
+        choices: [{ index: 0, delta: {}, finish_reason: 'error' }],
+      });
+      res.write(`data: ${errChunk}\n\n`);
+      res.write('data: [DONE]\n\n');
+      res.end();
+    } else {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: message }));
+    }
+  }
+}
+
+/**
+ * Handle /v1/models endpoint.
+ */
+function handleModels(res: ServerResponse): void {
+  const models = [
+    {
+      id: 'nighthawk',
+      object: 'model',
+      created: Math.floor(Date.now() / 1000),
+      owned_by: 'nighthawk',
+    },
+  ];
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ object: 'list', data: models }));
+}
+
+export async function handleWeb(deps: WebDeps, opts: WebOptions): Promise<void> {
+  const homeDir = deps.getHomeDir();
+  let session: Session | undefined;
+
+  try {
+    session = await createWebSession(homeDir);
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    deps.stderr.write(`Failed to create NightHawk session: ${msg}\n`);
+    return deps.exit(1);
+  }
+
+  const server = createServer(async (req, res) => {
+    const url = req.url ?? '/';
+
+    // API routes
+    if (url === '/v1/chat/completions' || url === '/v1/chat/completions/') {
+      await handleChatCompletions(req, res, session!);
+      return;
+    }
+
+    if (url === '/v1/models' || url === '/v1/models/') {
+      handleModels(res);
+      return;
+    }
+
+    // Try static file serving
+    const served = await serveStaticFile(req, res);
+    if (!served) {
+      res.writeHead(404);
+      res.end('Not found');
+    }
+  });
+
+  return new Promise<void>((resolvePromise, reject) => {
+    server.on('error', (error) => {
+      deps.stderr.write(`Failed to start web server: ${error.message}\n`);
+      deps.exit(1);
+      reject(error);
+    });
+
+    server.listen(opts.port, opts.host, () => {
+      const addr = server.address();
+      const port = typeof addr === 'object' && addr !== null ? addr.port : opts.port;
+      const url = `http://${opts.host}:${port}`;
+
+      deps.stdout.write(`NightHawk Web is running at ${url}\n`);
+      deps.stdout.write('Press Ctrl-C to stop.\n');
+
+      if (opts.open) {
+        try {
+          deps.openUrl(url);
+        } catch {
+          deps.stderr.write(`Could not open a browser; visit ${url} manually.\n`);
+        }
+      }
+    });
+
+    deps.waitForShutdown().then(async () => {
+      server.close();
+      if (session !== undefined) {
+        try {
+          await session.close();
+        } catch {
+          // Ignore close errors
+        }
+      }
+      resolvePromise();
+    });
+  });
+}
+
+export function registerWebCommand(parent: Command, overrides?: Partial<WebDeps>): void {
+  parent
+    .command('web')
+    .description('Launch the NightHawk Web UI in your browser.')
+    .option('--port <number>', 'Port to bind. Default: 3000.')
+    .option('--host <host>', 'Host to bind. Default: 127.0.0.1.')
+    .option('--no-open', 'Do not open the browser automatically.')
+    .action(async (options: { port?: string; host?: string; open?: boolean }) => {
+      const port = options.port === undefined ? 3000 : Number.parseInt(options.port, 10);
+      await handleWeb(createDefaultWebDeps(overrides), {
+        port: Number.isNaN(port) ? 3000 : port,
+        host: options.host ?? '127.0.0.1',
+        open: options.open !== false,
+      });
+    });
+}
+
+function createDefaultWebDeps(overrides: Partial<WebDeps> = {}): WebDeps {
+  return {
+    getHomeDir: overrides.getHomeDir ?? (() => resolveNighthawkHome()),
+    getVersion: overrides.getVersion ?? getVersion,
+    openUrl:
+      overrides.openUrl ??
+      (async (url: string) => {
+        openUrl(url);
+      }),
+    waitForShutdown: overrides.waitForShutdown ?? waitForSigint,
+    stdout: overrides.stdout ?? process.stdout,
+    stderr: overrides.stderr ?? process.stderr,
+    exit: overrides.exit ?? ((code: number) => process.exit(code)),
+  };
+}
+
+function waitForSigint(): Promise<void> {
+  return new Promise<void>((resolve) => {
+    const onSig = (): void => {
+      process.off('SIGINT', onSig);
+      resolve();
+    };
+    process.on('SIGINT', onSig);
+  });
+}

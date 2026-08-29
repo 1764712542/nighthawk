@@ -357,7 +357,6 @@ describe('parseManifest', () => {
     const result = await parseManifest(root);
     expect(result.manifest).toEqual(expect.objectContaining({ name: 'demo' }));
     for (const field of [
-      'tools',
       'configFile',
       'config_file',
       'inject',

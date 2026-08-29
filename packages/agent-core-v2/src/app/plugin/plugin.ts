@@ -9,11 +9,14 @@ import type {
   EnabledPluginSystemPrompt,
   PluginAgentRoot,
   PluginCommandDef,
+  PluginConfigSectionInfo,
   PluginInfo,
   PluginMcpServerEntry,
   PluginMutationSummary,
+  PluginProfileInfo,
   PluginReloadEvent,
   PluginSummary,
+  PluginToolInfo,
   PluginUpdateStatus,
   ReloadSummary,
 } from './types';
@@ -55,6 +58,9 @@ export interface IPluginService {
   checkUpdates(): Promise<readonly PluginUpdateStatus[]>;
   pluginSkillRoots(): Promise<readonly SkillRoot[]>;
   pluginAgentRoots(): Promise<readonly PluginAgentRoot[]>;
+  pluginToolRoots(): Promise<readonly string[]>;
+  pluginProfileRoots(): Promise<readonly string[]>;
+  pluginConfigSectionRoots(): Promise<readonly string[]>;
   enabledSessionStarts(): Promise<readonly EnabledPluginSessionStart[]>;
   enabledSystemPrompts(): Promise<readonly EnabledPluginSystemPrompt[]>;
   enabledMcpServers(): Promise<Record<string, McpServerConfig>>;
