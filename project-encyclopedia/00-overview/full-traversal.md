@@ -6,10 +6,10 @@
 
 | 指标 | 数值 |
 | --- | --- |
-| 非生成文件总数（排除 node_modules/dist/.git 等） | 4714 |
-| TypeScript/TSX 源文件 | 3899 |
-| Markdown 文件 | 468 |
-| JSON/JSONL 文件 | 195 |
+| 非生成文件总数（排除 node_modules/dist/.git 等） | 4846 |
+| TypeScript/TSX 源文件 | 3936 |
+| Markdown 文件 | 486 |
+| JSON/JSONL 文件 | 270 |
 | 顶层目录 | `packages`、`apps`、`project-encyclopedia`、`reports`、`docs`、`.agents`、`plugins`、`scripts`、`build` 等 |
 
 > 统计来自 `.tmp/repo_stats.py`，当前仓库 HEAD 状态。
@@ -18,11 +18,11 @@
 
 | 目录 | 文件数 | 内容 |
 | --- | --- | --- |
-| `packages/` | 3384 | 18 个核心/支撑包，包含 agent 引擎、服务端、SDK、LLM 抽象、执行环境、TUI 框架、数据层 |
-| `apps/` | 924 | CLI/TUI、VS Code 扩展、inspect、vis 及内置 web/native 资源 |
-| `project-encyclopedia/` | 167 | 本项目深度文档集 |
-| `reports/` | 80 | 测试/运行事件 JSONL，多为自动化产出 |
-| `docs/` | 73 | VitePress 双语用户文档（不含 dist 后） |
+| `packages/` | 3461 | 18 个核心/支撑包，包含 agent 引擎、服务端、SDK、LLM 抽象、执行环境、TUI 框架、数据层 |
+| `apps/` | 930 | CLI/TUI、VS Code 扩展、inspect、vis 及内置 web/native 资源 |
+| `project-encyclopedia/` | 183 | 本项目深度文档集 |
+| `reports/` | 111 | 测试/运行事件 JSONL，多为自动化产出 |
+| `docs/` | 75 | VitePress 双语用户文档（不含 dist 后） |
 | `.agents/` | 29 | 仓库内置 AI 开发技能：agent-core-dev、gen-docs、write-tui、translate-docs 等 |
 | `plugins/` | 18 | 官方/精选插件市场与插件包 |
 | `scripts/` | 8 | 构建、守卫、安全冒烟、Nix 校验等脚本 |

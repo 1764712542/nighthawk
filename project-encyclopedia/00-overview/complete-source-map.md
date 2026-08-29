@@ -4,7 +4,7 @@
 
 ## 总览
 
-- 源码/文档/配置文件总数：4720
+- 源码/文档/配置文件总数：4846
 
 ## 目录文件数（按前缀）
 
@@ -36,8 +36,8 @@
 | `README.md` | 1 |
 | `README.zh-CN.md` | 1 |
 | `SECURITY.md` | 1 |
-| `apps` | 924 |
-| `apps/nighthawk` | 571 |
+| `apps` | 930 |
+| `apps/nighthawk` | 577 |
 | `apps/nighthawk-inspect` | 72 |
 | `apps/nighthawk-inspect/AGENTS.md` | 1 |
 | `apps/nighthawk-inspect/README.md` | 1 |
@@ -52,8 +52,8 @@
 | `apps/nighthawk/README.md` | 1 |
 | `apps/nighthawk/native` | 4 |
 | `apps/nighthawk/package.json` | 1 |
-| `apps/nighthawk/scripts` | 33 |
-| `apps/nighthawk/src` | 311 |
+| `apps/nighthawk/scripts` | 35 |
+| `apps/nighthawk/src` | 315 |
 | `apps/nighthawk/test` | 213 |
 | `apps/nighthawk/tsconfig.dev.json` | 1 |
 | `apps/nighthawk/tsconfig.json` | 1 |
@@ -87,16 +87,17 @@
 | `build/raw-text-loader.mjs` | 1 |
 | `build/raw-text-plugin.mjs` | 1 |
 | `build/register-raw-text-loader.mjs` | 1 |
-| `docs` | 73 |
+| `docs` | 75 |
 | `docs/.DS_Store` | 1 |
 | `docs/AGENTS.md` | 1 |
 | `docs/FULL-FEATURE-SPEC.md` | 1 |
 | `docs/architecture` | 1 |
 | `docs/architecture/plugin-and-extension-design.md` | 1 |
-| `docs/en` | 31 |
+| `docs/en` | 32 |
 | `docs/en/architecture` | 1 |
 | `docs/en/configuration` | 5 |
 | `docs/en/customization` | 7 |
+| `docs/en/developer` | 1 |
 | `docs/en/guides` | 9 |
 | `docs/en/index.md` | 1 |
 | `docs/en/reference` | 7 |
@@ -108,11 +109,12 @@
 | `docs/interview/memory.md` | 1 |
 | `docs/interview/skill-system.md` | 1 |
 | `docs/package.json` | 1 |
-| `docs/zh` | 32 |
+| `docs/zh` | 33 |
 | `docs/zh/.DS_Store` | 1 |
 | `docs/zh/architecture` | 1 |
 | `docs/zh/configuration` | 5 |
 | `docs/zh/customization` | 7 |
+| `docs/zh/developer` | 1 |
 | `docs/zh/guides` | 9 |
 | `docs/zh/index.md` | 1 |
 | `docs/zh/reference` | 7 |
@@ -124,7 +126,7 @@
 | `latest.json` | 1 |
 | `mise.toml` | 1 |
 | `package.json` | 1 |
-| `packages` | 3384 |
+| `packages` | 3461 |
 | `packages/acp-adapter` | 61 |
 | `packages/acp-adapter/CHANGELOG.md` | 1 |
 | `packages/acp-adapter/README.md` | 1 |
@@ -134,23 +136,23 @@
 | `packages/acp-adapter/tsconfig.json` | 1 |
 | `packages/acp-adapter/tsdown.config.ts` | 1 |
 | `packages/acp-adapter/vitest.config.ts` | 1 |
-| `packages/acp-server` | 48 |
+| `packages/acp-server` | 49 |
 | `packages/acp-server/CHANGELOG.md` | 1 |
 | `packages/acp-server/package.json` | 1 |
 | `packages/acp-server/src` | 25 |
-| `packages/acp-server/test` | 18 |
+| `packages/acp-server/test` | 19 |
 | `packages/acp-server/tsconfig.json` | 1 |
 | `packages/acp-server/tsdown.config.ts` | 1 |
 | `packages/acp-server/vitest.config.ts` | 1 |
-| `packages/agent-core` | 727 |
-| `packages/agent-core-v2` | 1431 |
+| `packages/agent-core` | 731 |
+| `packages/agent-core-v2` | 1455 |
 | `packages/agent-core-v2/AGENTS.md` | 1 |
 | `packages/agent-core-v2/CHANGELOG.md` | 1 |
 | `packages/agent-core-v2/docs` | 11 |
 | `packages/agent-core-v2/package.json` | 1 |
 | `packages/agent-core-v2/scripts` | 9 |
-| `packages/agent-core-v2/src` | 1002 |
-| `packages/agent-core-v2/test` | 402 |
+| `packages/agent-core-v2/src` | 1025 |
+| `packages/agent-core-v2/test` | 403 |
 | `packages/agent-core-v2/tsconfig.contract.json` | 1 |
 | `packages/agent-core-v2/tsconfig.json` | 1 |
 | `packages/agent-core-v2/tsdown.config.ts` | 1 |
@@ -160,7 +162,7 @@
 | `packages/agent-core/README.md` | 1 |
 | `packages/agent-core/package.json` | 1 |
 | `packages/agent-core/scripts` | 1 |
-| `packages/agent-core/src` | 455 |
+| `packages/agent-core/src` | 459 |
 | `packages/agent-core/test` | 264 |
 | `packages/agent-core/tsconfig.json` | 1 |
 | `packages/agent-core/tsdown.config.ts` | 1 |
@@ -184,14 +186,14 @@
 | `packages/kap-server/tsconfig.json` | 1 |
 | `packages/kap-server/tsdown.config.ts` | 1 |
 | `packages/kap-server/vitest.config.ts` | 1 |
-| `packages/klient` | 96 |
+| `packages/klient` | 136 |
 | `packages/klient/AGENTS.md` | 1 |
 | `packages/klient/CHANGELOG.md` | 1 |
 | `packages/klient/Dockerfile` | 1 |
 | `packages/klient/README.md` | 1 |
 | `packages/klient/examples` | 7 |
 | `packages/klient/package.json` | 1 |
-| `packages/klient/reports` | 2 |
+| `packages/klient/reports` | 42 |
 | `packages/klient/scripts` | 1 |
 | `packages/klient/src` | 50 |
 | `packages/klient/test` | 27 |
@@ -209,11 +211,11 @@
 | `packages/kosong/tsconfig.type-negative.json` | 1 |
 | `packages/kosong/tsdown.config.ts` | 1 |
 | `packages/kosong/vitest.config.ts` | 1 |
-| `packages/migration-legacy` | 97 |
+| `packages/migration-legacy` | 101 |
 | `packages/migration-legacy/CHANGELOG.md` | 1 |
 | `packages/migration-legacy/package.json` | 1 |
-| `packages/migration-legacy/src` | 27 |
-| `packages/migration-legacy/test` | 65 |
+| `packages/migration-legacy/src` | 28 |
+| `packages/migration-legacy/test` | 68 |
 | `packages/migration-legacy/tsconfig.json` | 1 |
 | `packages/migration-legacy/tsdown.config.ts` | 1 |
 | `packages/migration-legacy/vitest.config.ts` | 1 |
@@ -264,6 +266,10 @@
 | `packages/pi-tui/test` | 39 |
 | `packages/pi-tui/tsconfig.json` | 1 |
 | `packages/pi-tui/vitest.config.ts` | 1 |
+| `packages/plugin-sdk` | 4 |
+| `packages/plugin-sdk/package.json` | 1 |
+| `packages/plugin-sdk/src` | 2 |
+| `packages/plugin-sdk/tsconfig.json` | 1 |
 | `packages/protocol` | 75 |
 | `packages/protocol/CHANGELOG.md` | 1 |
 | `packages/protocol/package.json` | 1 |
@@ -310,9 +316,11 @@
 | `plugins/official/nighthawk-webbridge` | 3 |
 | `pnpm-lock.yaml` | 1 |
 | `pnpm-workspace.yaml` | 1 |
-| `project-encyclopedia` | 173 |
-| `project-encyclopedia/00-overview` | 11 |
+| `project-encyclopedia` | 183 |
+| `project-encyclopedia/00-overview` | 13 |
 | `project-encyclopedia/00-overview/README.md` | 1 |
+| `project-encyclopedia/00-overview/build-and-reports.md` | 1 |
+| `project-encyclopedia/00-overview/complete-source-map.md` | 1 |
 | `project-encyclopedia/00-overview/engineering-proof.md` | 1 |
 | `project-encyclopedia/00-overview/faq.md` | 1 |
 | `project-encyclopedia/00-overview/full-traversal.md` | 1 |
@@ -323,8 +331,9 @@
 | `project-encyclopedia/00-overview/technology-summary.md` | 1 |
 | `project-encyclopedia/00-overview/what-is-nighthawk.md` | 1 |
 | `project-encyclopedia/00-overview/why-security-first.md` | 1 |
-| `project-encyclopedia/01-architecture` | 14 |
+| `project-encyclopedia/01-architecture` | 15 |
 | `project-encyclopedia/01-architecture/agent-loop.md` | 1 |
+| `project-encyclopedia/01-architecture/decisions.md` | 1 |
 | `project-encyclopedia/01-architecture/di-scope.md` | 1 |
 | `project-encyclopedia/01-architecture/extension-architecture.md` | 1 |
 | `project-encyclopedia/01-architecture/feature-system.md` | 1 |
@@ -368,11 +377,12 @@
 | `project-encyclopedia/03-packages/telemetry` | 3 |
 | `project-encyclopedia/03-packages/transcript` | 3 |
 | `project-encyclopedia/03-packages/tree-sitter-bash` | 3 |
-| `project-encyclopedia/04-features` | 10 |
+| `project-encyclopedia/04-features` | 11 |
 | `project-encyclopedia/04-features/goals.md` | 1 |
 | `project-encyclopedia/04-features/hooks.md` | 1 |
 | `project-encyclopedia/04-features/mcp.md` | 1 |
 | `project-encyclopedia/04-features/memory.md` | 1 |
+| `project-encyclopedia/04-features/official-plugins.md` | 1 |
 | `project-encyclopedia/04-features/permissions.md` | 1 |
 | `project-encyclopedia/04-features/plan-mode.md` | 1 |
 | `project-encyclopedia/04-features/plugins.md` | 1 |
@@ -403,21 +413,23 @@
 | `project-encyclopedia/06-data-flow/session-create-flow.md` | 1 |
 | `project-encyclopedia/06-data-flow/tool-call-flow.md` | 1 |
 | `project-encyclopedia/06-data-flow/transport-flow.md` | 1 |
-| `project-encyclopedia/07-tech-stack` | 10 |
+| `project-encyclopedia/07-tech-stack` | 11 |
 | `project-encyclopedia/07-tech-stack/changesets.md` | 1 |
 | `project-encyclopedia/07-tech-stack/github-actions.md` | 1 |
 | `project-encyclopedia/07-tech-stack/nix.md` | 1 |
 | `project-encyclopedia/07-tech-stack/node-sea.md` | 1 |
 | `project-encyclopedia/07-tech-stack/oxlint.md` | 1 |
 | `project-encyclopedia/07-tech-stack/pnpm-workspace.md` | 1 |
+| `project-encyclopedia/07-tech-stack/repo-skills.md` | 1 |
 | `project-encyclopedia/07-tech-stack/tsdown.md` | 1 |
 | `project-encyclopedia/07-tech-stack/typescript.md` | 1 |
 | `project-encyclopedia/07-tech-stack/vitepress.md` | 1 |
 | `project-encyclopedia/07-tech-stack/vitest.md` | 1 |
-| `project-encyclopedia/08-development` | 8 |
+| `project-encyclopedia/08-development` | 9 |
 | `project-encyclopedia/08-development/build.md` | 1 |
 | `project-encyclopedia/08-development/contributing.md` | 1 |
 | `project-encyclopedia/08-development/docs-workflow.md` | 1 |
+| `project-encyclopedia/08-development/full-development-process.md` | 1 |
 | `project-encyclopedia/08-development/linting.md` | 1 |
 | `project-encyclopedia/08-development/native-build.md` | 1 |
 | `project-encyclopedia/08-development/package-authoring.md` | 1 |
@@ -440,12 +452,13 @@
 | `project-encyclopedia/10-glossary/persistence-terms.md` | 1 |
 | `project-encyclopedia/10-glossary/protocol-terms.md` | 1 |
 | `project-encyclopedia/10-glossary/security-terms.md` | 1 |
-| `project-encyclopedia/11-reference` | 12 |
+| `project-encyclopedia/11-reference` | 13 |
 | `project-encyclopedia/11-reference/api-endpoints.md` | 1 |
 | `project-encyclopedia/11-reference/cli-options.md` | 1 |
 | `project-encyclopedia/11-reference/config-files.md` | 1 |
 | `project-encyclopedia/11-reference/data-locations.md` | 1 |
 | `project-encyclopedia/11-reference/env-vars.md` | 1 |
+| `project-encyclopedia/11-reference/export-index.md` | 1 |
 | `project-encyclopedia/11-reference/mcp-config.md` | 1 |
 | `project-encyclopedia/11-reference/permission-rules.md` | 1 |
 | `project-encyclopedia/11-reference/sdk-api.md` | 1 |
@@ -453,16 +466,19 @@
 | `project-encyclopedia/11-reference/tools.md` | 1 |
 | `project-encyclopedia/11-reference/troubleshooting.md` | 1 |
 | `project-encyclopedia/11-reference/ws-protocol.md` | 1 |
-| `project-encyclopedia/13-vibe-coding` | 5 |
+| `project-encyclopedia/13-vibe-coding` | 8 |
 | `project-encyclopedia/13-vibe-coding/README.md` | 1 |
+| `project-encyclopedia/13-vibe-coding/agents-md-and-skills.md` | 1 |
+| `project-encyclopedia/13-vibe-coding/example-workflow.md` | 1 |
 | `project-encyclopedia/13-vibe-coding/prompt-engineering.md` | 1 |
 | `project-encyclopedia/13-vibe-coding/prompt-library.md` | 1 |
+| `project-encyclopedia/13-vibe-coding/role-prompts.md` | 1 |
 | `project-encyclopedia/13-vibe-coding/security-review.md` | 1 |
 | `project-encyclopedia/13-vibe-coding/workflow.md` | 1 |
 | `project-encyclopedia/README.md` | 1 |
 | `project-encyclopedia/UNIMPLEMENTED-FEATURES.md` | 1 |
-| `reports` | 80 |
-| `reports/latest` | 80 |
+| `reports` | 111 |
+| `reports/latest` | 111 |
 | `reports/latest/events-33043.jsonl` | 1 |
 | `reports/latest/events-33045.jsonl` | 1 |
 | `reports/latest/events-33047.jsonl` | 1 |
@@ -487,6 +503,14 @@
 | `reports/latest/events-35535.jsonl` | 1 |
 | `reports/latest/events-35536.jsonl` | 1 |
 | `reports/latest/events-35538.jsonl` | 1 |
+| `reports/latest/events-37268.jsonl` | 1 |
+| `reports/latest/events-37269.jsonl` | 1 |
+| `reports/latest/events-37273.jsonl` | 1 |
+| `reports/latest/events-37274.jsonl` | 1 |
+| `reports/latest/events-37275.jsonl` | 1 |
+| `reports/latest/events-37276.jsonl` | 1 |
+| `reports/latest/events-37277.jsonl` | 1 |
+| `reports/latest/events-37278.jsonl` | 1 |
 | `reports/latest/events-57112.jsonl` | 1 |
 | `reports/latest/events-57113.jsonl` | 1 |
 | `reports/latest/events-57118.jsonl` | 1 |
@@ -511,6 +535,22 @@
 | `reports/latest/events-60826.jsonl` | 1 |
 | `reports/latest/events-60827.jsonl` | 1 |
 | `reports/latest/events-60828.jsonl` | 1 |
+| `reports/latest/events-61442.jsonl` | 1 |
+| `reports/latest/events-61443.jsonl` | 1 |
+| `reports/latest/events-61457.jsonl` | 1 |
+| `reports/latest/events-61458.jsonl` | 1 |
+| `reports/latest/events-61459.jsonl` | 1 |
+| `reports/latest/events-61462.jsonl` | 1 |
+| `reports/latest/events-61463.jsonl` | 1 |
+| `reports/latest/events-61464.jsonl` | 1 |
+| `reports/latest/events-82155.jsonl` | 1 |
+| `reports/latest/events-82512.jsonl` | 1 |
+| `reports/latest/events-82527.jsonl` | 1 |
+| `reports/latest/events-82528.jsonl` | 1 |
+| `reports/latest/events-82529.jsonl` | 1 |
+| `reports/latest/events-82531.jsonl` | 1 |
+| `reports/latest/events-82533.jsonl` | 1 |
+| `reports/latest/events-82534.jsonl` | 1 |
 | `reports/latest/events-84402.jsonl` | 1 |
 | `reports/latest/events-84405.jsonl` | 1 |
 | `reports/latest/events-84407.jsonl` | 1 |
@@ -543,6 +583,13 @@
 | `reports/latest/events-9074.jsonl` | 1 |
 | `reports/latest/events-9075.jsonl` | 1 |
 | `reports/latest/events-9076.jsonl` | 1 |
+| `reports/latest/events-95031.jsonl` | 1 |
+| `reports/latest/events-95034.jsonl` | 1 |
+| `reports/latest/events-95035.jsonl` | 1 |
+| `reports/latest/events-95036.jsonl` | 1 |
+| `reports/latest/events-95037.jsonl` | 1 |
+| `reports/latest/events-95039.jsonl` | 1 |
+| `reports/latest/events-95040.jsonl` | 1 |
 | `scripts` | 8 |
 | `scripts/build.mjs` | 1 |
 | `scripts/check-nix-workspace.mjs` | 1 |
@@ -611,8 +658,10 @@
 - `apps/nighthawk/native/win32/prebuilds/win32-arm64/win32-console-mode.node`
 - `apps/nighthawk/native/win32/prebuilds/win32-x64/win32-console-mode.node`
 - `apps/nighthawk/package.json`
+- `apps/nighthawk/scripts/build-lobe-chat.mjs`
 - `apps/nighthawk/scripts/build-plugin-marketplace-cdn.mjs`
 - `apps/nighthawk/scripts/build-vis-asset.mjs`
+- `apps/nighthawk/scripts/build-web-ui.mjs`
 - `apps/nighthawk/scripts/built-in-catalog.mjs`
 - `apps/nighthawk/scripts/check-web-assets.mjs`
 - `apps/nighthawk/scripts/copy-native-assets.mjs`
@@ -666,6 +715,7 @@
 - `apps/nighthawk/src/cli/sub/update-download.ts`
 - `apps/nighthawk/src/cli/sub/upgrade.ts`
 - `apps/nighthawk/src/cli/sub/vis.ts`
+- `apps/nighthawk/src/cli/sub/web.ts`
 - `apps/nighthawk/src/cli/telemetry.ts`
 - `apps/nighthawk/src/cli/update/cache.ts`
 - `apps/nighthawk/src/cli/update/cdn.ts`
@@ -728,6 +778,7 @@
 - `apps/nighthawk/src/tui/commands/parse.ts`
 - `apps/nighthawk/src/tui/commands/pentest-scan.ts`
 - `apps/nighthawk/src/tui/commands/pentest.ts`
+- `apps/nighthawk/src/tui/commands/personas.ts`
 - `apps/nighthawk/src/tui/commands/plugin-commands.ts`
 - `apps/nighthawk/src/tui/commands/plugins.ts`
 - `apps/nighthawk/src/tui/commands/prompts.ts`
@@ -737,6 +788,7 @@
 - `apps/nighthawk/src/tui/commands/resolve.ts`
 - `apps/nighthawk/src/tui/commands/session.ts`
 - `apps/nighthawk/src/tui/commands/skills.ts`
+- `apps/nighthawk/src/tui/commands/swarm-status.ts`
 - `apps/nighthawk/src/tui/commands/swarm.ts`
 - `apps/nighthawk/src/tui/commands/tower.ts`
 - `apps/nighthawk/src/tui/commands/trace.ts`
@@ -901,6 +953,7 @@
 - `apps/nighthawk/src/tui/utils/object-patch.ts`
 - `apps/nighthawk/src/tui/utils/osc133.ts`
 - `apps/nighthawk/src/tui/utils/paging.ts`
+- `apps/nighthawk/src/tui/utils/persona-card.ts`
 - `apps/nighthawk/src/tui/utils/plugin-source-label.ts`
 - `apps/nighthawk/src/tui/utils/printable-key.ts`
 - `apps/nighthawk/src/tui/utils/refresh-providers.ts`
@@ -1547,6 +1600,7 @@
 - `docs/en/customization/plugins.md`
 - `docs/en/customization/skills.md`
 - `docs/en/customization/themes.md`
+- `docs/en/developer/plugin-development.md`
 - `docs/en/guides/getting-started.md`
 - `docs/en/guides/goals.md`
 - `docs/en/guides/ides.md`
@@ -1585,6 +1639,7 @@
 - `docs/zh/customization/plugins.md`
 - `docs/zh/customization/skills.md`
 - `docs/zh/customization/themes.md`
+- `docs/zh/developer/plugin-development.md`
 - `docs/zh/guides/getting-started.md`
 - `docs/zh/guides/goals.md`
 - `docs/zh/guides/ides.md`
@@ -1710,6 +1765,7 @@
 - `packages/acp-server/test/convert.test.ts`
 - `packages/acp-server/test/di-shadow.test.ts`
 - `packages/acp-server/test/e2e-turn.test.ts`
+- `packages/acp-server/test/events-map.test.ts`
 - `packages/acp-server/test/initialize.test.ts`
 - `packages/acp-server/test/interaction-bridge.test.ts`
 - `packages/acp-server/test/lifecycle.test.ts`
@@ -1890,6 +1946,9 @@
 - `packages/agent-core/src/mcp/session-config.ts`
 - `packages/agent-core/src/mcp/tool-naming.ts`
 - `packages/agent-core/src/mcp/types.ts`
+- `packages/agent-core/src/persona/discovery.ts`
+- `packages/agent-core/src/persona/index.ts`
+- `packages/agent-core/src/persona/types.ts`
 - `packages/agent-core/src/plugin/archive.ts`
 - `packages/agent-core/src/plugin/commands.ts`
 - `packages/agent-core/src/plugin/github-resolver.ts`
@@ -2096,6 +2155,7 @@
 - `packages/agent-core/src/tools/builtin/pentest/report-generator.ts`
 - `packages/agent-core/src/tools/builtin/pentest/subdomain-enum.ts`
 - `packages/agent-core/src/tools/builtin/pentest/threat-model.ts`
+- `packages/agent-core/src/tools/builtin/persona/personaCard.ts`
 - `packages/agent-core/src/tools/builtin/planning/enter-plan-mode.md`
 - `packages/agent-core/src/tools/builtin/planning/enter-plan-mode.ts`
 - `packages/agent-core/src/tools/builtin/planning/exit-plan-mode.md`
@@ -2618,6 +2678,9 @@
 - `packages/agent-core-v2/src/agent/media/videoUpload.ts`
 - `packages/agent-core-v2/src/agent/media/webp-dec-wasm.ts`
 - `packages/agent-core-v2/src/agent/media/webp-decode.ts`
+- `packages/agent-core-v2/src/agent/pentestMode/pentestMode.ts`
+- `packages/agent-core-v2/src/agent/pentestMode/pentestModeOps.ts`
+- `packages/agent-core-v2/src/agent/pentestMode/pentestModeService.ts`
 - `packages/agent-core-v2/src/agent/permissionGate/permissionGate.ts`
 - `packages/agent-core-v2/src/agent/permissionGate/permissionGateService.ts`
 - `packages/agent-core-v2/src/agent/permissionMode/configSection.ts`
@@ -3041,6 +3104,18 @@
 - `packages/agent-core-v2/src/features/interaction/interactionFeature.ts`
 - `packages/agent-core-v2/src/features/interaction/interactionOps.ts`
 - `packages/agent-core-v2/src/features/interaction/sessionInteractions.ts`
+- `packages/agent-core-v2/src/features/pentest/index.ts`
+- `packages/agent-core-v2/src/features/pentest/pentestFeature.ts`
+- `packages/agent-core-v2/src/features/pentest/tools/dir-brute.ts`
+- `packages/agent-core-v2/src/features/pentest/tools/dirBruteTool.ts`
+- `packages/agent-core-v2/src/features/pentest/tools/password-brute.ts`
+- `packages/agent-core-v2/src/features/pentest/tools/passwordBruteTool.ts`
+- `packages/agent-core-v2/src/features/pentest/tools/port-scanner.ts`
+- `packages/agent-core-v2/src/features/pentest/tools/portScannerTool.ts`
+- `packages/agent-core-v2/src/features/pentest/tools/subdomain-enum.ts`
+- `packages/agent-core-v2/src/features/pentest/tools/subdomainEnumTool.ts`
+- `packages/agent-core-v2/src/features/pentest/tools/threat-model.ts`
+- `packages/agent-core-v2/src/features/pentest/tools/threatModelTool.ts`
 - `packages/agent-core-v2/src/features/plan/configSection.ts`
 - `packages/agent-core-v2/src/features/plan/exitPlanModeReview.ts`
 - `packages/agent-core-v2/src/features/plan/injection/plan-mode-exit-reminder.md`
@@ -3293,6 +3368,7 @@
 - `packages/agent-core-v2/src/mcpCore/oauth/store.ts`
 - `packages/agent-core-v2/src/mcpCore/tool-naming.ts`
 - `packages/agent-core-v2/src/mcpCore/types.ts`
+- `packages/agent-core-v2/src/os/adapters/kaos-adapter.ts`
 - `packages/agent-core-v2/src/os/backends/node-local/hostClockService.ts`
 - `packages/agent-core-v2/src/os/backends/node-local/hostEnvironmentService.ts`
 - `packages/agent-core-v2/src/os/backends/node-local/hostFsService.ts`
@@ -3322,9 +3398,15 @@
 - `packages/agent-core-v2/src/persistence/interface/blobStore.ts`
 - `packages/agent-core-v2/src/persistence/interface/queryStore.ts`
 - `packages/agent-core-v2/src/persistence/interface/storage.ts`
+- `packages/agent-core-v2/src/persona/discovery.ts`
+- `packages/agent-core-v2/src/persona/index.ts`
+- `packages/agent-core-v2/src/persona/matcher.ts`
+- `packages/agent-core-v2/src/persona/types.ts`
+- `packages/agent-core-v2/src/persona.ts`
 - `packages/agent-core-v2/src/program/program.ts`
 - `packages/agent-core-v2/src/program/programDependencies.ts`
 - `packages/agent-core-v2/src/runtime/fakeRuntime.ts`
+- `packages/agent-core-v2/src/runtime/kaosRuntime.ts`
 - `packages/agent-core-v2/src/runtime/localRuntime.ts`
 - `packages/agent-core-v2/src/runtime/runtime.ts`
 - `packages/agent-core-v2/src/runtime/runtimeProvider.ts`
@@ -3439,6 +3521,7 @@
 - `packages/agent-core-v2/src/workspace/workspaceAgentProfileLoader/internal/paths.ts`
 - `packages/agent-core-v2/src/workspace/workspaceAgentProfileLoader/internal/systemFile.ts`
 - `packages/agent-core-v2/src/workspace/workspaceAgentProfileLoader/internal/types.ts`
+- `packages/agent-core-v2/src/workspace/workspaceAgentProfileLoader/personaCard.ts`
 - `packages/agent-core-v2/src/workspace/workspaceAgentProfileLoader/pluginAgentProfileLoader.ts`
 - `packages/agent-core-v2/src/workspace/workspaceAgentProfileLoader/pluginAgentProfileLoaderService.ts`
 - `packages/agent-core-v2/src/workspace/workspaceAgentProfileLoader/userAgentProfileLoader.ts`
@@ -3546,6 +3629,7 @@
 - `packages/agent-core-v2/test/agent/media/mediaResolver.test.ts`
 - `packages/agent-core-v2/test/agent/media/sessionMediaStore.test.ts`
 - `packages/agent-core-v2/test/agent/media/tools/read-media.test.ts`
+- `packages/agent-core-v2/test/agent/pentestMode/pentestModeService.test.ts`
 - `packages/agent-core-v2/test/agent/permissionGate/permissionGate.test.ts`
 - `packages/agent-core-v2/test/agent/permissionMode/permissionMode.test.ts`
 - `packages/agent-core-v2/test/agent/permissionMode/setModeAndBroadcast.test.ts`
@@ -4168,6 +4252,46 @@
 - `packages/klient/examples/nighthawk-select-tools.ts`
 - `packages/klient/examples/smoke.ts`
 - `packages/klient/package.json`
+- `packages/klient/reports/latest/events-28005.jsonl`
+- `packages/klient/reports/latest/events-28006.jsonl`
+- `packages/klient/reports/latest/events-28007.jsonl`
+- `packages/klient/reports/latest/events-28008.jsonl`
+- `packages/klient/reports/latest/events-28009.jsonl`
+- `packages/klient/reports/latest/events-28011.jsonl`
+- `packages/klient/reports/latest/events-28012.jsonl`
+- `packages/klient/reports/latest/events-28014.jsonl`
+- `packages/klient/reports/latest/events-40937.jsonl`
+- `packages/klient/reports/latest/events-40940.jsonl`
+- `packages/klient/reports/latest/events-42352.jsonl`
+- `packages/klient/reports/latest/events-43525.jsonl`
+- `packages/klient/reports/latest/events-43697.jsonl`
+- `packages/klient/reports/latest/events-43704.jsonl`
+- `packages/klient/reports/latest/events-43743.jsonl`
+- `packages/klient/reports/latest/events-44174.jsonl`
+- `packages/klient/reports/latest/events-58893.jsonl`
+- `packages/klient/reports/latest/events-58895.jsonl`
+- `packages/klient/reports/latest/events-58915.jsonl`
+- `packages/klient/reports/latest/events-58934.jsonl`
+- `packages/klient/reports/latest/events-58941.jsonl`
+- `packages/klient/reports/latest/events-58942.jsonl`
+- `packages/klient/reports/latest/events-58943.jsonl`
+- `packages/klient/reports/latest/events-58959.jsonl`
+- `packages/klient/reports/latest/events-67509.jsonl`
+- `packages/klient/reports/latest/events-67511.jsonl`
+- `packages/klient/reports/latest/events-67513.jsonl`
+- `packages/klient/reports/latest/events-67515.jsonl`
+- `packages/klient/reports/latest/events-67516.jsonl`
+- `packages/klient/reports/latest/events-67517.jsonl`
+- `packages/klient/reports/latest/events-67518.jsonl`
+- `packages/klient/reports/latest/events-67519.jsonl`
+- `packages/klient/reports/latest/events-68185.jsonl`
+- `packages/klient/reports/latest/events-68187.jsonl`
+- `packages/klient/reports/latest/events-68190.jsonl`
+- `packages/klient/reports/latest/events-68191.jsonl`
+- `packages/klient/reports/latest/events-68192.jsonl`
+- `packages/klient/reports/latest/events-68193.jsonl`
+- `packages/klient/reports/latest/events-68194.jsonl`
+- `packages/klient/reports/latest/events-68195.jsonl`
 - `packages/klient/reports/latest/events-9555.jsonl`
 - `packages/klient/reports/vitest/latest/index.html`
 - `packages/klient/scripts/run-docker-e2e.sh`
@@ -4368,6 +4492,7 @@
 - `packages/migration-legacy/src/sessions/workdir-bucket.ts`
 - `packages/migration-legacy/src/steps/config.ts`
 - `packages/migration-legacy/src/steps/mcp.ts`
+- `packages/migration-legacy/src/steps/plugins.ts`
 - `packages/migration-legacy/src/steps/skills.ts`
 - `packages/migration-legacy/src/steps/user-history.ts`
 - `packages/migration-legacy/src/stub-detect.ts`
@@ -4394,6 +4519,8 @@
 - `packages/migration-legacy/test/fixtures/multi-workdir/.kimi/sessions/dbf62706c1b976e79a5e7cfcc3491a1f/uuid-b1/test`
 - `packages/migration-legacy/test/fixtures/multi-workdir/.kimi/sessions/kaos-foo_caaf674614e26c6365945408f85c9c9a/uuid-c1/context.jsonl`
 - `packages/migration-legacy/test/fixtures/multi-workdir/.kimi/sessions/kaos-foo_caaf674614e26c6365945408f85c9c9a/uuid-c1/state.json`
+- `packages/migration-legacy/test/fixtures/plugins/legacy-plugin/nighthawk.plugin.json`
+- `packages/migration-legacy/test/fixtures/plugins/not-a-plugin/data.json`
 - `packages/migration-legacy/test/fixtures/recent-protocol-1.10/context.jsonl`
 - `packages/migration-legacy/test/fixtures/recent-protocol-1.10/state.json`
 - `packages/migration-legacy/test/fixtures/recent-protocol-1.10/wire.jsonl`
@@ -4434,6 +4561,7 @@
 - `packages/migration-legacy/test/sessions/workdir-bucket.test.ts`
 - `packages/migration-legacy/test/steps/config.test.ts`
 - `packages/migration-legacy/test/steps/mcp.test.ts`
+- `packages/migration-legacy/test/steps/plugins.test.ts`
 - `packages/migration-legacy/test/steps/skills.test.ts`
 - `packages/migration-legacy/test/steps/user-history.test.ts`
 - `packages/migration-legacy/test/stub-detect.test.ts`
@@ -4809,6 +4937,10 @@
 - `packages/pi-tui/test/wrap-ansi.test.ts`
 - `packages/pi-tui/tsconfig.json`
 - `packages/pi-tui/vitest.config.ts`
+- `packages/plugin-sdk/package.json`
+- `packages/plugin-sdk/src/index.ts`
+- `packages/plugin-sdk/src/types.ts`
+- `packages/plugin-sdk/tsconfig.json`
 - `packages/protocol/CHANGELOG.md`
 - `packages/protocol/package.json`
 - `packages/protocol/src/__tests__/approval.test.ts`
@@ -5015,6 +5147,8 @@
 - `pnpm-lock.yaml`
 - `pnpm-workspace.yaml`
 - `project-encyclopedia/00-overview/README.md`
+- `project-encyclopedia/00-overview/build-and-reports.md`
+- `project-encyclopedia/00-overview/complete-source-map.md`
 - `project-encyclopedia/00-overview/engineering-proof.md`
 - `project-encyclopedia/00-overview/faq.md`
 - `project-encyclopedia/00-overview/full-traversal.md`
@@ -5026,6 +5160,7 @@
 - `project-encyclopedia/00-overview/what-is-nighthawk.md`
 - `project-encyclopedia/00-overview/why-security-first.md`
 - `project-encyclopedia/01-architecture/agent-loop.md`
+- `project-encyclopedia/01-architecture/decisions.md`
 - `project-encyclopedia/01-architecture/di-scope.md`
 - `project-encyclopedia/01-architecture/extension-architecture.md`
 - `project-encyclopedia/01-architecture/feature-system.md`
@@ -5107,6 +5242,7 @@
 - `project-encyclopedia/04-features/hooks.md`
 - `project-encyclopedia/04-features/mcp.md`
 - `project-encyclopedia/04-features/memory.md`
+- `project-encyclopedia/04-features/official-plugins.md`
 - `project-encyclopedia/04-features/permissions.md`
 - `project-encyclopedia/04-features/plan-mode.md`
 - `project-encyclopedia/04-features/plugins.md`
@@ -5141,6 +5277,7 @@
 - `project-encyclopedia/07-tech-stack/node-sea.md`
 - `project-encyclopedia/07-tech-stack/oxlint.md`
 - `project-encyclopedia/07-tech-stack/pnpm-workspace.md`
+- `project-encyclopedia/07-tech-stack/repo-skills.md`
 - `project-encyclopedia/07-tech-stack/tsdown.md`
 - `project-encyclopedia/07-tech-stack/typescript.md`
 - `project-encyclopedia/07-tech-stack/vitepress.md`
@@ -5148,6 +5285,7 @@
 - `project-encyclopedia/08-development/build.md`
 - `project-encyclopedia/08-development/contributing.md`
 - `project-encyclopedia/08-development/docs-workflow.md`
+- `project-encyclopedia/08-development/full-development-process.md`
 - `project-encyclopedia/08-development/linting.md`
 - `project-encyclopedia/08-development/native-build.md`
 - `project-encyclopedia/08-development/package-authoring.md`
@@ -5173,6 +5311,7 @@
 - `project-encyclopedia/11-reference/config-files.md`
 - `project-encyclopedia/11-reference/data-locations.md`
 - `project-encyclopedia/11-reference/env-vars.md`
+- `project-encyclopedia/11-reference/export-index.md`
 - `project-encyclopedia/11-reference/mcp-config.md`
 - `project-encyclopedia/11-reference/permission-rules.md`
 - `project-encyclopedia/11-reference/sdk-api.md`
@@ -5181,8 +5320,11 @@
 - `project-encyclopedia/11-reference/troubleshooting.md`
 - `project-encyclopedia/11-reference/ws-protocol.md`
 - `project-encyclopedia/13-vibe-coding/README.md`
+- `project-encyclopedia/13-vibe-coding/agents-md-and-skills.md`
+- `project-encyclopedia/13-vibe-coding/example-workflow.md`
 - `project-encyclopedia/13-vibe-coding/prompt-engineering.md`
 - `project-encyclopedia/13-vibe-coding/prompt-library.md`
+- `project-encyclopedia/13-vibe-coding/role-prompts.md`
 - `project-encyclopedia/13-vibe-coding/security-review.md`
 - `project-encyclopedia/13-vibe-coding/workflow.md`
 - `project-encyclopedia/README.md`
@@ -5211,6 +5353,14 @@
 - `reports/latest/events-35535.jsonl`
 - `reports/latest/events-35536.jsonl`
 - `reports/latest/events-35538.jsonl`
+- `reports/latest/events-37268.jsonl`
+- `reports/latest/events-37269.jsonl`
+- `reports/latest/events-37273.jsonl`
+- `reports/latest/events-37274.jsonl`
+- `reports/latest/events-37275.jsonl`
+- `reports/latest/events-37276.jsonl`
+- `reports/latest/events-37277.jsonl`
+- `reports/latest/events-37278.jsonl`
 - `reports/latest/events-57112.jsonl`
 - `reports/latest/events-57113.jsonl`
 - `reports/latest/events-57118.jsonl`
@@ -5235,6 +5385,22 @@
 - `reports/latest/events-60826.jsonl`
 - `reports/latest/events-60827.jsonl`
 - `reports/latest/events-60828.jsonl`
+- `reports/latest/events-61442.jsonl`
+- `reports/latest/events-61443.jsonl`
+- `reports/latest/events-61457.jsonl`
+- `reports/latest/events-61458.jsonl`
+- `reports/latest/events-61459.jsonl`
+- `reports/latest/events-61462.jsonl`
+- `reports/latest/events-61463.jsonl`
+- `reports/latest/events-61464.jsonl`
+- `reports/latest/events-82155.jsonl`
+- `reports/latest/events-82512.jsonl`
+- `reports/latest/events-82527.jsonl`
+- `reports/latest/events-82528.jsonl`
+- `reports/latest/events-82529.jsonl`
+- `reports/latest/events-82531.jsonl`
+- `reports/latest/events-82533.jsonl`
+- `reports/latest/events-82534.jsonl`
 - `reports/latest/events-84402.jsonl`
 - `reports/latest/events-84405.jsonl`
 - `reports/latest/events-84407.jsonl`
@@ -5267,6 +5433,13 @@
 - `reports/latest/events-9074.jsonl`
 - `reports/latest/events-9075.jsonl`
 - `reports/latest/events-9076.jsonl`
+- `reports/latest/events-95031.jsonl`
+- `reports/latest/events-95034.jsonl`
+- `reports/latest/events-95035.jsonl`
+- `reports/latest/events-95036.jsonl`
+- `reports/latest/events-95037.jsonl`
+- `reports/latest/events-95039.jsonl`
+- `reports/latest/events-95040.jsonl`
 - `scripts/build.mjs`
 - `scripts/check-nix-workspace.mjs`
 - `scripts/check-no-comments.mjs`
@@ -5278,28 +5451,6 @@
 - `test.py`
 - `tsconfig.json`
 - `vitest.config.ts`
-
-## 专业实现要点（开发流程视角）
-
-### 需求分析
-
-先明确产品要解决的核心问题：终端 AI Agent 需要同时具备编程、代码审计、渗透测试能力。
-
-### 架构选型
-
-选择 TypeScript monorepo，让应用、服务端、SDK、数据层共享类型；选择 pnpm workspace 管理依赖。
-
-### 实现步骤
-
-先做 Agent 内核（v1），再沉淀公共包（kosong/kaos），随后演进 v2 DI×Scope 引擎，最后包装 CLI/TUI/VS Code/Server。
-
-### 验证方式
-
-使用 `pnpm lint`、`pnpm typecheck`、`pnpm test`、`node scripts/smoke-security.ts` 形成回归防线。
-
-### 维护注意
-
-新增包必须同步 `pnpm-workspace.yaml` 与 `flake.nix`；公开 API 变更需 changeset。
 
 ## 证据与代码位置
 

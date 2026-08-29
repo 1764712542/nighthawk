@@ -1,6 +1,9 @@
 name: Manual Native Bundle
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       release-tag:
@@ -13,10 +16,20 @@ permissions:
   contents: write
 
 env:
-  RELEASE_TAG: ${{ inputs.release-tag }}
+  RELEASE_TAG: ${{ inputs.release-tag != '' && inputs.release-tag || format('v{0}', '0.41.0') }}
 
 jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.get-version.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v6
+      - id: get-version
+        run: echo "tag=v$(node -e "console.log(require('./apps/nighthawk/package.json').version)")" >> "$GITHUB_OUTPUT"
+
   build:
+    needs: version
     uses: ./.github/workflows/_native-build.yml
     with:
       upload-artifact-prefix: nighthawk-native
@@ -25,10 +38,12 @@ jobs:
 
   publish:
     name: Publish native assets and Homebrew formula
-    needs: build
+    needs: [build, version]
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'push' && needs.version.outputs.tag || inputs.release-tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
