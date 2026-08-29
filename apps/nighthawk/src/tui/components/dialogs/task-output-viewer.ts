@@ -34,12 +34,12 @@ export interface TaskOutputViewerProps {
 }
 
 export const STATUS_LABEL: Record<BackgroundTaskStatus, string> = {
-  running: 'running',
-  completed: 'completed',
-  failed: 'failed',
-  timed_out: 'timed out',
-  killed: 'killed',
-  lost: 'lost',
+  running: '运行中',
+  completed: '已完成',
+  failed: '失败',
+  timed_out: '超时',
+  killed: '已终止',
+  lost: '已丢失',
 };
 
 export function statusColor(status: BackgroundTaskStatus): 'success' | 'textMuted' | 'error' {

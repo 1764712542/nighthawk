@@ -33,15 +33,15 @@ const AGENT_SWARM_LEFT_INDENT = ' ';
 const AGENT_SWARM_RIGHT_GAP = 1;
 const AGENT_SWARM_NON_GRID_LINES = 6;
 const COMPACT_TERMINAL_MARK_WIDTH = 1;
-const ORCHESTRATING_LABEL = 'Orchestrating...';
-const PROMPTING_LABEL = 'Prompting...';
-const WORKING_LABEL = 'Working...';
-const COMPLETED_LABEL = 'Completed.';
-const FAILED_LABEL = 'Failed.';
-const ABORTED_LABEL = 'Aborted.';
-const CANCELLED_LABEL = 'Cancelled.';
-const QUEUED_LABEL = 'Queued...';
-const SUSPENDED_LABEL = 'Rate limited...';
+const ORCHESTRATING_LABEL = '编排中...';
+const PROMPTING_LABEL = '提示中...';
+const WORKING_LABEL = '工作中...';
+const COMPLETED_LABEL = '已完成。';
+const FAILED_LABEL = '失败。';
+const ABORTED_LABEL = '已中止。';
+const CANCELLED_LABEL = '已取消。';
+const QUEUED_LABEL = '排队中...';
+const SUSPENDED_LABEL = '速率受限...';
 const RESUMED_ITEM_LABEL = '(resumed)';
 const CANCELLED_LABEL_DARKEN_FACTOR = 0.72;
 const AGENT_SWARM_TITLE_ACCENT_BIAS = 1.3;
@@ -178,9 +178,9 @@ const PHASE_LABELS: Record<AgentSwarmPhase, string> = {
   pending: QUEUED_LABEL,
   queued: QUEUED_LABEL,
   suspended: SUSPENDED_LABEL,
-  running: 'Running',
-  completed: 'Completed',
-  failed: 'Failed',
+  running: '运行中',
+  completed: '已完成',
+  failed: '失败',
   cancelled: ABORTED_LABEL,
 };
 

@@ -1234,7 +1234,7 @@ export class NighthawkTUI {
     let session = this.session;
     if (session === undefined) {
       if (!this.engineV2) {
-        this.showError('No active session for shell command.');
+        this.showError('没有活跃会话用于 shell 命令。');
         return;
       }
       session = await this.ensureSession();

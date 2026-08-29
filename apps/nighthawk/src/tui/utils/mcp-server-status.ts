@@ -63,12 +63,12 @@ export function formatMcpStartupStatusSummary(
   }
 
   const parts: string[] = [];
-  if (failed > 0) parts.push(`${failed} failed`);
-  if (needsAuth > 0) parts.push(`${needsAuth} need auth`);
-  if (connecting > 0) parts.push(`${connecting} connecting`);
-  if (connected > 0) parts.push(`${connected} connected`);
-  if (disabled > 0) parts.push(`${disabled} disabled`);
-  if (removed > 0) parts.push(`${removed} removed`);
+  if (failed > 0) parts.push(`${failed} 失败`);
+  if (needsAuth > 0) parts.push(`${needsAuth} 需要认证`);
+  if (connecting > 0) parts.push(`${connecting} 连接中`);
+  if (connected > 0) parts.push(`${connected} 已连接`);
+  if (disabled > 0) parts.push(`${disabled} 已禁用`);
+  if (removed > 0) parts.push(`${removed} 已移除`);
   return parts.join(', ');
 }
 

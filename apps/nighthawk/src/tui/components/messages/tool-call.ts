@@ -55,7 +55,7 @@ const MAX_LIVE_OUTPUT_CHARS = 50_000;
 
 /** Delay before a long-running foreground Bash/Agent card advertises Ctrl+B. */
 const DETACH_HINT_DELAY_MS = 10_000;
-const DETACH_HINT_TEXT = 'Press Ctrl+B to run in background';
+const DETACH_HINT_TEXT = '按 Ctrl+B 后台运行';
 
 type SubagentTextKind = 'thinking' | 'text';
 type SubagentPhase = 'queued' | 'spawning' | 'running' | 'done' | 'failed' | 'backgrounded';
@@ -1753,7 +1753,7 @@ export class ToolCallComponent extends Container {
         break;
       }
       case 'failed':
-        parts.push(currentTheme.fg('error', '✗ failed'));
+        parts.push(currentTheme.fg('error', '✗ 失败'));
         break;
       case 'backgrounded':
         parts.push('◐ backgrounded');
@@ -2332,12 +2332,12 @@ export class ToolCallComponent extends Container {
 
     if (summary.completed > 0) {
       segments.push(
-        currentTheme.fg('success', `${SUCCESS_MARK.trimEnd()} ${String(summary.completed)} completed`),
+        currentTheme.fg('success', `${SUCCESS_MARK.trimEnd()} ${String(summary.completed)} 已完成`),
       );
     }
     if (summary.failed > 0) {
       segments.push(
-        currentTheme.fg('error', `${FAILURE_MARK.trimEnd()} ${String(summary.failed)} failed`),
+        currentTheme.fg('error', `${FAILURE_MARK.trimEnd()} ${String(summary.failed)} 失败`),
       );
     }
     if (summary.aborted > 0) {

@@ -40,26 +40,26 @@ function phaseFromStatus(status: BackgroundTaskStatus): BackgroundAgentStatusPha
 }
 
 function subjectFor(info: BackgroundTaskInfo): string {
-  if (info.kind === 'agent') return 'agent task';
-  if (info.kind === 'question') return 'question task';
-  return 'bash task';
+  if (info.kind === 'agent') return '代理任务';
+  if (info.kind === 'question') return '询问任务';
+  return '命令任务';
 }
 
 function headlineFor(info: BackgroundTaskInfo): string {
   const subject = subjectFor(info);
   switch (info.status) {
     case 'running':
-      return `${subject} started in background`;
+      return `${subject} 在后台启动`;
     case 'completed':
-      return `${subject} completed in background`;
+      return `${subject} 在后台已完成`;
     case 'failed':
-      return `${subject} failed in background`;
+      return `${subject} 在后台失败`;
     case 'timed_out':
-      return `${subject} timed out`;
+      return `${subject} 超时`;
     case 'killed':
-      return `${subject} stopped`;
+      return `${subject} 已终止`;
     case 'lost':
-      return `${subject} lost`;
+      return `${subject} 已丢失`;
   }
 }
 

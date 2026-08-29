@@ -16,12 +16,12 @@ const STATUS_PRIORITY: Record<McpServerInfo['status'], number> = {
 };
 
 const STATUS_LABEL: Record<McpServerInfo['status'], string> = {
-  connected: 'connected',
-  pending: 'pending',
-  'needs-auth': 'needs auth',
-  failed: 'failed',
-  disabled: 'disabled',
-  removed: 'removed',
+  connected: '已连接',
+  pending: '连接中',
+  'needs-auth': '需要认证',
+  failed: '失败',
+  disabled: '已禁用',
+  removed: '已移除',
 };
 
 const SUMMARY_ORDER: readonly McpServerInfo['status'][] = [
@@ -52,11 +52,11 @@ function statusPainter(
 
 function formatToolCount(server: McpServerInfo): string {
   if (server.status === 'disabled' || server.status === 'removed') return '—';
-  return `${server.toolCount} tool${server.toolCount === 1 ? '' : 's'}`;
+  return `${server.toolCount} 个工具`;
 }
 
 function formatToolsAvailable(count: number): string {
-  return `${count} tool${count === 1 ? '' : 's'} available`;
+  return `${count} 个工具可用`;
 }
 
 /**
@@ -103,27 +103,27 @@ export function buildMcpStatusReportLines(options: McpStatusReportOptions): stri
   const value = (text: string) => currentTheme.fg('text', text);
   const error = (text: string) => currentTheme.fg('error', text);
 
-  const lines: string[] = [accent('Servers')];
+  const lines: string[] = [accent('服务器')];
 
   if (servers.length === 0) {
-    lines.push(muted('  No MCP servers configured. Run /mcp-config to add one.'));
+    lines.push(muted('  未配置 MCP 服务器。运行 /mcp-config 添加一个。'));
     return lines;
   }
 
-  const nameWidth = Math.max('Name'.length, ...servers.map((server) => server.name.length));
+  const nameWidth = Math.max('名称'.length, ...servers.map((server) => server.name.length));
   const statusWidth = Math.max(
-    'Status'.length,
+    '状态'.length,
     ...servers.map((server) => STATUS_LABEL[server.status].length),
   );
   const transportWidth = Math.max(
-    'Transport'.length,
+    '传输'.length,
     ...servers.map((server) => server.transport.length),
   );
 
   lines.push(
-    `  ${muted('Name'.padEnd(nameWidth))}  ${muted('Status'.padEnd(statusWidth))}  ${muted(
-      'Transport'.padEnd(transportWidth),
-    )}  ${muted('Tools')}`,
+    `  ${muted('名称'.padEnd(nameWidth))}  ${muted('状态'.padEnd(statusWidth))}  ${muted(
+      '传输'.padEnd(transportWidth),
+    )}  ${muted('工具')}`,
   );
 
   for (const server of servers) {
@@ -141,16 +141,16 @@ export function buildMcpStatusReportLines(options: McpStatusReportOptions): stri
       server.error !== undefined &&
       server.error.trim().length > 0
     ) {
-      lines.push(`    ${muted('error:')} ${error(formatErrorLine(server.error))}`);
+      lines.push(`    ${muted('错误：')} ${error(formatErrorLine(server.error))}`);
     }
     if (server.status === 'needs-auth') {
-      lines.push(`    ${muted('action:')} ${value(`run /mcp-config login ${server.name}`)}`);
+      lines.push(`    ${muted('操作：')} ${value(`运行 /mcp-config login ${server.name}`)}`);
     }
   }
 
   lines.push('');
   lines.push(`  ${value(buildSummary(servers))}`);
-  lines.push(`  ${muted('Configure with')} ${value('/mcp-config')}`);
+  lines.push(`  ${muted('通过以下方式配置')} ${value('/mcp-config')}`);
 
   return lines;
 }

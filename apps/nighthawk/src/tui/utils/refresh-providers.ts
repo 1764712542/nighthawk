@@ -154,7 +154,7 @@ async function refreshProviderModelList(
     return { kind: 'failed', reason: error instanceof Error ? error.message : String(error) };
   }
   if (models.length === 0) {
-    return { kind: 'failed', reason: 'The endpoint returned no models.' };
+    return { kind: 'failed', reason: '端点未返回任何模型。' };
   }
 
   const previousDefault = config.defaultModel;

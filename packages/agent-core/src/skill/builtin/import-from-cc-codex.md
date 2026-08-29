@@ -1,6 +1,6 @@
 ---
 name: import-from-cc-codex
-description: Import Claude Code and Codex instructions, skills, and MCP settings into NightHawk.
+description: 将 Claude Code 和 Codex 的指令、技能和 MCP 设置导入到 NightHawk。
 disable-model-invocation: true
 ---
 

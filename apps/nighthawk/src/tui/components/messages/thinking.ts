@@ -111,7 +111,7 @@ export class ThinkingComponent implements Component {
       );
       rendered = [
         '',
-        spinner + currentTheme.fg('textDim', 'thinking...'),
+        spinner + currentTheme.fg('textDim', '思考中...'),
         ...visibleLines.map((line) => MESSAGE_INDENT + line),
       ];
     } else {

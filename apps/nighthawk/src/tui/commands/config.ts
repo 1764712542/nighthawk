@@ -100,7 +100,7 @@ export async function handlePlanCommand(host: SlashCommandHost, args: string): P
   // The session may already be in the requested mode (e.g. it was created
   // with config.defaultPlanMode applied), and re-entering plan mode throws.
   if (host.state.appState.planMode === enabled) {
-    host.showNotice(`Plan mode is already ${enabled ? 'on' : 'off'}`);
+    host.showNotice(`规划模式已${enabled ? '开启' : '关闭'}`);
     return;
   }
 
@@ -114,12 +114,12 @@ async function applyPlanMode(host: SlashCommandHost, session: Session, enabled: 
     if (enabled) {
       const plan = await session.getPlan().catch(() => null);
       host.showNotice(
-        'Plan mode: ON',
+        '规划模式：已开启',
         plan?.path !== undefined ? `Plan will be created here: ${plan.path}` : undefined,
       );
       return;
     }
-    host.showNotice('Plan mode: OFF');
+    host.showNotice('规划模式：已关闭');
   } catch (error) {
     const msg = formatErrorMessage(error);
     host.showError(`Failed to set plan mode: ${msg}`);

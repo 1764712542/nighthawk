@@ -31,7 +31,7 @@ export interface HelpPanelCommand {
 
 /** Static list — keep in sync with the global editor bindings. */
 export const DEFAULT_KEYBOARD_SHORTCUTS: readonly KeyboardShortcut[] = [
-  { keys: 'Shift-Tab', description: 'Toggle plan mode' },
+  { keys: 'Shift-Tab', description: '切换规划模式' },
   { keys: 'Ctrl-G', description: 'Edit in external editor ($VISUAL / $EDITOR)' },
   { keys: 'Ctrl-O', description: 'Toggle tool output / compaction summary expansion' },
   { keys: 'Ctrl-B', description: 'Run foreground task in background; when idle, toggle tool output expansion' },

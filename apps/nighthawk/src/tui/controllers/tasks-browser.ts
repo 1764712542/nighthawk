@@ -61,7 +61,7 @@ export class TasksBrowserController {
 
     const session = this.host.session;
     if (session === undefined) {
-      this.host.showError('No active session.');
+      this.host.showError('没有活跃会话。');
       return;
     }
 
@@ -320,7 +320,7 @@ export class TasksBrowserController {
 
     const session = this.host.session;
     if (session === undefined) {
-      this.flash('No active session.');
+      this.flash('没有活跃会话。');
       return;
     }
 
@@ -356,7 +356,7 @@ export class TasksBrowserController {
 
     const session = this.host.session;
     if (session === undefined) {
-      this.flash('No active session.');
+      this.flash('没有活跃会话。');
       return;
     }
 

@@ -102,15 +102,15 @@ async function applySwarmMode(
   commandText: string,
 ): Promise<void> {
   if (enabled && host.state.appState.swarmMode) {
-    host.showStatus('Swarm mode is already on.');
+    host.showStatus('集群模式已开启。');
     return;
   }
   if (!enabled && !host.state.appState.swarmMode) {
-    host.showStatus('Swarm mode is already off.');
+    host.showStatus('集群模式已关闭。');
     return;
   }
   if (enabled && host.state.appState.permissionMode === 'manual') {
-    showSwarmStartPermissionPrompt(host, commandText, 'Swarm mode not enabled.', async (choice) => {
+    showSwarmStartPermissionPrompt(host, commandText, '集群模式未启用。', async (choice) => {
       if ((choice === 'auto' || choice === 'yolo') && !(await setPermissionForSwarm(host, choice))) {
         return;
       }

@@ -20,13 +20,13 @@ export function formatBackgroundAgentTranscript(
   extras: { resultSummary?: string; error?: string } | undefined = undefined,
 ): BackgroundAgentStatusData {
   const normalizedAgentName = normalizeBackgroundField(meta.agentName);
-  const subject = normalizedAgentName !== undefined ? `${normalizedAgentName} agent` : 'agent';
+  const subject = normalizedAgentName !== undefined ? `${normalizedAgentName} 代理` : '代理';
   const headline =
     phase === 'started'
-      ? `${subject} started in background`
+      ? `${subject} 在后台启动`
       : phase === 'completed'
-        ? `${subject} completed in background`
-        : `${subject} failed in background`;
+        ? `${subject} 在后台已完成`
+        : `${subject} 在后台失败`;
   const tail = phase === 'failed' ? normalizeBackgroundField(extras?.error) : undefined;
   const detailParts = [
     normalizeBackgroundField(meta.model),

@@ -30,7 +30,7 @@ import type { SlashCommandHost } from './dispatch';
 
 const MAX_GOAL_OBJECTIVE_LENGTH = 4000;
 const RESUME_GOAL_INPUT = 'Resume the active goal.';
-const START_NEXT_GOAL_NOW_MESSAGE = 'No active goal. Starting this goal now.';
+const START_NEXT_GOAL_NOW_MESSAGE = '没有活跃目标。立即开始此目标。';
 
 type GoalCommandHost = Pick<
   SlashCommandHost,

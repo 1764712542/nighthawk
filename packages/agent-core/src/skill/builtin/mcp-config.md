@@ -1,6 +1,6 @@
 ---
 name: mcp-config
-description: Configure MCP servers and handle MCP OAuth login.
+description: 配置 MCP 服务器并处理 MCP OAuth 登录。
 ---
 
 # Interactive MCP server configuration

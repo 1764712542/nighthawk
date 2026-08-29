@@ -1,6 +1,6 @@
 ---
 name: check-nighthawk-docs
-description: Answer questions about the NightHawk product using the official documentation — CLI usage, configuration, slash commands, features, membership and quota, API onboarding, third-party tool setup, and error codes. Use when the user asks how NightHawk works, how to set something up, or what a NightHawk error message means.
+description: 使用官方文档回答关于 NightHawk 产品的问题——CLI 用法、配置、斜杠命令、功能、会员与配额、API 接入、第三方工具设置和错误码。当用户询问 NightHawk 如何使用、如何设置某项功能、或某个错误消息的含义时使用。
 ---
 
 # Check NightHawk docs (check-nighthawk-docs)

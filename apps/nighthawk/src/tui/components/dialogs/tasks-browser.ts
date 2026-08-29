@@ -53,12 +53,12 @@ export interface TasksBrowserProps {
 }
 
 const STATUS_LABEL: Record<BackgroundTaskStatus, string> = {
-  running: 'running',
-  completed: 'completed',
-  failed: 'failed',
-  timed_out: 'timed out',
-  killed: 'killed',
-  lost: 'lost',
+  running: '运行中',
+  completed: '已完成',
+  failed: '失败',
+  timed_out: '超时',
+  killed: '已终止',
+  lost: '已丢失',
 };
 
 /** Auto-cancel the inline stop confirmation after this many ms. */
@@ -445,8 +445,8 @@ export class TasksBrowserApp extends Container implements Focusable {
     if (this.sortedVisible.length === 0) {
       const empty =
         this.props.filter === 'active'
-          ? 'No active tasks. Tab = show all.'
-          : 'No background tasks in this session.';
+          ? '没有活跃任务。Tab = 显示全部。'
+          : '此会话中没有后台任务。';
       const lines: string[] = [currentTheme.fg('textMuted', empty)];
       while (lines.length < innerHeight) lines.push('');
       return this.renderFrame(title, lines, width, height);

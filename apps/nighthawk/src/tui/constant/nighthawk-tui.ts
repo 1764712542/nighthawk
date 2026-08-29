@@ -3,13 +3,13 @@ import { DEFAULT_OAUTH_PROVIDER_NAME } from '#/constant/app';
 export { DEFAULT_OAUTH_PROVIDER_NAME, OAUTH_LOGIN_REQUIRED_CODE, PRODUCT_NAME } from '#/constant/app';
 
 export const LLM_NOT_SET_MESSAGE = 'LLM not set, send "/connect" to connect a provider';
-export const NO_ACTIVE_SESSION_MESSAGE = 'No active session. Send /connect to connect a provider.';
-export const CTRL_D_HINT = 'Press Ctrl+D again to exit';
-export const CTRL_C_HINT = 'Press Ctrl+C again to exit';
+export const NO_ACTIVE_SESSION_MESSAGE = '没有活跃会话。发送 /connect 连接一个供应商。';
+export const CTRL_D_HINT = '再按 Ctrl+D 退出';
+export const CTRL_C_HINT = '再按 Ctrl+C 退出';
 export const MAIN_AGENT_ID = 'main';
 export const OAUTH_LOGIN_REQUIRED_STARTUP_NOTICE = 'Provider session expired. Send /connect to reconnect.';
 export const SESSIONLESS_STARTUP_NOTICE =
-  'No session yet — one will be created on your first message.';
+  '尚未创建会话——您的第一条消息将自动创建。';
 export const TOWER_STATUS_PROMPT =
   'Report the current tower status: call TowerStatus and give a compact summary.';
 export const TOWER_TEARDOWN_PROMPT =

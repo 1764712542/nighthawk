@@ -1,6 +1,6 @@
 ---
 name: custom-theme
-description: Create or edit a nighthawk custom color theme — a JSON file under the resolved NIGHTHAWK_HOME data directory that recolors the TUI. Use when the user wants their own theme, asks for a specific palette or mood, or wants to tweak an existing custom theme's colors.
+description: 创建或编辑 nighthawk 自定义颜色主题——一个位于 NIGHTHAWK_HOME 数据目录下的 JSON 文件，可重新着色 TUI。当用户想要自己的主题、指定配色方案或风格、或调整现有自定义主题颜色时使用。
 ---
 
 # Create a nighthawk custom theme (custom-theme)

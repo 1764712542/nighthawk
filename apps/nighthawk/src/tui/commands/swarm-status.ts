@@ -6,7 +6,7 @@ export function handleSwarmStatusCommand(host: SlashCommandHost): void {
   const summaries = host.sessionEventHandler.subAgentEventHandler.getSwarmProgressSummaries();
 
   if (summaries.length === 0) {
-    host.showStatus(currentTheme.fg('textDim', '╔══════════════════════════════╗\n║  No active swarm progress.  ║\n╚══════════════════════════════╝'));
+    host.showStatus(currentTheme.fg('textDim', '╔══════════════════════════════╗\n║  没有活跃的集群进度。  ║\n╚══════════════════════════════╝'));
     return;
   }
 
@@ -14,13 +14,13 @@ export function handleSwarmStatusCommand(host: SlashCommandHost): void {
   const t = currentTheme;
 
   for (const s of summaries) {
-    const status = s.isFinished ? t.fg('success', '● FINISHED') : t.fg('warning', '● ACTIVE');
+    const status = s.isFinished ? t.fg('success', '● 已完成') : t.fg('warning', '● 活跃中');
     const desc = t.fg('textStrong', s.description);
-    const stats = t.fg('textDim', `${s.total} subagents`);
-    const done = t.fg('success', `${s.completed} done`);
-    const active = t.fg('warning', `${s.active} active`);
-    const failed = t.fg('error', `${s.failed} failed`);
-    const cancelled = t.fg('textMuted', `${s.cancelled} cancelled`);
+    const stats = t.fg('textDim', `${s.total} 个子代理`);
+    const done = t.fg('success', `${s.completed} 已完成`);
+    const active = t.fg('warning', `${s.active} 活跃中`);
+    const failed = t.fg('error', `${s.failed} 失败`);
+    const cancelled = t.fg('textMuted', `${s.cancelled} 已取消`);
 
     lines.push(
       t.fg('border', '╔══') + status + t.fg('border', '══╗'),
