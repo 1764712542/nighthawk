@@ -18,6 +18,15 @@ This page documents the changes in each NightHawk CLI release.
 - **Core security tools**: Four security tools always available — `SecurityScan` (116+ vulnerability rules covering SQLi, XSS, command injection, path traversal, SSRF, deserialization, weak crypto, and auth flaws), `SecretScan` (hardcoded credential detection with Shannon entropy scoring), `TaintTrace` (cross-file taint tracking from user-controlled sources to dangerous sinks), `DepAudit` (dependency audit with postinstall script checks, unpinned version detection, and OSV CVE queries).
 - Pentest report generation via `/report` — exports HTML/PDF with executive summary, risk matrix, vulnerability details (CWE/OWASP/CVSS), reproduction steps, and remediation.
 - Slash command system with 30+ commands: `/help`, `/login`, `/logout`, `/model`, `/provider`, `/settings`, `/permission`, `/theme`, `/editor`, `/exit`, `/version`, `/status`, `/usage`, `/title`, `/compact`, `/new`, `/sessions`, `/session`, `/tasks`, `/fork`, `/undo`, `/init`, `/export-md`, `/export-debug-zip`, `/copy`, `/reload`, `/reload-tui`, `/goal`, `/swarm`, `/plan`, `/yolo`, `/auto`, `/btw`, `/mcp`, `/plugins`, `/feedback`, `/add-dir`, `/experiments`, `/mcp-config`, `/custom-theme`, `/update-config`, `/check-nighthawk-docs`, `/import-from-cc-codex`, `/sub-skill`.
+- MCP stdio supports kaos executor: configure `executor: 'kaos'` for MCP stdio servers to launch child processes via the Kaos executor, no longer limited to local execution.
+- ACP supports `type: 'acp'` MCP transport: MCP servers from ACP with `acp` transport are now handled correctly instead of being dropped.
+- Todo priority field: each todo item can now set a `priority` (high/medium/low), displayed sorted by priority in the TUI.
+- ACP supports Other free-text: `Other` type content blocks in the ACP protocol now support free-text editing instead of being ignored.
+- TUI Agent auto-grouping by description: multiple Agent tool calls are automatically grouped by description in the TUI, with on-demand split view.
+- v2 pentest mode fully implemented: `setPentestMode` is now fully functional in the v2 engine — SDK clients can switch pentest mode normally.
+- v2 non-main agent Goal support: non-main agents in the v2 engine can now set and execute Goal objectives, closing the v1/v2 gap.
+- v2 Kaos injection adapter: `createSessionWithKaos` / `resumeSessionWithKaos` now correctly inject the Kaos execution environment in the v2 engine instead of falling back to local execution.
+- Legacy CLI plugin migration support: `nighthawk migrate` now supports migrating legacy CLI plugins — both skills and plugins are fully migrated.
 
 ### Polish
 

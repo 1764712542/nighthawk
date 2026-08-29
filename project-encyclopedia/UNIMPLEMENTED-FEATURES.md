@@ -4,46 +4,12 @@
 
 ## A. 明确未实现（代码抛错 / no-op stub）
 
-### 1. MCP stdio 自定义 executor（非 `local`）未实现
-- 现象：配置 MCP stdio server 时如果指定 `executor` 且不是 `local`，启动直接抛 `NOT_IMPLEMENTED`。
-- 代码位置：
-  - `packages/agent-core-v2/src/mcpCore/client-stdio.ts:55`
-  - `packages/agent-core/src/mcp/client-stdio.ts:63`
-- 影响：目前只能通过本机 `local` 启动 MCP stdio 子进程，无法接入自定义 executor / 远程执行器。
-
-### 2. SSHKaos 远程环境变量探测未实现
-- 现象：`SSHKaos.osEnv` 直接抛错。
-- 代码位置：`packages/kaos/src/ssh.ts:448`
-- 影响：通过 SSH 使用 Kaos 时，无法读取远程 `osEnv`；远程环境探测是预留 stub。
-
-### 3. MiniDb 跨分片两阶段提交（2PC）未实现
+### 1. MiniDb 跨分片两阶段提交（2PC）未实现
 - 现象：`crossShard: '2pc'` 直接抛错，仅 `best-effort` / `none` 可用。
 - 代码位置：
   - `packages/minidb/src/cluster/index.ts:84`
   - `packages/minidb/src/cluster/coordinator.ts:26`
 - 影响：ClusterDb 尚不支持严格跨分片原子提交。
-
-### 4. ACP `type: 'acp'` 的 MCP server 传输不支持
-- 现象：来自 ACP 的 MCP server 若为 `acp` transport 会被 `log.warn` 丢弃。
-- 代码位置：
-  - `packages/acp-adapter/src/mcp.ts:16`
-  - `packages/acp-server/src/convert.ts:169`
-- 影响：无法通过 ACP 使用基于 ACP transport 的 MCP server。
-
-### 5. v2 引擎的 `setPentestMode` 未实现
-- 现象：v2 SDK 客户端调用 `setPentestMode` 会抛 `NOT_IMPLEMENTED`。
-- 代码位置：`packages/node-sdk/src/sdk-rpc-client-v2.ts:2104-2110`
-- 影响：只有 v1 引擎支持通过 SDK 切换渗透测试模式；v2 尚未实现。
-
-### 6. TUI Agent 分组后无法取消分组
-- 现象：多个 Agent 工具调用被渲染成组后，没有 ungroup 能力。
-- 代码位置：`apps/nighthawk/src/tui/components/messages/agent-group.ts:15`
-- 影响：用户无法在 TUI 中把已合并的 Agent 组重新拆开。
-
-### 7. 旧版 CLI 插件本体尚未迁移
-- 现象：`nighthawk migrate` 对 legacy CLI plugins 仍提示不支持迁移。
-- 代码位置：`apps/nighthawk/src/migration/migration-screen.ts:324`
-- 影响：skills 已完成迁移，但旧版 CLI 插件本体不会被迁移。
 
 ## B. 已实现但存在版本差异或降级
 
@@ -59,22 +25,7 @@
 - 代码位置：`packages/acp-adapter/src/server.ts:804-835`
 - 影响：ACP 扩展能力取决于引擎版本，不能将 v1 stub 结论套用于 v2。
 
-### 3. BTW 已实现，但 v1/v2 fork 语义不同
-- 现象：v2 总是 fork main agent，且 child 是持久化 agent；v1 可 fork `interactiveAgentId`，child 是内存态。
-- 代码位置：`packages/node-sdk/src/sdk-rpc-client-v2.ts:2038-2048`
-- 影响：依赖 v1 BTW 语义的宿主可能观察到差异。
-
-### 4. Goal 已实现，但 v2 仅支持 main agent
-- 现象：v2 对非 main agent 执行 goal 命令会 `goal.unsupported_agent`。
-- 代码位置：`packages/node-sdk/src/sdk-rpc-client-v2.ts:2128`
-- 影响：v1 每个 agent 都有 GoalMode；v2 仅 main agent 支持 goal。
-
-### 5. v2 忽略 `createSessionWithKaos` / `resumeSessionWithKaos` 的 kaos 注入
-- 现象：v2 没有 kaos 注入点，传入的 kaos 参数会被忽略，退化为本地执行。
-- 代码位置：`packages/node-sdk/src/sdk-rpc-client-v2.ts:848-858`
-- 影响：依赖自定义 Kaos 执行环境的宿主在 v2 下无法注入远程/自定义文件系统。
-
-### 6. v1 若干能力在 v2 没有独立服务，由 SDK 适配层重建
+### 3. v1 若干能力在 v2 没有独立服务，由 SDK 适配层重建
 - 例子：`getSessionWarnings`、`listWorkspaceSkills`、print policy。
 - 代码位置：
   - `packages/node-sdk/src/sdk-rpc-client-v2.ts:603-621`
@@ -122,38 +73,6 @@ grep -R "not implemented\|not yet implemented\|NotImplementedError\|no-op stub" 
 
 以下按源码文件列出可验证的导出函数/类，并给出实现职责说明。
 
-### packages/agent-core-v2/src/mcpCore/client-stdio.ts
-
-| 函数 | 行号 | 签名 | 实现说明 |
-| --- | --- | --- | --- |
-| `mergeStdioEnv` | 292 | `export function mergeStdioEnv(` | `mergeStdioEnv` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
-
-| 类 | 行号 | 声明 | 实现说明 |
-| --- | --- | --- | --- |
-| `StdioMcpClient` | 37 | `export class StdioMcpClient implements MCPClient {` | 该类封装本文模块的核心状态与行为。 |
-
-### packages/agent-core/src/mcp/client-stdio.ts
-
-| 函数 | 行号 | 签名 | 实现说明 |
-| --- | --- | --- | --- |
-| `resolveStdioCwd` | 231 | `export function resolveStdioCwd(configCwd: string \| undefined, defaultCwd: string \| undefined): string \| undefined {` | `resolveStdioCwd` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
-| `mergeStdioEnv` | 256 | `export function mergeStdioEnv(` | `mergeStdioEnv` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
-
-| 类 | 行号 | 声明 | 实现说明 |
-| --- | --- | --- | --- |
-| `StdioMcpClient` | 36 | `export class StdioMcpClient implements MCPClient {` | 该类封装本文模块的核心状态与行为。 |
-
-### packages/kaos/src/ssh.ts
-
-| 类 | 行号 | 声明 | 实现说明 |
-| --- | --- | --- | --- |
-| `KaosSSHError` | 77 | `export class KaosSSHError extends KaosError {` | 该类封装本文模块的核心状态与行为。 |
-| `KaosFileNotFoundError` | 87 | `export class KaosFileNotFoundError extends KaosSSHError {` | 该类封装本文模块的核心状态与行为。 |
-| `KaosPermissionError` | 94 | `export class KaosPermissionError extends KaosSSHError {` | 该类封装本文模块的核心状态与行为。 |
-| `KaosConnectionError` | 101 | `export class KaosConnectionError extends KaosSSHError {` | 该类封装本文模块的核心状态与行为。 |
-| `SSHProcess` | 216 | `export class SSHProcess implements KaosProcess {` | 该类封装本文模块的核心状态与行为。 |
-| `SSHKaos` | 435 | `export class SSHKaos implements Kaos {` | 该类封装本文模块的核心状态与行为。 |
-
 ### packages/minidb/src/cluster/index.ts
 
 | 类 | 行号 | 声明 | 实现说明 |
@@ -177,22 +96,6 @@ grep -R "not implemented\|not yet implemented\|NotImplementedError\|no-op stub" 
 | --- | --- | --- | --- |
 | `AcpServer` | 219 | `export class AcpServer implements Agent {` | 该类封装本文模块的核心状态与行为。 |
 
-### packages/acp-adapter/src/mcp.ts
-
-| 函数 | 行号 | 签名 | 实现说明 |
-| --- | --- | --- | --- |
-| `acpMcpServersToConfigs` | 43 | `export function acpMcpServersToConfigs(` | `acpMcpServersToConfigs` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
-
-### packages/acp-server/src/convert.ts
-
-| 函数 | 行号 | 签名 | 实现说明 |
-| --- | --- | --- | --- |
-| `acpBlocksToContentParts` | 26 | `export function acpBlocksToContentParts(blocks: readonly ContentBlock[]): readonly ContentPart[] {` | `acpBlocksToContentParts` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
-| `compressPromptImageParts` | 105 | `export async function compressPromptImageParts(` | `compressPromptImageParts` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
-| `acpMcpServersToConfigRecord` | 172 | `export function acpMcpServersToConfigRecord(` | `acpMcpServersToConfigRecord` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
-| `displayBlockToAcpContent` | 279 | `export function displayBlockToAcpContent(block: ToolInputDisplay): ToolCallContent \| null {` | `displayBlockToAcpContent` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
-| `toolResultToAcpContent` | 333 | `export function toolResultToAcpContent(event: ToolResultEvent): ToolCallContent[] {` | `toolResultToAcpContent` 是本文涉及模块中的一个导出函数/类，具体语义以源码实现为准。 |
-
 ### packages/node-sdk/src/sdk-rpc-client-v2.ts
 
 | 函数 | 行号 | 签名 | 实现说明 |
@@ -202,18 +105,6 @@ grep -R "not implemented\|not yet implemented\|NotImplementedError\|no-op stub" 
 | 类 | 行号 | 声明 | 实现说明 |
 | --- | --- | --- | --- |
 | `SDKRpcClientV2` | 368 | `export class SDKRpcClientV2 extends SDKRpcClientBase {` | 该类封装本文模块的核心状态与行为。 |
-
-### apps/nighthawk/src/tui/components/messages/agent-group.ts
-
-| 类 | 行号 | 声明 | 实现说明 |
-| --- | --- | --- | --- |
-| `AgentGroupComponent` | 46 | `export class AgentGroupComponent extends Container {` | 该类封装本文模块的核心状态与行为。 |
-
-### apps/nighthawk/src/migration/migration-screen.ts
-
-| 类 | 行号 | 声明 | 实现说明 |
-| --- | --- | --- | --- |
-| `MigrationScreenComponent` | 79 | `export class MigrationScreenComponent extends Container implements Focusable {` | 该类封装本文模块的核心状态与行为。 |
 
 ### packages/acp-adapter/src/question.ts
 
@@ -265,91 +156,6 @@ grep -R "not implemented\|not yet implemented\|NotImplementedError\|no-op stub" 
 
 以下片段直接从仓库源码截取，用于展示关键实现形态；完整实现请打开对应文件。
 
-### 来自 `packages/agent-core-v2/src/mcpCore/client-stdio.ts` 的 `mergeStdioEnv`
-
-源码位置：`packages/agent-core-v2/src/mcpCore/client-stdio.ts:292` 附近。
-
-```ts
-export function mergeStdioEnv(
-  configEnv?: Record<string, string>,
-  parentEnv: Readonly<Record<string, string | undefined>> = process.env,
-): Record<string, string> {
-  const merged: Record<string, string> = {};
-  for (const [key, value] of Object.entries(parentEnv)) {
-    if (value !== undefined) merged[key] = value;
-  }
-  if (configEnv !== undefined) Object.assign(merged, configEnv);
-  Object.assign(merged, proxyEnvForChild(merged));
-  reconcileChildNoProxy(merged, configEnv);
-  return merged;
-}
-```
-
-### 来自 `packages/agent-core/src/mcp/client-stdio.ts` 的 `resolveStdioCwd`
-
-源码位置：`packages/agent-core/src/mcp/client-stdio.ts:231` 附近。
-
-```ts
-export function resolveStdioCwd(configCwd: string | undefined, defaultCwd: string | undefined): string | undefined {
-  if (configCwd === undefined) return defaultCwd;
-  if (defaultCwd !== undefined && isWindowsAbsolutePath(defaultCwd)) {
-    return win32.resolve(defaultCwd, configCwd).replaceAll('\\', '/');
-  }
-  if (isWindowsAbsolutePath(configCwd)) {
-    return win32.resolve(configCwd).replaceAll('\\', '/');
-  }
-  if (defaultCwd !== undefined && !isAbsolute(configCwd)) return resolve(defaultCwd, configCwd);
-  return configCwd;
-}
-
-function isWindowsAbsolutePath(value: string): boolean {
-  return /^[A-Za-z]:[\\/]/.test(value) || /^[\\/]{2}[^\\/]+[\\/][^\\/]+/.test(value);
-}
-
-// Inherit the parent's env so PATH/HOME/etc. survive — otherwise `npx`/`uvx`
-// style stdio servers fail to launch even with a valid config. `config.env`
-// overrides on conflict. A node child does not inherit our in-process undici
-// dispatcher, so `proxyEnvForChild` adds `NODE_USE_ENV_PROXY` (and a
-// loopback-protected `NO_PROXY`) to make it honor the proxy natively (on a Node
-// version that supports the flag — ≥22.21 or ≥24.5). It is computed from the
-// MERGED env so a proxy declared only in `config.env` is honored too.
-// `reconcileChildNoProxy` then mirrors a single-casing `NO_PROXY` override onto
-// ...
-```
-
-### 来自 `packages/kaos/src/ssh.ts` 的 `KaosSSHError`
-
-源码位置：`packages/kaos/src/ssh.ts:77` 附近。
-
-```ts
-export class KaosSSHError extends KaosError {
-  readonly code: number | undefined;
-
-  constructor(message: string, code?: number) {
-    super(message);
-    this.name = 'KaosSSHError';
-    this.code = code;
-  }
-}
-
-export class KaosFileNotFoundError extends KaosSSHError {
-  constructor(message: string, code?: number) {
-    super(message, code);
-    this.name = 'KaosFileNotFoundError';
-  }
-}
-
-export class KaosPermissionError extends KaosSSHError {
-  constructor(message: string, code?: number) {
-    super(message, code);
-    this.name = 'KaosPermissionError';
-  }
-}
-
-// ...
-```
-
-
 ## 时序/状态图
 
 ```mermaid
@@ -365,33 +171,6 @@ flowchart LR
 
 以下是本文涉及路径中的真实源码导出/结构，帮助你把概念映射到函数、类与方法：
 
-  - `packages/agent-core-v2/src/mcpCore/client-stdio.ts`：
-    - 导出签名/声明：
-      - `export interface StdioMcpClientOptions {`
-      - `export class StdioMcpClient implements MCPClient`
-      - `export function mergeStdioEnv(
-  configEnv?: Record<string, string>,
-  parentEnv: Readonly<Record<string, string | undefined>> = process.env,
-): Record<strin...`
-  - `packages/agent-core/src/mcp/client-stdio.ts`：
-    - 导出签名/声明：
-      - `export interface StdioMcpClientOptions {`
-      - `export class StdioMcpClient implements MCPClient`
-      - `export function resolveStdioCwd(configCwd: string | undefined, defaultCwd: string | undefined): string | undefined`
-      - `export function mergeStdioEnv(
-  configEnv?: Record<string, string>,
-  parentEnv: Readonly<Record<string, string | undefined>> = process.env,
-): Record<strin...`
-  - `packages/kaos/src/ssh.ts`：
-    - 导出签名/声明：
-      - `export type SSHKaosExtraOptions = Omit<`
-      - `export interface SSHKaosOptions {`
-      - `export class KaosSSHError extends KaosError`
-      - `export class KaosFileNotFoundError extends KaosSSHError`
-      - `export class KaosPermissionError extends KaosSSHError`
-      - `export class KaosConnectionError extends KaosSSHError`
-      - `export class SSHProcess implements KaosProcess`
-      - `export class SSHKaos implements Kaos`
   - `packages/minidb/src/cluster/index.ts`：
     - 导出签名/声明：
       - `export type {`
@@ -412,36 +191,12 @@ flowchart LR
   harness: NighthawkHarness,
   opts?:`
     - 类内方法（节选）：`setTimeout`
-  - `packages/acp-adapter/src/mcp.ts`：
-    - 导出签名/声明：
-      - `export function acpMcpServersToConfigs(
-  servers: readonly McpServer[] | undefined,
-): Record<string, McpServerConfig>`
-  - `packages/acp-server/src/convert.ts`：
-    - 导出签名/声明：
-      - `export function acpBlocksToContentParts(blocks: readonly ContentBlock[]): readonly ContentPart[]`
-      - `export async function compressPromptImageParts(
-  parts: readonly ContentPart[],
-  options:`
-      - `export function acpMcpServersToConfigRecord(
-  servers: readonly McpServer[] | undefined,
-): Record<string, McpServerConfig> | undefined`
-      - `export function displayBlockToAcpContent(block: ToolInputDisplay): ToolCallContent | null`
-      - `export function toolResultToAcpContent(event: ToolResultEvent): ToolCallContent[]`
   - `packages/node-sdk/src/sdk-rpc-client-v2.ts`：
     - 导出签名/声明：
       - `export interface SDKRpcClientV2Options {`
       - `export class SDKRpcClientV2 extends SDKRpcClientBase`
       - `export function createNighthawkHarnessV2(options: NighthawkHarnessOptions): NighthawkHarness`
     - 类内方法（节选）：`ensureNighthawkHome`, `assertImportFits`
-  - `apps/nighthawk/src/tui/components/messages/agent-group.ts`：
-    - 导出签名/声明：
-      - `export class AgentGroupComponent extends Container`
-  - `apps/nighthawk/src/migration/migration-screen.ts`：
-    - 导出签名/声明：
-      - `export interface MigrationScreenOptions {`
-      - `export interface MigrationScreenResult {`
-      - `export class MigrationScreenComponent extends Container implements Focusable`
   - `packages/acp-adapter/src/question.ts`：
     - 导出签名/声明：
       - `export function questionItemToPermissionOptions(
@@ -549,17 +304,9 @@ flowchart LR
 
 ## 证据与代码位置
 
-- `packages/agent-core-v2/src/mcpCore/client-stdio.ts`
-- `packages/agent-core/src/mcp/client-stdio.ts`
-- `packages/kaos/src/ssh.ts`
 - `packages/minidb/src/cluster/index.ts`
 - `packages/minidb/src/cluster/coordinator.ts`
 - `packages/acp-adapter/src/server.ts`
-- `packages/acp-adapter/src/mcp.ts`
-- `packages/acp-server/src/convert.ts`
-- `packages/node-sdk/src/sdk-rpc-client-v2.ts`
-- `apps/nighthawk/src/tui/components/messages/agent-group.ts`
-- `apps/nighthawk/src/migration/migration-screen.ts`
 - `packages/acp-adapter/src/question.ts`
 - `packages/acp-adapter/src/events-map.ts`
 - `packages/agent-core/src/flags/registry.ts`

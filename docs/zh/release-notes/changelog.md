@@ -18,6 +18,15 @@ outline: 2
 - **核心安全工具**：四个始终可用的安全工具——`SecurityScan`（116+ 漏洞规则，覆盖 SQLi、XSS、命令注入、路径穿越、SSRF、反序列化、弱加密、认证缺陷）、`SecretScan`（Shannon 熵评分的硬编码凭据检测）、`TaintTrace`（跨文件用户输入到危险 sink 的污点追踪）、`DepAudit`（依赖审计，含 postinstall 脚本检查、版本锁定检测和 OSV CVE 查询）。
 - 渗透测试报告生成：`/report` 导出 HTML/PDF 格式，包含执行摘要、风险矩阵、漏洞详情（CWE/OWASP/CVSS）、复现步骤和修复建议。
 - 斜杠命令系统：30+ 内置命令——`/help`、`/login`、`/logout`、`/model`、`/provider`、`/settings`、`/permission`、`/theme`、`/editor`、`/exit`、`/version`、`/status`、`/usage`、`/title`、`/compact`、`/new`、`/sessions`、`/session`、`/tasks`、`/fork`、`/undo`、`/init`、`/export-md`、`/export-debug-zip`、`/copy`、`/reload`、`/reload-tui`、`/goal`、`/swarm`、`/plan`、`/yolo`、`/auto`、`/btw`、`/mcp`、`/plugins`、`/feedback`、`/add-dir`、`/experiments`、`/mcp-config`、`/custom-theme`、`/update-config`、`/check-nighthawk-docs`、`/import-from-cc-codex`、`/sub-skill`。
+- MCP stdio 支持 kaos executor：可为 MCP stdio server 配置 `executor: 'kaos'`，通过 Kaos 执行器启动子进程，不再局限于本地执行。
+- ACP 支持 `type: 'acp'` 的 MCP transport：来自 ACP 的 MCP server 若为 `acp` transport 现可正常处理，不再被丢弃。
+- Todo 新增优先级字段：每个 todo 项可设置 `priority`（high/medium/low），在 TUI 中按优先级排序展示。
+- ACP 支持 Other 自由文本：ACP 协议中 `Other` 类型的 content block 现可自由编辑文本内容，不再被忽略。
+- TUI Agent 按描述自动分组/拆分：多个 Agent 工具调用在 TUI 中根据描述自动合并为组，支持按需拆分查看。
+- v2 渗透测试模式完整实现：`setPentestMode` 在 v2 引擎中完全实现，SDK 客户端可正常切换渗透测试模式。
+- v2 非 main agent Goal 支持：v2 引擎中非 main agent 现也可设置和执行 Goal 目标，消除 v1/v2 差异。
+- v2 Kaos 注入适配器：`createSessionWithKaos` / `resumeSessionWithKaos` 在 v2 引擎中正确注入 Kaos 执行环境，不再退化到本地执行。
+- 旧版 CLI 插件迁移支持：`nighthawk migrate` 现支持迁移旧版 CLI 插件本体，技能与插件均可完整迁移。
 
 ### 优化
 
