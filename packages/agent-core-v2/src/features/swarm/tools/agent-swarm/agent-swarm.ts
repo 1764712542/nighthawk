@@ -6,6 +6,25 @@ import { type AgentTool } from '#/tool/toolContract';
 export const PROMPT_TEMPLATE_PLACEHOLDER = '{{item}}';
 export const MAX_AGENT_SWARM_SUBAGENTS = 128;
 
+export const SwarmItemEntrySchema = z.union([
+  z.string().trim().min(1).describe('Simple item value, filled into the prompt template.'),
+  z
+    .object({
+      item: z.string().trim().min(1).describe('The item value to fill into the prompt template.'),
+      persona: z
+        .string()
+        .trim()
+        .min(1)
+        .optional()
+        .describe(
+          'Persona card name to use as the subagent system prompt prefix. Auto-matched when omitted.',
+        ),
+    })
+    .strict(),
+]);
+
+export type SwarmItemEntry = z.infer<typeof SwarmItemEntrySchema>;
+
 export const AgentSwarmToolInputSchema = z
   .object({
     description: z
@@ -30,11 +49,11 @@ export const AgentSwarmToolInputSchema = z
         `Prompt template for each subagent. The ${PROMPT_TEMPLATE_PLACEHOLDER} placeholder is replaced with each item value.`,
       ),
     items: z
-      .array(z.string().trim().min(1))
+      .array(SwarmItemEntrySchema)
       .max(MAX_AGENT_SWARM_SUBAGENTS)
       .optional()
       .describe(
-        `Values used to fill ${PROMPT_TEMPLATE_PLACEHOLDER}. Each item launches one new subagent.`,
+        `Values used to fill ${PROMPT_TEMPLATE_PLACEHOLDER}. Each entry can be a plain string or an object with "item" and optional "persona". Each item launches one new subagent.`,
       ),
     fork: z
       .boolean()

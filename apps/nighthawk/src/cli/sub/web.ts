@@ -107,6 +107,48 @@ async function createWebSession(homeDir: string): Promise<Session> {
   return session;
 }
 
+function findLastIndex<T>(arr: readonly T[], predicate: (item: T) => boolean): number {
+  for (let i = arr.length - 1; i >= 0; i--) {
+    if (predicate(arr[i]!)) return i;
+  }
+  return -1;
+}
+
+function formatUsage(usage: { inputOther: number; output: number; inputCacheRead: number; inputCacheCreation: number }): {
+  prompt_tokens: number;
+  completion_tokens: number;
+  total_tokens: number;
+} {
+  const promptTokens = usage.inputOther + usage.inputCacheRead + usage.inputCacheCreation;
+  return {
+    prompt_tokens: promptTokens,
+    completion_tokens: usage.output,
+    total_tokens: promptTokens + usage.output,
+  };
+}
+
+/**
+ * Group consecutive messages by role, merging same-role runs into a single entry.
+ */
+function groupMessagesByRole(
+  messages: readonly { role: string; content: string }[],
+): readonly { role: string; content: string }[] {
+  if (messages.length === 0) return [];
+  const groups: { role: string; content: string }[] = [];
+  let current = { role: messages[0]!.role, content: messages[0]!.content };
+  for (let i = 1; i < messages.length; i++) {
+    const m = messages[i]!;
+    if (m.role === current.role) {
+      current = { role: current.role, content: `${current.content}\n${m.content}` };
+    } else {
+      groups.push(current);
+      current = { role: m.role, content: m.content };
+    }
+  }
+  groups.push(current);
+  return groups;
+}
+
 /**
  * Handle an OpenAI-compatible chat completions request.
  */
@@ -148,13 +190,46 @@ async function handleChatCompletions(
     return;
   }
 
-  const userMessage = messages.find((m) => m.role === 'user')?.content ?? '';
-  if (userMessage.length === 0) {
+  const lastUserIndex = findLastIndex(messages, (m) => m.role === 'user');
+  if (lastUserIndex === -1) {
     res.writeHead(400, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'No user message found' }));
     return;
   }
 
+  // Rebuild conversation history: group messages by role and alternate
+  // between session.prompt() for user messages and importContext for
+  // system/assistant messages, so the AI receives the full conversation context.
+  const groups = groupMessagesByRole(messages.slice(0, lastUserIndex));
+  for (const group of groups) {
+    if (group.role === 'user') {
+      // Submit user message and wait for the assistant to respond, building context
+      await new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          unsubscribe();
+          resolve();
+        }, 120_000);
+
+        const unsubscribe = session.onEvent((event) => {
+          if (event.type === 'turn.ended') {
+            clearTimeout(timeout);
+            unsubscribe();
+            resolve();
+          }
+        });
+
+        session.prompt(group.content).catch((error: Error) => {
+          clearTimeout(timeout);
+          unsubscribe();
+          reject(error);
+        });
+      });
+    } else {
+      await session.importContext(group.content, `web-chat-${group.role}`);
+    }
+  }
+
+  const userMessage = messages[lastUserIndex]!.content;
   const isStream = parsed.stream === true;
 
   if (isStream) {
@@ -175,8 +250,24 @@ async function handleChatCompletions(
 
       const unsubscribe = session.onEvent((event) => {
         if (event.type === 'assistant.delta') {
-          const payload = event as { delta: string };
+          const payload = event as { delta: string; type: string };
           parts.push(payload.delta);
+          if (isStream) {
+            const chunk = JSON.stringify({
+              id: 'chatcmpl-default',
+              object: 'chat.completion.chunk',
+              created: Math.floor(Date.now() / 1000),
+              model: 'nighthawk',
+              choices: [
+                {
+                  index: 0,
+                  delta: { content: payload.delta },
+                  finish_reason: null,
+                },
+              ],
+            });
+            res.write(`data: ${chunk}\n\n`);
+          }
         }
         if (event.type === 'turn.ended') {
           clearTimeout(timeout);
@@ -192,8 +283,22 @@ async function handleChatCompletions(
       });
     });
 
+    // Fetch real usage data
+    let usage = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 };
+    try {
+      const sessionUsage = await session.getUsage();
+      if (sessionUsage.currentTurn !== undefined) {
+        usage = formatUsage(sessionUsage.currentTurn);
+      } else if (sessionUsage.total !== undefined) {
+        usage = formatUsage(sessionUsage.total);
+      }
+    } catch {
+      // Usage unavailable, keep zeroed
+    }
+
     if (isStream) {
-      const chunk = JSON.stringify({
+      // Send final chunk with usage and finish_reason, then [DONE]
+      const finalChunk = JSON.stringify({
         id: 'chatcmpl-default',
         object: 'chat.completion.chunk',
         created: Math.floor(Date.now() / 1000),
@@ -201,12 +306,13 @@ async function handleChatCompletions(
         choices: [
           {
             index: 0,
-            delta: { role: 'assistant', content: text },
+            delta: {},
             finish_reason: 'stop',
           },
         ],
+        usage,
       });
-      res.write(`data: ${chunk}\n\n`);
+      res.write(`data: ${finalChunk}\n\n`);
       res.write('data: [DONE]\n\n');
       res.end();
     } else {
@@ -222,11 +328,7 @@ async function handleChatCompletions(
             finish_reason: 'stop',
           },
         ],
-        usage: {
-          prompt_tokens: 0,
-          completion_tokens: 0,
-          total_tokens: 0,
-        },
+        usage,
       };
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(response));

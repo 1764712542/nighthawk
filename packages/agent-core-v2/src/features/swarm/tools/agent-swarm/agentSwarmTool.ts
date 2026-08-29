@@ -1,3 +1,7 @@
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
+
 import {
   ToolAccesses,
   type ExecutableToolContext,
@@ -14,6 +18,7 @@ import { IAgentScopeContext } from '#/agent/scopeContext/scopeContext';
 import { IAgentSwarmService } from '#/features/swarm/agent/swarm';
 import { resolveSwarmTimeoutMs } from '#/features/swarm/configSection';
 import { ISessionSubagentService } from '#/session/subagent/subagent';
+import { ISessionContext } from '#/session/sessionContext/sessionContext';
 import {
   FORK_EXPERIMENTAL_UNAVAILABLE,
   FORK_WITH_RESUME_UNAVAILABLE,
@@ -33,7 +38,9 @@ import {
   MAX_AGENT_SWARM_SUBAGENTS,
   PROMPT_TEMPLATE_PLACEHOLDER,
   type AgentSwarmToolInput,
+  type SwarmItemEntry,
 } from './agent-swarm';
+import { matchPersonaForTask, type PersonaCard } from '#/persona';
 import AGENT_SWARM_DESCRIPTION from './agent-swarm.md?raw';
 import AGENT_SWARM_FORK_DESCRIPTION from './agent-swarm-fork.md?raw';
 
@@ -46,6 +53,7 @@ interface AgentSwarmSpawnSpec {
   readonly kind: 'spawn';
   readonly index: number;
   readonly item?: string;
+  readonly personaName?: string;
   readonly prompt: string;
 }
 
@@ -91,6 +99,7 @@ export class AgentSwarmTool implements IAgentSwarmTool {
     @IFlagService private readonly flags: IFlagService,
     @ISessionSubagentService private readonly subagents: ISessionSubagentService,
     @IAgentProfileService private readonly profile: IAgentProfileService,
+    @ISessionContext private readonly sessionContext: ISessionContext,
   ) {
     this.callerAgentId = scopeContext.agentId;
   }
@@ -176,7 +185,8 @@ export class AgentSwarmTool implements IAgentSwarmTool {
     }
     const profileName = plan?.profileName ?? DEFAULT_SUBAGENT_TYPE;
     const timeoutMs = resolveSwarmTimeoutMs(this.config);
-    const specs = await createAgentSwarmSpecs(args, (agentId) =>
+    const personaCards = discoverPersonaCards(this.sessionContext.cwd);
+    const specs = await createAgentSwarmSpecs(args, personaCards, (agentId) =>
       this.swarmService.getSwarmItem({ callerAgentId: this.callerAgentId, agentId }),
     );
     const tasks: SessionSwarmTask<AgentSwarmSpec>[] = specs.map((spec) => {
@@ -218,13 +228,14 @@ export class AgentSwarmTool implements IAgentSwarmTool {
 
 async function createAgentSwarmSpecs(
   args: AgentSwarmToolInput,
+  personaCards: readonly PersonaCard[],
   getResumeItem: (agentId: string) => Promise<string | undefined>,
 ): Promise<AgentSwarmSpec[]> {
   const resumeEntries = Object.entries(args.resume_agent_ids ?? {}).map(([agentId, prompt]) => ({
     agentId: agentId.trim(),
     prompt: prompt.trim(),
   }));
-  const items = (args.items ?? []).map((item) => item.trim());
+  const items = (args.items ?? []).map((entry) => normalizeSwarmItemEntry(entry));
   const itemCount = items.length;
   const resumeCount = resumeEntries.length;
   const promptSpawns = promptSpawnCount(args);
@@ -272,8 +283,15 @@ async function createAgentSwarmSpecs(
   }
   if (items.length > 0) {
     const itemPromptTemplate = promptTemplate!;
-    items.forEach((item, index) => {
-      const prompt = itemPromptTemplate.split(PROMPT_TEMPLATE_PLACEHOLDER).join(item);
+    items.forEach(({ item, personaName }, index) => {
+      let prompt = itemPromptTemplate.split(PROMPT_TEMPLATE_PLACEHOLDER).join(item);
+      // Resolve persona and prepend its content to the prompt
+      let resolvedPersonaName: string | undefined;
+      const persona = resolvePersona(personaName, item, personaCards);
+      if (persona !== undefined) {
+        resolvedPersonaName = persona.name;
+        prompt = `${persona.content}\n\n${prompt}`;
+      }
       const previousIndex = seenPrompts.get(prompt);
       if (previousIndex !== undefined) {
         throw new Error2(
@@ -287,6 +305,7 @@ async function createAgentSwarmSpecs(
         kind: 'spawn',
         index: specs.length + 1,
         item,
+        personaName: resolvedPersonaName,
         prompt,
       });
     });
@@ -351,10 +370,11 @@ function renderSwarmResults(results: readonly SwarmRunResult[]): string {
     const agentId = result.agentId === undefined ? '' : ` agent_id="${result.agentId}"`;
     const mode = result.spec.kind === 'resume' ? ' mode="resume"' : '';
     const item = result.spec.item === undefined ? '' : ` item="${escapeXmlAttribute(result.spec.item)}"`;
+    const persona = result.spec.kind === 'spawn' && result.spec.personaName !== undefined ? ` persona="${escapeXmlAttribute(result.spec.personaName)}"` : '';
     const state = result.state === undefined ? '' : ` state="${result.state}"`;
     const body = result.status === 'completed' ? (result.result ?? '') : (result.error ?? 'unknown error');
     lines.push(
-      `<subagent${mode}${agentId}${item}${state} outcome="${result.status}">${body}</subagent>`,
+      `<subagent${mode}${agentId}${item}${persona}${state} outcome="${result.status}">${body}</subagent>`,
     );
   }
 
@@ -382,4 +402,70 @@ function escapeXmlAttribute(value: string): string {
     .replaceAll('"', '&quot;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;');
+}
+
+export function normalizeSwarmItemEntry(
+  entry: SwarmItemEntry,
+): { item: string; personaName: string | undefined } {
+  if (typeof entry === 'string') {
+    return { item: entry, personaName: undefined };
+  }
+  return { item: entry.item, personaName: entry.persona };
+}
+
+export function resolvePersona(
+  explicitPersonaName: string | undefined,
+  taskDescription: string,
+  cards: readonly PersonaCard[],
+): PersonaCard | undefined {
+  if (cards.length === 0) return undefined;
+  if (explicitPersonaName !== undefined) {
+    const lowerName = explicitPersonaName.toLowerCase();
+    return cards.find(
+      (card) =>
+        card.name.toLowerCase() === lowerName ||
+        card.name.toLowerCase().replace(/[^a-z0-9]/g, '') === lowerName.replace(/[^a-z0-9]/g, ''),
+    );
+  }
+  return matchPersonaForTask(taskDescription, cards);
+}
+
+/**
+ * Discover persona card files from the workspace and user agent directories.
+ * Scans .agents/personas/ in the workspace and ~/.nighthawk/personas/.
+ */
+function discoverPersonaCards(workspaceCwd: string): readonly PersonaCard[] {
+  const cards: PersonaCard[] = [];
+  const personaDirs = [
+    join(workspaceCwd, '.agents', 'personas'),
+    join(homedir(), '.nighthawk', 'personas'),
+  ];
+  for (const dir of personaDirs) {
+    if (!existsSync(dir)) continue;
+    try {
+      const files = readdirSync(dir);
+      for (const file of files) {
+        if (!file.endsWith('.md')) continue;
+        try {
+          const filePath = join(dir, file);
+          const content = readFileSync(filePath, 'utf-8');
+          const name = file.replace(/\.md$/, '').toLowerCase();
+          // Extract description from first heading or first line
+          const lines = content.split('\n');
+          const description = lines.length > 0 ? lines[0]!.replace(/^#\s*/, '').trim() : name;
+          cards.push({
+            name,
+            description,
+            path: filePath,
+            content,
+          });
+        } catch {
+          // Skip unreadable files
+        }
+      }
+    } catch {
+      // Skip unreadable directories
+    }
+  }
+  return cards;
 }
