@@ -20,7 +20,9 @@ export class SessionBtwService implements ISessionBtwService {
     if (main === undefined) {
       throw new Error2(ErrorCodes.AGENT_NOT_FOUND, 'Main agent was not found');
     }
-    const childContext = await this.agentLifecycle.fork(main.accessor.get(IAgentScopeContext).agentContext);
+    const childContext = await this.agentLifecycle.fork(main.accessor.get(IAgentScopeContext).agentContext, {
+      labels: { source: 'btw' },
+    });
     const child = this.agentLifecycle.handleOf(childContext.agentId)!;
     child.accessor
       .get(IAgentSystemReminderService)

@@ -80,7 +80,10 @@ describe('SessionBtwService', () => {
     const id = await svc.start();
 
     expect(id).toBe('agent-btw-1');
-    expect(fork).toHaveBeenCalledWith(expect.objectContaining({ agentId: 'main', generation: 1 }));
+    expect(fork).toHaveBeenCalledWith(
+      expect.objectContaining({ agentId: 'main', generation: 1 }),
+      { labels: { source: 'btw' } },
+    );
     expect(appendReminder).toHaveBeenCalledWith(SIDE_QUESTION_SYSTEM_REMINDER, {
       kind: 'injection',
       variant: 'btw',

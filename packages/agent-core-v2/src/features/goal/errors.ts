@@ -9,7 +9,6 @@ export const GoalErrors = {
     GOAL_STATUS_INVALID: 'goal.status_invalid',
     GOAL_METADATA_RESERVED: 'goal.metadata_reserved',
     GOAL_NOT_RESUMABLE: 'goal.not_resumable',
-    GOAL_UNSUPPORTED_AGENT: 'goal.unsupported_agent',
   },
   info: {
     'goal.already_exists': {
@@ -53,12 +52,6 @@ export const GoalErrors = {
       retryable: false,
       public: true,
       action: 'Only paused or blocked goals can be resumed.',
-    },
-    'goal.unsupported_agent': {
-      title: 'Goals are unavailable for subagents',
-      retryable: false,
-      public: true,
-      action: 'Run goal lifecycle commands on the main agent.',
     },
   },
 } as const satisfies ErrorDomain;

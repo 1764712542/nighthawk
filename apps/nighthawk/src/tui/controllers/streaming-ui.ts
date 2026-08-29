@@ -66,6 +66,7 @@ export class StreamingUIController {
   private _pendingAgentGroup: {
     readonly turnId: string | undefined;
     readonly step: number;
+    readonly groupKey: string;
     solo?: ToolCallComponent;
     group?: AgentGroupComponent;
   } | null = null;
@@ -800,15 +801,17 @@ export class StreamingUIController {
 
     const step = toolCall.step ?? this._currentStep;
     const turnId = toolCall.turnId ?? this._currentTurnId;
+    const rawDesc = toolCall.args['description'];
+    const groupKey = typeof rawDesc === 'string' ? rawDesc.trim() : '';
     const pending = this._pendingAgentGroup;
 
-    if (pending !== null && (pending.step !== step || pending.turnId !== turnId)) {
+    if (pending !== null && (pending.step !== step || pending.turnId !== turnId || pending.groupKey !== groupKey)) {
       this._pendingAgentGroup = null;
     }
 
     const cur = this._pendingAgentGroup;
     if (cur === null) {
-      this._pendingAgentGroup = { step, turnId, solo: tc };
+      this._pendingAgentGroup = { step, turnId, groupKey, solo: tc };
       state.transcriptContainer.addChild(tc);
       state.ui.requestRender();
       return true;
@@ -821,14 +824,14 @@ export class StreamingUIController {
 
     const solo = cur.solo;
     if (solo === undefined) {
-      this._pendingAgentGroup = { step, turnId, solo: tc };
+      this._pendingAgentGroup = { step, turnId, groupKey, solo: tc };
       state.transcriptContainer.addChild(tc);
       state.ui.requestRender();
       return true;
     }
     const group = this.upgradeSoloAgentToGroup(solo);
     group.attach(toolCall.id, tc);
-    this._pendingAgentGroup = { step, turnId, group };
+    this._pendingAgentGroup = { step, turnId, groupKey, group };
     state.ui.requestRender();
     return true;
   }

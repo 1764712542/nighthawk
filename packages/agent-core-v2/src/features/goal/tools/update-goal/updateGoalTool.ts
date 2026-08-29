@@ -1,6 +1,5 @@
 import { toInputJsonSchema } from '#/tool/input-schema';
 import { IAgentScopeContext } from '#/agent/scopeContext/scopeContext';
-import { GOAL_MAIN_AGENT_ONLY, mainAgentOnlyExecution } from '#/agent/tools/mainAgentOnly';
 import { type ToolExecution } from '#/tool/toolContract';
 
 import { AgentGoal, type GoalRuntime } from '#/features/goal/goalAgentRuntime';
@@ -33,8 +32,6 @@ export class UpdateGoalTool implements IUpdateGoalTool {
   }
 
   resolveExecution(args: UpdateGoalToolInput): ToolExecution {
-    const denied = mainAgentOnlyExecution(this.scopeContext, GOAL_MAIN_AGENT_ONLY);
-    if (denied !== undefined) return denied;
     if (!isUpdateGoalStatus(args.status)) {
       return {
         isError: true,

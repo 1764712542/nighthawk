@@ -1,6 +1,5 @@
 import { toInputJsonSchema } from '#/tool/input-schema';
 import { IAgentScopeContext } from '#/agent/scopeContext/scopeContext';
-import { GOAL_MAIN_AGENT_ONLY, mainAgentOnlyExecution } from '#/agent/tools/mainAgentOnly';
 import { type ToolExecution } from '#/tool/toolContract';
 
 import { AgentGoal, type GoalRuntime } from '#/features/goal/goalAgentRuntime';
@@ -26,8 +25,6 @@ export class GetGoalTool implements IGetGoalTool {
   }
 
   resolveExecution(_args: GetGoalToolInput): ToolExecution {
-    const denied = mainAgentOnlyExecution(this.scopeContext, GOAL_MAIN_AGENT_ONLY);
-    if (denied !== undefined) return denied;
     return {
       description: 'Reading the current goal',
       approvalRule: this.name,

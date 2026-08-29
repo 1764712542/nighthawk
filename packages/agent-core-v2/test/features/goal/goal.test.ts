@@ -1708,12 +1708,6 @@ describe('goal error catalog metadata', () => {
       public: true,
       action: 'Only paused or blocked goals can be resumed.',
     });
-    expect(errorInfo('goal.unsupported_agent')).toEqual({
-      title: 'Goals are unavailable for subagents',
-      retryable: false,
-      public: true,
-      action: 'Run goal lifecycle commands on the main agent.',
-    });
   });
 });
 
@@ -1756,45 +1750,39 @@ describe('AgentGoalService agent eligibility', () => {
     await ctx.dispose();
   });
 
-  it.each([
-    ['getGoal', (goals: GoalRuntime) => goals.getGoal()],
-    ['isGoalToolTarget', (goals: GoalRuntime) => goals.isGoalToolTarget(1, 'goal-1')],
-    ['createGoal', (goals: GoalRuntime) => goals.createGoal({ objective: 'work' })],
-    ['pauseGoal', (goals: GoalRuntime) => goals.pauseGoal()],
-    ['resumeGoal', (goals: GoalRuntime) => goals.resumeGoal()],
-    ['setBudgetLimits', (goals: GoalRuntime) =>
-      goals.setBudgetLimits({ budgetLimits: { turnBudget: 1 } })],
-    ['cancelGoal', (goals: GoalRuntime) => goals.cancelGoal()],
-    ['markBlocked', (goals: GoalRuntime) => goals.markBlocked()],
-    ['markComplete', (goals: GoalRuntime) => goals.markComplete()],
-  ] as const)(
-    '%s rejects direct goal service access when the agent is a subagent',
-    async (_name, call) => {
-      const goals = ctx.resolve(AgentGoal);
-        await expect(Promise.resolve().then<unknown>(() => call(goals))).rejects.toMatchObject({
-        code: 'goal.unsupported_agent',
-        details: { agentId: 'sub-1' },
-      });
-    },
-  );
+  it('supports getGoal and createGoal for non-main agents', async () => {
+    const goals = ctx.resolve(AgentGoal);
+    expect(goals.getGoal().goal).toBeNull();
+    const snapshot = await goals.createGoal({ objective: 'work' });
+    expect(snapshot.status).toBe('active');
+    expect(goals.getGoal().goal?.goalId).toBe(snapshot.goalId);
+  });
 
-  it.each([
-    ['createGoal', () => ctx.rpc.createGoal({ objective: 'work' })],
-    ['getGoal', () => ctx.rpc.getGoal({})],
-    ['pauseGoal', () => ctx.rpc.pauseGoal({})],
-    ['resumeGoal', () => ctx.rpc.resumeGoal({})],
-    ['cancelGoal', () => ctx.rpc.cancelGoal({})],
-  ] as const)(
-    '%s rejects subagent goal RPC access with the stable goal error',
-    async (_name, call) => {
-      await expect(call()).rejects.toMatchObject({
-        code: 'goal.unsupported_agent',
-        details: { agentId: 'sub-1' },
-      });
-    },
-  );
+  it('supports pause, resume, cancel, and budget for non-main agents', async () => {
+    const goals = ctx.resolve(AgentGoal);
+    const snapshot = await goals.createGoal({ objective: 'work' });
+    await goals.pauseGoal();
+    expect(goals.getGoal().goal?.status).toBe('paused');
+    await goals.resumeGoal();
+    expect(goals.getGoal().goal?.status).toBe('active');
+    await goals.setBudgetLimits({ budgetLimits: { turnBudget: 5 } });
+    expect(goals.getGoal().goal?.budget.turnBudget).toBe(5);
+    await goals.cancelGoal();
+    expect(goals.getGoal().goal).toBeNull();
+  });
 
-  it('does not continue a previously persisted goal when the agent is a subagent', async () => {
+  it('allows non-main agent to create a goal via RPC', async () => {
+    const result = await ctx.rpc.createGoal({ objective: 'work' });
+    expect(result.status).toBe('active');
+  });
+
+  it('allows non-main agent to get a goal via RPC', async () => {
+    await ctx.rpc.createGoal({ objective: 'work' });
+    const result = await ctx.rpc.getGoal({});
+    expect(result.goal?.objective).toBe('work');
+  });
+
+  it('pauses a restored goal for non-main agents instead of continuing', async () => {
     await ctx.restore([
       { type: 'goal.create', goalId: 'legacy-subagent-goal', objective: 'work' },
     ]);

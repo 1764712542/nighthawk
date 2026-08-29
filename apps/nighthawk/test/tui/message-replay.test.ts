@@ -710,17 +710,17 @@ describe('NighthawkTUI resume message replay', () => {
     ).toEqual(['Goal blocked']);
   });
 
-  it('groups replayed Agent calls from one assistant message using live grouping', async () => {
+  it('groups replayed Agent calls with the same description using live grouping', async () => {
     const replay: AgentReplayRecord[] = [
       message('user', [{ type: 'text', text: 'run two agents' }]),
       message('assistant', [], {
         toolCalls: [
           toolCall('call_agent_1', 'Agent', {
-            description: 'Review API',
+            description: 'Review changed files',
             subagent_type: 'reviewer',
           }),
           toolCall('call_agent_2', 'Agent', {
-            description: 'Review tests',
+            description: 'Review changed files',
             subagent_type: 'reviewer',
           }),
         ],
@@ -744,6 +744,47 @@ describe('NighthawkTUI resume message replay', () => {
     expect(output).toContain('2 agents finished');
     expect(output).not.toContain('Still working…');
     expect(output).not.toContain('Waiting to start…');
+    expect(driver.streamingUI.hasPendingAgentGroup()).toBe(false);
+    expect(driver.streamingUI.getToolComponent('call_agent_1')).toBeUndefined();
+    expect(driver.streamingUI.getToolComponent('call_agent_2')).toBeUndefined();
+  });
+
+  it('splits replayed Agent calls with different descriptions into separate solo cards', async () => {
+    const replay: AgentReplayRecord[] = [
+      message('user', [{ type: 'text', text: 'run two agents' }]),
+      message('assistant', [], {
+        toolCalls: [
+          toolCall('call_agent_1', 'Agent', {
+            description: 'Review API',
+            subagent_type: 'reviewer',
+          }),
+          toolCall('call_agent_2', 'Agent', {
+            description: 'Review tests',
+            subagent_type: 'reviewer',
+          }),
+        ],
+      }),
+      message('tool', [{ type: 'text', text: 'agent one done' }], {
+        toolCallId: 'call_agent_1',
+      }),
+      message('tool', [{ type: 'text', text: 'agent two done' }], {
+        toolCallId: 'call_agent_2',
+      }),
+    ];
+
+    const driver = await replayIntoDriver(replay);
+    // Two agents with different descriptions are not grouped — each stays as
+    // a standalone ToolCallComponent (solo card) rather than being merged into
+    // an AgentGroupComponent.
+    const groups = driver.state.transcriptContainer.children.filter(
+      (child) => child instanceof AgentGroupComponent,
+    );
+    expect(groups.length).toBe(0);
+
+    const soloCards = driver.state.transcriptContainer.children.filter(
+      (child) => child instanceof ToolCallComponent,
+    );
+    expect(soloCards.length).toBe(2);
     expect(driver.streamingUI.hasPendingAgentGroup()).toBe(false);
     expect(driver.streamingUI.getToolComponent('call_agent_1')).toBeUndefined();
     expect(driver.streamingUI.getToolComponent('call_agent_2')).toBeUndefined();

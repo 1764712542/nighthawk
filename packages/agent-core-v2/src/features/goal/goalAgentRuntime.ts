@@ -47,7 +47,7 @@ import {
   toNighthawkErrorPayload,
   type NighthawkErrorPayload,
 } from '#/errors';
-import { MAIN_AGENT_ID } from '#/session/agentLifecycle/agentLifecycle';
+
 import { ISessionUsageService } from '#/session/usage/sessionUsage';
 import type { ExecutableToolResult } from '#/tool/toolContract';
 
@@ -299,28 +299,16 @@ export class GoalRuntime {
   }
 }
 
-function assertSupportedAgent(context: GoalOperationContext): void {
-  if (context.runtime.agent.agentId === MAIN_AGENT_ID) return;
-  throw new Error2(
-    ErrorCodes.GOAL_UNSUPPORTED_AGENT,
-    'Goals are only supported by the main agent',
-    { details: { agentId: context.runtime.agent.agentId } },
-  );
-}
-
 function getGoal(context: GoalOperationContext): GoalToolResult {
-  assertSupportedAgent(context);
   const state = context.runtime.getState().goal;
   return { goal: state === null ? null : toSnapshot(context, state) };
 }
 
 function isGoalToolTarget(context: GoalOperationContext, turnId: number, goalId: string): boolean {
-  assertSupportedAgent(context);
   return context.effects.goalTurnTargets.get(turnId) === goalId;
 }
 
 async function createGoal(context: GoalOperationContext, input: CreateGoalInput, actor: GoalActor = 'user'): Promise<GoalSnapshot> {
-  assertSupportedAgent(context);
   const objective = validateObjective(context, input.objective);
   prepareForGoalCreation(context, input.replace === true);
   const wallClockResumedAt = Date.now();
@@ -368,7 +356,6 @@ function prepareForGoalCreation(context: GoalOperationContext, replace: boolean)
 }
 
 async function pauseGoal(context: GoalOperationContext, input: GoalReasonInput = {}, actor: GoalActor = 'user'): Promise<GoalSnapshot> {
-  assertSupportedAgent(context);
   const state = requireState(context);
   if (state.status === 'paused') return toSnapshot(context, state);
   if (state.status !== 'active') {
@@ -384,14 +371,12 @@ async function pauseActiveGoal(context: GoalOperationContext,
   input: GoalReasonInput = {},
   actor: GoalActor = 'runtime',
 ): Promise<GoalSnapshot | null> {
-  assertSupportedAgent(context);
   const state = context.runtime.getState().goal;
   if (state === null || state.status !== 'active') return null;
   return applyLifecycle(context, state, 'paused', input.reason, actor);
 }
 
 async function resumeGoal(context: GoalOperationContext, input: ResumeGoalInput = {}, actor: GoalActor = 'user'): Promise<GoalSnapshot> {
-  assertSupportedAgent(context);
   const state = requireState(context);
   if (state.status === 'active') return toSnapshot(context, state);
   if (state.status !== 'paused' && state.status !== 'blocked') {
@@ -426,7 +411,6 @@ async function setBudgetLimits(context: GoalOperationContext,
   input: { readonly budgetLimits: GoalBudgetLimits; },
   actor: GoalActor = 'user',
 ): Promise<GoalSnapshot> {
-  assertSupportedAgent(context);
   const state = requireState(context);
   const budgetLimits = { ...state.budgetLimits, ...input.budgetLimits };
   void context.runtime.dispatch(new GoalUpdate({ agentId: context.runtime.agent.agentId, budgetLimits }));
@@ -443,7 +427,6 @@ async function setBudgetLimits(context: GoalOperationContext,
 }
 
 async function cancelGoal(context: GoalOperationContext, _input: GoalReasonInput = {}, actor: GoalActor = 'user'): Promise<GoalSnapshot> {
-  assertSupportedAgent(context);
   const state = requireState(context);
   const snapshot = toSnapshot(context, state);
   if (state.status === 'active' && context.effects.liveTurnId !== undefined) {
@@ -463,7 +446,6 @@ async function markBlocked(context: GoalOperationContext,
   input: GoalReasonInput = {},
   actor: GoalActor = 'runtime',
 ): Promise<GoalSnapshot | null> {
-  assertSupportedAgent(context);
   const state = context.runtime.getState().goal;
   if (state === null || state.status !== 'active') return null;
   const snapshot = applyLifecycle(context, state, 'blocked', input.reason, actor, {
@@ -476,7 +458,6 @@ async function markComplete(context: GoalOperationContext,
   input: GoalReasonInput = {},
   actor: GoalActor = 'model',
 ): Promise<GoalSnapshot | null> {
-  assertSupportedAgent(context);
   const state = context.runtime.getState().goal;
   if (state === null || state.status !== 'active') return null;
   dispatchCompletion(context, state, input.reason, actor);
@@ -511,17 +492,14 @@ function emitCompletion(context: GoalOperationContext,
 }
 
 async function pauseOnInterrupt(context: GoalOperationContext, input: GoalReasonInput = {}): Promise<GoalSnapshot | null> {
-  assertSupportedAgent(context);
   return pauseActiveGoal(context, input, 'user');
 }
 
 async function recordTokenUsage(context: GoalOperationContext, tokenDelta: number): Promise<GoalSnapshot | null> {
-  assertSupportedAgent(context);
   return accountTokenUsage(context, tokenDelta);
 }
 
 async function incrementTurn(context: GoalOperationContext): Promise<GoalSnapshot | null> {
-  assertSupportedAgent(context);
   return incrementGoalTurn(context);
 }
 
@@ -1246,32 +1224,30 @@ const goalEffects = fromCallback(({
     }
   });
   const disposables: IDisposable[] = [deadline];
-  if (input.runtime.agent.agentId === MAIN_AGENT_ID) {
-    disposables.push(new GoalInjection(handlers.injection, input.runtime.get(IAgentContextInjectorService)));
-    disposables.push(input.runtime.get(IEventBus).subscribe(TurnStarted, handlers.turnStarted));
-    disposables.push(input.runtime.get(ISessionUsageService).onDidRecord(handlers.usageRecorded));
-    const loop = input.runtime.get(IAgentLoopService);
-    disposables.push(loop.hooks.onWillBeginStep.register('goal-count-turn', async (context, next) => {
-      await handlers.beforeStep(context);
+  disposables.push(new GoalInjection(handlers.injection, input.runtime.get(IAgentContextInjectorService)));
+  disposables.push(input.runtime.get(IEventBus).subscribe(TurnStarted, handlers.turnStarted));
+  disposables.push(input.runtime.get(ISessionUsageService).onDidRecord(handlers.usageRecorded));
+  const loop = input.runtime.get(IAgentLoopService);
+  disposables.push(loop.hooks.onWillBeginStep.register('goal-count-turn', async (context, next) => {
+    await handlers.beforeStep(context);
+    await next();
+  }));
+  disposables.push(loop.hooks.onDidFinishStep.register('goal-outcome-continuation', async (context, next) => {
+    handlers.afterStep(context);
+    await next();
+  }));
+  const tools = input.runtime.get(IAgentToolExecutorService);
+  disposables.push(tools.onBeforeExecuteTool(handlers.approval));
+  disposables.push(tools.onBeforeExecuteTool(handlers.veto));
+  disposables.push(tools.hooks.onDidExecuteTool.register(
+    'goal-outcome-tool-result',
+    async (context, next) => {
+      handlers.toolCompleted(context);
       await next();
-    }));
-    disposables.push(loop.hooks.onDidFinishStep.register('goal-outcome-continuation', async (context, next) => {
-      handlers.afterStep(context);
-      await next();
-    }));
-    const tools = input.runtime.get(IAgentToolExecutorService);
-    disposables.push(tools.onBeforeExecuteTool(handlers.approval));
-    disposables.push(tools.onBeforeExecuteTool(handlers.veto));
-    disposables.push(tools.hooks.onDidExecuteTool.register(
-      'goal-outcome-tool-result',
-      async (context, next) => {
-        handlers.toolCompleted(context);
-        await next();
-      },
-    ));
-    disposables.push(input.runtime.get(IEventBus).subscribe(TurnEnded, handlers.turnEnded));
-    handlers.normalize();
-  }
+    },
+  ));
+  disposables.push(input.runtime.get(IEventBus).subscribe(TurnEnded, handlers.turnEnded));
+  handlers.normalize();
   input.restore.waitUntil(Promise.resolve());
   return () => {
     for (let index = disposables.length - 1; index >= 0; index -= 1) {

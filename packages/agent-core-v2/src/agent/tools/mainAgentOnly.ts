@@ -4,8 +4,6 @@ import { MAIN_AGENT_ID } from '#/session/agentLifecycle/agentLifecycle';
 
 export const CRON_MAIN_AGENT_ONLY = 'Cron tools are only supported by the main agent.';
 
-export const GOAL_MAIN_AGENT_ONLY = 'Goal tools are only supported by the main agent.';
-
 export function mainAgentOnlyExecution(
   scopeContext: IAgentScopeContext,
   output: string,
