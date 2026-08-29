@@ -4,12 +4,14 @@ import type { TUI } from '@nighthawk/pi-tui';
 import {
   BRAILLE_SPINNER_FRAMES,
   BRAILLE_SPINNER_INTERVAL_MS,
+  MOON_SPINNER_BOUNCE_FRAMES,
+  MOON_SPINNER_BOUNCE_INTERVAL_MS,
   MOON_SPINNER_FRAMES,
   MOON_SPINNER_INTERVAL_MS,
 } from '#/tui/constant/rendering';
 import { currentTheme } from '#/tui/theme';
 
-export type SpinnerStyle = 'moon' | 'braille';
+export type SpinnerStyle = 'moon' | 'braille' | 'bounce';
 
 const FLOW_COLOR_TOKENS = ['primary', 'success', 'warning', 'accent', 'error'] as const;
 
@@ -40,8 +42,12 @@ export class MoonLoader extends Text {
   ) {
     super('', 1, 0);
     this.ui = ui;
-    this.frames = style === 'moon' ? [...MOON_SPINNER_FRAMES] : [...BRAILLE_SPINNER_FRAMES];
-    this.interval = style === 'moon' ? MOON_SPINNER_INTERVAL_MS : BRAILLE_SPINNER_INTERVAL_MS;
+    this.frames = style === 'bounce'
+      ? [...MOON_SPINNER_BOUNCE_FRAMES]
+      : (style === 'moon' ? [...MOON_SPINNER_FRAMES] : [...BRAILLE_SPINNER_FRAMES]);
+    this.interval = style === 'bounce'
+      ? MOON_SPINNER_BOUNCE_INTERVAL_MS
+      : (style === 'moon' ? MOON_SPINNER_INTERVAL_MS : BRAILLE_SPINNER_INTERVAL_MS);
     this.colorFn = colorFn;
     this.label = label;
     this.start();

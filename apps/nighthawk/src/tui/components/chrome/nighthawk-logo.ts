@@ -21,8 +21,34 @@ export const NIGHTHAWK_LOGO_LINES: readonly string[] = Array.from({ length: 5 },
     .join(' '),
 );
 
-const ANIMATION_FRAMES = 6;
-const FRAME_INTERVAL_MS = 150;
+const MOEBIUS_TRIANGLE_FRAMES: readonly string[][] = [
+  [
+    '    ╱╲    ',
+    '   ╱  ╲   ',
+    '  ╱ ╱╲ ╲  ',
+    ' ╱ ╱  ╲ ╲ ',
+    '╱ ╱    ╲ ╲',
+  ],
+  [
+    '  ╲    ╱  ',
+    '   ╲  ╱   ',
+    '  ╱ ╲╱ ╲  ',
+    ' ╱ ╱  ╲ ╲ ',
+    '╱ ╱    ╲ ╲',
+  ],
+  [
+    '  ╱    ╲  ',
+    ' ╱ ╲  ╱ ╲ ',
+    '╱   ╲╱   ╲',
+    '╲   ╱╲   ╱',
+    ' ╲ ╱  ╲ ╱ ',
+  ],
+];
+
+const MOEBIUS_FRAME_COUNT = 3;
+const MOEBIUS_INTERVAL_MS = 200;
+const MOEBIUS_LOOPS = 3;
+const MOEBIUS_TOTAL_TICKS = MOEBIUS_FRAME_COUNT * MOEBIUS_LOOPS;
 
 interface RgbColor {
   readonly red: number;
@@ -77,12 +103,12 @@ export class NightHawkLogoComponent {
     this.done = false;
     this.timer ??= setInterval(() => {
       this.frame += 1;
-      if (this.frame >= ANIMATION_FRAMES) {
+      if (this.frame >= MOEBIUS_TOTAL_TICKS) {
         this.done = true;
         this.stop();
       }
       this.requestRender();
-    }, FRAME_INTERVAL_MS);
+    }, MOEBIUS_INTERVAL_MS);
     this.requestRender();
   }
 
@@ -99,18 +125,23 @@ export class NightHawkLogoComponent {
 
   invalidate(): void {}
 
-  render(colors: ColorPalette): string[] {
-    const progress = this.done ? 1 : Math.min(1, (this.frame + 1) / ANIMATION_FRAMES);
-    return NIGHTHAWK_LOGO_LINES.map((line) => {
+  private renderMoebiusTriangle(colors: ColorPalette): string[] {
+    const frameIndex = this.done ? 0 : (this.frame % MOEBIUS_FRAME_COUNT);
+    const lines = MOEBIUS_TRIANGLE_FRAMES[frameIndex]!;
+    return lines.map((line) => {
       const chars = Array.from(line);
       const styled = chars.map((char, charIndex) => {
         if (char === ' ') return char;
         const rowRatio = charIndex / Math.max(1, chars.length - 1);
         const gradientRatio = rowRatio * 1.3;
-        const animatedColor = interpolateGradient(colors.primary, colors.accent, Math.min(1, gradientRatio * progress));
-        return chalk.hex(animatedColor).bold(char);
+        const color = interpolateGradient(colors.primary, colors.accent, Math.min(1, gradientRatio));
+        return chalk.hex(color).bold(char);
       });
       return styled.join('');
     });
+  }
+
+  render(colors: ColorPalette): string[] {
+    return this.renderMoebiusTriangle(colors);
   }
 }
