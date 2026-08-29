@@ -116,6 +116,14 @@ const config = withMermaid(defineConfig({
               ],
             },
           ],
+          '/zh/developer/': [
+            {
+              text: '开发指南',
+              items: [
+                { text: '插件开发', link: '/zh/developer/plugin-development' },
+              ],
+            },
+          ],
         },
       },
     },
@@ -194,6 +202,14 @@ const config = withMermaid(defineConfig({
               text: 'Release Notes',
               items: [
                 { text: 'Changelog', link: '/en/release-notes/changelog' },
+              ],
+            },
+          ],
+          '/en/developer/': [
+            {
+              text: 'Development',
+              items: [
+                { text: 'Plugin Development', link: '/en/developer/plugin-development' },
               ],
             },
           ],

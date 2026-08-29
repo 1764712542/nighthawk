@@ -1,0 +1,30 @@
+{
+  "name": "@nighthawk/plugin-sdk",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TypeScript types and utilities for NightHawk plugin developers.",
+  "license": "MIT",
+  "author": "NightHawk Contributors",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AliceGoto/nighthawk.git",
+    "directory": "packages/plugin-sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/AliceGoto/nighthawk/issues"
+  },
+  "type": "module",
+  "imports": {
+    "#/*": "./src/*.ts"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "rm -rf dist"
+  }
+}

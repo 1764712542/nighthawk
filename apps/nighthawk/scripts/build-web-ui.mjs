@@ -1,4 +1,49 @@
-<!DOCTYPE html>
+/**
+ * Build the web UI for NightHawk.
+ *
+ * Lobe Chat (https://github.com/lobehub/lobe-chat) can be used as the
+ * web chat interface by pointing it at the NightHawk server's OpenAI-compatible
+ * endpoint.  However, a full Next.js build is heavy and pulls in a large
+ * dependency tree that this monorepo does not carry.
+ *
+ * Instead, this script generates the lightweight standalone chat HTML
+ * (`dist-web/index.html`) that talks directly to the local server at
+ * `/v1/chat/completions` via the OpenAI-compatible API.  The server is expected
+ * to be running on the same origin (e.g. `nighthawk web`).
+ */
+
+import { copyFile, mkdir, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+
+const __dirname = import.meta.dirname;
+const distWeb = resolve(__dirname, '..', 'dist-web');
+
+async function build() {
+  await mkdir(distWeb, { recursive: true });
+
+  // Copy the favicon from the existing assets if available, otherwise
+  // generate a minimal placeholder.
+  const faviconSrc = resolve(__dirname, '..', 'dist-web', 'favicon.ico');
+  try {
+    await copyFile(faviconSrc, resolve(distWeb, 'favicon.ico'));
+  } catch {
+    // favicon not available — skip
+  }
+
+  // Generate the chat HTML.  This is the main entry point.
+  const html = generateChatHtml();
+  await writeFile(resolve(distWeb, 'index.html'), html, 'utf-8');
+
+  console.log(`Web UI built at ${distWeb}/index.html`);
+}
+
+/**
+ * Generate the standalone chat HTML page.
+ * Uses the browser's native fetch() and the ReadableStream API to stream
+ * responses from the OpenAI-compatible /v1/chat/completions endpoint.
+ */
+function generateChatHtml() {
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -78,11 +123,7 @@
   <h1>NightHawk Chat</h1>
   <span class="subtitle">OpenAI-compatible endpoint</span>
 </header>
-<div id="messages">
-  <div class="message assistant">
-    <div class="content">Hello! I'm NightHawk Chat. Send a message to start a conversation.</div>
-  </div>
-</div>
+<div id="messages"></div>
 <div id="input-area">
   <textarea id="input" rows="1" placeholder="Type a message..." autofocus></textarea>
   <button id="send-btn">Send</button>
@@ -150,7 +191,7 @@
 
       if (!res.ok) {
         const errBody = await res.text().catch(() => '');
-        addError('Request failed: ' + res.status + ' ' + res.statusText + (errBody ? ' — ' + errBody : ''));
+        addError(\`Request failed: \${res.status} \${res.statusText}\${errBody ? ' — ' + errBody : ''}\`);
         setLoading(false);
         history.pop();
         return;
@@ -161,14 +202,16 @@
       let fullContent = '';
 
       assistantContentEl.textContent = '';
-      if (loadingSpan.parentNode) assistantContentEl.removeChild(loadingSpan);
+      assistantContentEl.removeChild(loadingSpan);
+
+      const buffer = [];
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
         const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\n');
+        const lines = chunk.split('\\\\n');
 
         for (const line of lines) {
           if (!line.startsWith('data: ')) continue;
@@ -212,4 +255,10 @@
   inputEl.focus();
 </script>
 </body>
-</html>
+</html>`;
+}
+
+build().catch((err) => {
+  console.error('Build failed:', err);
+  process.exit(1);
+});

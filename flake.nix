@@ -75,6 +75,7 @@
         ./packages/node-sdk
         ./packages/oauth
         ./packages/pi-tui
+        ./packages/plugin-sdk
         ./packages/protocol
         ./packages/telemetry
         ./packages/transcript
@@ -102,6 +103,7 @@
         "@nighthawk/nighthawk-oauth"
         "@nighthawk/klient"
         "@nighthawk/pi-tui"
+        "@nighthawk/plugin-sdk"
         "@nighthawk/protocol"
         "@nighthawk/telemetry"
         "@nighthawk/transcript"

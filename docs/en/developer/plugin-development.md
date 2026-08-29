@@ -231,3 +231,75 @@ const tools = manager.pluginToolRoots();
 
 - **v1 engine** (`packages/agent-core`): The legacy plugin system. The `tools`, `profiles`, and `configSections` fields are parsed and stored in the manifest but their consumption is deferred to the integration layer.
 - **v2 engine** (`packages/agent-core-v2`): The current plugin system. The same fields are parsed and exposed through the `IPluginService` interface.
+
+## Marketplace Submission Guide
+
+NightHawk's plugin marketplace is managed through `plugins/marketplace.json`, which contains official and curated plugins. If you want to submit your plugin to the marketplace, follow the guidelines below.
+
+### Marketplace Entry Format
+
+Each plugin entry in the marketplace contains the following fields:
+
+```json
+{
+  "id": "your-plugin-id",
+  "tier": "curated",
+  "displayName": "Your Plugin",
+  "version": "1.0.0",
+  "description": "A short description of what your plugin does.",
+  "keywords": ["keyword1", "keyword2"],
+  "homepage": "https://github.com/you/your-plugin",
+  "source": "https://github.com/you/your-plugin"
+}
+```
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `id` | `string` | Unique identifier, must match `/^[a-z0-9][a-z0-9_-]{0,63}$/` |
+| `tier` | `string` | Tier: `official`, `curated`, or `community` |
+| `displayName` | `string` | Display name |
+| `version` | `string` | Semantic version |
+| `description` | `string` | Short description (1-2 sentences recommended) |
+| `keywords` | `string[]` | Search keywords |
+| `homepage` | `string` | Project homepage URL |
+| `source` | `string` | Plugin source (GitHub URL or local path) |
+
+### Submission Requirements
+
+1. **Plugin must be functional** — verify that the plugin installs and works correctly before submitting.
+2. **Valid manifest** — the plugin root must contain a valid `nighthawk.plugin.json`.
+3. **Open source preferred** — hosting on GitHub is recommended for community review and contributions.
+4. **Naming convention** — the `id` must be globally unique and not conflict with existing plugins.
+5. **Clear description** — the `description` should accurately describe the plugin's functionality, avoiding marketing language.
+
+### Submission Process
+
+1. Complete your plugin, ensuring it includes a `nighthawk.plugin.json` manifest.
+2. Publish the plugin repository on GitHub.
+3. Submit a Pull Request to the [NightHawk repository](https://github.com/AliceGoto/nighthawk) modifying `plugins/marketplace.json` to add your plugin entry.
+4. Once the PR is reviewed and merged, the plugin will appear in the marketplace listing.
+
+### TypeScript SDK
+
+Plugin developers can use the `@nighthawk/plugin-sdk` package for TypeScript type support:
+
+```bash
+npm install --save-dev @nighthawk/plugin-sdk
+```
+
+```typescript
+import type { PluginManifest } from '@nighthawk/plugin-sdk';
+
+const manifest: PluginManifest = {
+  name: 'my-plugin',
+  version: '1.0.0',
+  description: 'My plugin',
+  interface: {
+    displayName: 'My Plugin',
+    shortDescription: 'A useful plugin',
+    developerName: 'Your Name',
+  },
+};
+```
+
+The SDK provides types such as `PluginManifest`, `McpServerConfig`, `HookDefConfig`, and `PluginInterface` to give you IDE autocompletion and type checking during development.

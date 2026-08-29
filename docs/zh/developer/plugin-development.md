@@ -231,3 +231,75 @@ const tools = manager.pluginToolRoots();
 
 - **v1 引擎**（`packages/agent-core`）：旧版插件系统。`tools`、`profiles` 和 `configSections` 字段会被解析并存储在 manifest 中，但其消费延迟到集成层。
 - **v2 引擎**（`packages/agent-core-v2`）：当前插件系统。相同字段被解析并通过 `IPluginService` 接口暴露。
+
+## 插件市场提交指南
+
+NightHawk 的插件市场由 `plugins/marketplace.json` 管理，包含官方和精选插件。如果你想将自己的插件提交到市场，请遵循以下指南。
+
+### 市场条目格式
+
+市场中的每个插件条目包含以下字段：
+
+```json
+{
+  "id": "your-plugin-id",
+  "tier": "curated",
+  "displayName": "Your Plugin",
+  "version": "1.0.0",
+  "description": "A short description of what your plugin does.",
+  "keywords": ["keyword1", "keyword2"],
+  "homepage": "https://github.com/you/your-plugin",
+  "source": "https://github.com/you/your-plugin"
+}
+```
+
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| `id` | `string` | 唯一标识符，需符合 `/^[a-z0-9][a-z0-9_-]{0,63}$/` |
+| `tier` | `string` | 层级: `official`（官方）、`curated`（精选）或 `community`（社区） |
+| `displayName` | `string` | 显示名称 |
+| `version` | `string` | 语义化版本号 |
+| `description` | `string` | 简短描述（建议 1-2 句话） |
+| `keywords` | `string[]` | 搜索关键词 |
+| `homepage` | `string` | 项目主页 URL |
+| `source` | `string` | 插件源码地址（支持 GitHub 仓库 URL 或本地路径） |
+
+### 提交要求
+
+1. **插件必须可用** — 提交前确保插件能正常安装和运行。
+2. **Manifest 必须有效** — 插件根目录包含有效的 `nighthawk.plugin.json`。
+3. **开源优先** — 建议在 GitHub 上开源，以便社区审查和贡献。
+4. **命名规范** — `id` 必须全局唯一，不能与已有插件冲突。
+5. **描述清晰** — `description` 应准确说明插件功能，避免营销性语言。
+
+### 提交流程
+
+1. 完善插件，确保包含 `nighthawk.plugin.json` manifest 文件。
+2. 在 GitHub 上发布插件仓库。
+3. 向 [NightHawk 仓库](https://github.com/AliceGoto/nighthawk) 提交 Pull Request，修改 `plugins/marketplace.json` 添加你的插件条目。
+4. PR 审核通过后合并，插件将出现在市场列表中。
+
+### TypeScript SDK
+
+插件开发者可以使用 `@nighthawk/plugin-sdk` 包获取 TypeScript 类型支持：
+
+```bash
+npm install --save-dev @nighthawk/plugin-sdk
+```
+
+```typescript
+import type { PluginManifest } from '@nighthawk/plugin-sdk';
+
+const manifest: PluginManifest = {
+  name: 'my-plugin',
+  version: '1.0.0',
+  description: '我的插件',
+  interface: {
+    displayName: 'My Plugin',
+    shortDescription: '一个有用的插件',
+    developerName: 'Your Name',
+  },
+};
+```
+
+SDK 提供了 `PluginManifest`、`McpServerConfig`、`HookDefConfig`、`PluginInterface` 等类型，帮助你在开发过程中获得 IDE 自动补全和类型检查。
