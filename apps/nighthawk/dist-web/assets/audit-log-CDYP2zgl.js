@@ -1,0 +1,1 @@
+import{n as e,o as t}from"./rolldown-runtime-CMxvf4Kt.js";import{cs as n}from"./app-const-Bl9rlHwj.js";import{t as r}from"./AdminOnly-BPMQFdDp.js";import{t as i}from"./WorkspaceSetting-CokOiLmO.js";function a(){return null}var o=e((()=>{})),s,c;e((()=>{o(),i(),s=t(n()),c=()=>(0,s.jsx)(r,{children:(0,s.jsx)(a,{})}),c.displayName=`WorkspaceAuditLogPage`}))();export{c as default};

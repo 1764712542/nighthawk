@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-CMxvf4Kt.js";var t,n,r=e((()=>{t=`lobe-notebook`,n={createDocument:`createDocument`,deleteDocument:`deleteDocument`,getDocument:`getDocument`,updateDocument:`updateDocument`}}));export{t as n,r,n as t};

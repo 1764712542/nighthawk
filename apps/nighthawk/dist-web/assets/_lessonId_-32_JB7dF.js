@@ -1,0 +1,1 @@
+import{n as e,o as t}from"./rolldown-runtime-CMxvf4Kt.js";import{cs as n,ls as r}from"./app-const-Bl9rlHwj.js";import{a as i,u as a,y as o}from"../vendor/vendor-react-CBcx1o7d.js";var s,c,l;e((()=>{s=t(r()),i(),c=t(n()),l=(0,s.memo)(()=>{let{lessonId:e}=o();return(0,c.jsx)(a,{replace:!0,to:`../experience/${e}`})})}))();export{l as default};

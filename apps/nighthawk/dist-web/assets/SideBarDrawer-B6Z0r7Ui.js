@@ -1,0 +1,13 @@
+import{n as e,o as t}from"./rolldown-runtime-CMxvf4Kt.js";import{Ba as n,Ia as r,cs as i,ls as a}from"./app-const-Bl9rlHwj.js";import{Qr as o,bt as s}from"./dialog-BebLzVzY.js";import{a as c,t as l}from"./es-CVJR_g25.js";import{O as u,x as d}from"../vendor/vendor-icons-C-Y4oLkk.js";import{J as f,K as p,i as m,q as h,t as g}from"./base-ui-BAv0gRbN.js";import{t as _}from"./es-LELdnrjB.js";import{s as v,t as y}from"./serverConfig-CmLVLry1.js";import{r as b,t as x}from"./SkeletonList-BEka3_sY.js";import{n as S,t as C}from"./SideBarHeaderLayout-CDnNVMpQ.js";var w,T,E,D,O,k,A=e((()=>{w=t(a()),y(),T=(0,w.createContext)(null),E=()=>(0,w.useContext)(T),D=()=>{let e=v(e=>e.isMobile),t=E();return(0,w.useMemo)(()=>{if(!(!e||!t))return t},[t,e])},O=()=>{let e=D();return(0,w.useMemo)(()=>{if(e)return{container:e}},[e])},k=()=>{let e=D();return(0,w.useMemo)(()=>{if(e)return{container:e}},[e])}})),j,M,N=e((()=>{j=`nav-panel-drawer`,M=`user-dropdown-icon`})),P,F,I,L,R,z,B=e((()=>{_(),g(),l(),d(),P=t(a()),n(),x(),N(),A(),S(),F=t(i()),I=280,L=1e3,R=c(({css:e,cssVar:t})=>({body:e`
+    overflow: hidden auto;
+    flex: 1;
+    min-height: 0;
+    background: ${t.colorBgLayout};
+  `,panel:e`
+    border-inline: 1px solid ${t.colorBorderSecondary};
+    background: ${t.colorBgLayout};
+    box-shadow: 4px 0 8px -2px rgb(0 0 0 / 4%);
+  `,popup:e`
+    position: absolute;
+    overflow: hidden;
+  `})),z=(0,P.memo)(({subHeader:e,open:t,onClose:n,children:i,title:a,action:c,width:l=I})=>{let[d,g]=(0,P.useState)(null),[_,v]=(0,P.useState)(null);return(0,P.useEffect)(()=>{v(document.querySelector(`#${j}`))},[]),(0,F.jsx)(T,{value:d,children:(0,F.jsx)(f,{modal:!1,open:t,zIndex:L,onOpenChange:(e,t)=>{e||t.reason===`outside-press`||n()},children:(0,F.jsx)(h,{container:_,children:(0,F.jsxs)(p,{flush:!0,className:R.popup,panelClassName:R.panel,placement:`left`,ref:g,width:l,children:[(0,F.jsx)(C,{showBack:!1,showTogglePanelButton:!1,left:typeof a==`string`?(0,F.jsx)(m,{ellipsis:!0,fontSize:14,style:{fontWeight:600,paddingLeft:8},weight:400,children:a}):a,right:(0,F.jsxs)(F.Fragment,{children:[c,(0,F.jsx)(s,{icon:u,size:r,style:{marginInlineEnd:-2},onClick:n})]})}),e,(0,F.jsx)(`div`,{className:R.body,children:(0,F.jsx)(P.Suspense,{fallback:(0,F.jsx)(o,{gap:1,paddingBlock:1,paddingInline:4,children:(0,F.jsx)(b,{rows:3})}),children:i})})]})})})})})}));export{N as a,k as c,M as i,B as n,A as o,j as r,O as s,z as t};

@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-CMxvf4Kt.js";var t,n=e((()=>{t=(e,t)=>{if(!e)return``;let n=e instanceof Date?e:new Date(e);return Number.isNaN(n.getTime())?``:new Intl.DateTimeFormat(t,{day:`numeric`,hour:`numeric`,minute:`2-digit`,month:`short`,year:`numeric`}).format(n)}}));export{n,t};

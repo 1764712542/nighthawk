@@ -1,0 +1,1 @@
+import{n as e,o as t}from"./rolldown-runtime-CMxvf4Kt.js";import{ls as n}from"./app-const-Bl9rlHwj.js";import{Jt as r,Yt as i}from"./serverConfig-CmLVLry1.js";function a(){return(0,o.useCallback)(((e,t)=>{let n=r();n&&(typeof e==`number`?n(e):n(e,t))}),[])}var o,s=e((()=>{o=t(n()),i()}));export{a as n,s as t};

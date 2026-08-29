@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-CMxvf4Kt.js";import{ProviderDetailPage as t,ProviderLayout as n,t as r}from"./provider-JQjN7Nlk.js";e((()=>{r()}))();export{t as ProviderDetailPage,n as ProviderLayout};

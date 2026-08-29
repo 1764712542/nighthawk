@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-CMxvf4Kt.js";import{M as t,P as n}from"../vendor/vendor-data-runtime-DtXJIICD.js";import{r,t as i}from"./time-DKrvGb8K.js";var a,o=e((()=>{r(),t(),a=(e,t)=>{let{t:r}=n(`common`);return i(e,{...t,formatOtherYear:r(`time.formatOtherYear`),formatThisYear:r(`time.formatThisYear`)})}}));export{a as n,o as t};

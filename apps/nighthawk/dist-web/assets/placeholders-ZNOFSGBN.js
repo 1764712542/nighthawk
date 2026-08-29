@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-CMxvf4Kt.js";var t,n,r,i,a=e((()=>{t={},n=e=>{for(let[n,r]of Object.entries(e)){let e=t[n];t[n]=e?Object.assign(e,r):r}},r=()=>Object.entries(t).flatMap(([e,t])=>Object.entries(t).filter(e=>!!e[1]).map(([t,n])=>({apiName:t,identifier:e,placeholder:n}))),i=(e,n)=>{if(!e||!n)return;let r=t[e];if(r)return r[n]}}));export{n as i,a as n,r,i as t};

@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-CMxvf4Kt.js";import{Gt as t,Qn as n,qt as r,s as i,t as a}from"./serverConfig-CmLVLry1.js";var o,s=e((()=>{t(),a(),o=()=>{let[e,t]=r(e=>[e.hasNewVersion,e.useCheckLatestVersion]),{enableCheckUpdates:a}=i(n);return t(a),e}}));export{o as n,s as t};

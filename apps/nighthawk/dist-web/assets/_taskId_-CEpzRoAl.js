@@ -1,0 +1,1 @@
+import{n as e,o as t}from"./rolldown-runtime-CMxvf4Kt.js";import{cs as n,ls as r}from"./app-const-Bl9rlHwj.js";import{a as i,y as a}from"../vendor/vendor-react-CBcx1o7d.js";import{c as o,s}from"./router-C_YfN3X9.js";var c,l,u;e((()=>{c=t(r()),i(),s(),l=t(n()),u=(0,c.memo)(()=>{let{aid:e,taskId:t}=a();return t?(0,l.jsx)(o,{agentId:e,taskId:t}):null})}))();export{u as default};

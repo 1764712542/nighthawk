@@ -1,0 +1,1 @@
+import{n as e,o as t}from"./rolldown-runtime-CMxvf4Kt.js";import{cs as n}from"./app-const-Bl9rlHwj.js";import{n as r,t as i}from"./Labels-N1k4vfgY.js";var a,o;e((()=>{r(),a=t(n()),o=()=>(0,a.jsx)(i,{}),o.displayName=`WorkspaceLabelsSetting`}))();export{o as default};

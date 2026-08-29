@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-CMxvf4Kt.js";import{i as t,t as n}from"./library-CCaQUh3w.js";var r,i=e((()=>{n(),r=e=>t(e=>e.useFetchKnowledgeBaseItem)(e)}));export{r as n,i as t};

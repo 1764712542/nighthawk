@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-CMxvf4Kt.js";import{Tr as t,or as n}from"./model-runtime-client-tog6-eyE.js";var r,i=e((()=>{n(),r=e=>({category:e.category,includeAgentGroup:!0,includeCategoryCounts:!!e.q?.trim(),order:e.order,page:e.page,pageSize:21,q:e.q,sort:e.sort??t.Recommended,source:e.source})}));export{i as n,r as t};

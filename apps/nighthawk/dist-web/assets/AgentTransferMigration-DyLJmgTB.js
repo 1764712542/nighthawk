@@ -1,0 +1,19 @@
+import{n as e,o as t}from"./rolldown-runtime-CMxvf4Kt.js";import{M as n,P as r}from"../vendor/vendor-data-runtime-DtXJIICD.js";import{n as i,t as a}from"./agent-Cvv887Je.js";import{cs as o,ls as s}from"./app-const-Bl9rlHwj.js";import{Cr as c,Hr as l,Qr as u}from"./dialog-BebLzVzY.js";import{a as d,c as f,t as p}from"./es-CVJR_g25.js";import{Mc as m,x as h}from"../vendor/vendor-icons-C-Y4oLkk.js";import{i as g,t as _}from"./base-ui-BAv0gRbN.js";import{t as v}from"./es-LELdnrjB.js";import{a as y,c as b}from"./swrKeys-B4sicPWZ.js";import{Kt as x,Mr as S,Nr as C,Yt as w}from"./tool-BJJaXV35.js";import{_ as T,t as E}from"./selectors-BsEaCsu0.js";var D,O,k,A=e((()=>{D=t(s()),y(),i(),C(),x(),E(),O=()=>{let e=w.getState(),t=T.currentTopics(e)?.map(e=>e.id)??[],n=e.activeTopicId;return(n?[n,...t.filter(e=>e!==n)]:t).slice(0,1e3)},k=({agentId:e,groupId:t})=>{let n=b(t?[`group-transfer-job`,t]:e?[`agent-transfer-job`,e]:null,()=>t?S.getTransferJobStatus(t,O()):a.getTransferJobStatus(e,O()),{dedupingInterval:2500,refreshInterval:e=>e?3e3:0}),r=w(e=>e.activeTopicId),i=!!n.data,{mutate:o}=n;return(0,D.useEffect)(()=>{i&&o()},[r,i,o]),n}})),j,M,N,P,F,I,L=e((()=>{v(),_(),p(),h(),j=t(s()),n(),i(),x(),A(),M=t(o()),N=(e,t)=>{let{data:n}=k(e);return{job:n??null,topicPending:!!t&&!!n&&n.pendingTopicIds.includes(t)}},P=(0,j.memo)(({agentId:e,groupId:t,topicId:n})=>{let{t:i}=r(`chat`),{data:o,mutate:s}=k({agentId:e,groupId:t}),c=w(e=>e.refreshMessages),d=(0,j.useRef)(null);return(0,j.useEffect)(()=>{!n||d.current===n||(d.current=n,a.prioritizeTransferTopic(n).then(({pending:e})=>{e||(s(),c())}).catch(()=>{d.current===n&&(d.current=null)}))},[n,s,c]),(0,j.useEffect)(()=>()=>{c()},[c]),(0,M.jsxs)(u,{align:`center`,flex:1,gap:12,justify:`center`,padding:24,children:[(0,M.jsx)(l,{spin:!0,color:f.colorTextDescription,icon:m,size:20}),(0,M.jsx)(g,{type:`secondary`,weight:500,children:i(o?.type===`copy`?`transferMigration.topicPendingCopy.title`:`transferMigration.topicPending.title`)}),(0,M.jsx)(g,{fontSize:12,style:{maxWidth:420,textAlign:`center`},type:`secondary`,children:i(`transferMigration.topicPending.desc`)})]})}),P.displayName=`TopicMigrationPlaceholder`,F=d(({css:e})=>({chip:e`
+    pointer-events: auto;
+    cursor: default;
+
+    padding-block: 3px;
+    padding-inline: 10px;
+    border: 1px solid ${f.colorBorderSecondary};
+    border-radius: 20px;
+
+    font-size: 12px;
+    color: ${f.colorText};
+    white-space: nowrap;
+
+    /* Solid surface under the translucent fill: the chip also renders as a
+       floating overlay on top of chat content, where a bare alpha fill would
+       let the text underneath bleed through. */
+    background-color: ${f.colorBgElevated};
+    background-image: linear-gradient(${f.colorFillTertiary}, ${f.colorFillTertiary});
+  `})),I=(0,j.memo)(({agentId:e,groupId:t})=>{let{t:n}=r(`chat`),{data:i}=k({agentId:e,groupId:t});return i?(0,M.jsx)(c,{title:n(`transferMigration.agentBanner.desc`),children:(0,M.jsxs)(u,{horizontal:!0,align:`center`,className:F.chip,gap:6,children:[(0,M.jsx)(l,{spin:!0,color:f.colorWarning,icon:m,size:12}),(0,M.jsx)(`span`,{children:n(i.type===`copy`?`transferMigration.agentBadgeCopy`:`transferMigration.agentBadge`,{completed:i.completedTopics,total:i.totalTopics})})]})}):null}),I.displayName=`AgentMigrationBadge`})),R,z,B,V=e((()=>{v(),p(),h(),R=t(s()),L(),z=t(o()),B=(0,R.memo)(({agentId:e,groupId:t,topicId:n})=>{let{topicPending:r}=N({agentId:e,groupId:t},n);return r?(0,z.jsx)(l,{spin:!0,color:f.colorTextQuaternary,icon:m,size:12}):null}),B.displayName=`TopicMigrationIndicator`})),H=e((()=>{L(),V(),A()}));export{P as a,A as c,I as i,k as l,B as n,L as o,V as r,N as s,H as t};

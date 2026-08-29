@@ -1,0 +1,15 @@
+import{n as e,o as t}from"./rolldown-runtime-CMxvf4Kt.js";import{cs as n,ls as r}from"./app-const-Bl9rlHwj.js";import{Hr as i,Qr as a}from"./dialog-BebLzVzY.js";import{a as o,c as s,f as c,l,t as u}from"./es-CVJR_g25.js";import{i as d,t as f}from"./base-ui-BAv0gRbN.js";import{Li as p,t as m,ur as h}from"./es-LELdnrjB.js";var g,_,v,y=e((()=>{m(),f(),g=t(r()),_=t(n()),v=(0,g.memo)(({className:e,style:t,value:n=`--`,wrap:r})=>r?(0,_.jsxs)(a,{horizontal:!0,align:`flex-start`,className:e,gap:4,style:{position:`relative`,width:`100%`,...t},children:[(0,_.jsx)(d,{style:{color:`inherit`,flex:1,fontFamily:`inherit`,fontSize:`inherit`,margin:0,minWidth:0,overflowWrap:`anywhere`,whiteSpace:`pre-wrap`},children:n||`--`}),(0,_.jsx)(p,{content:n||`--`,size:`small`})]}):(0,_.jsxs)(a,{horizontal:!0,align:`center`,className:e,gap:4,style:{overflow:`hidden`,position:`relative`,...t},children:[(0,_.jsx)(d,{ellipsis:!0,style:{color:`inherit`,fontFamily:`inherit`,fontSize:`inherit`,margin:0,overflow:`hidden`,width:`100%`},children:n||`--`}),(0,_.jsx)(p,{content:n||`--`,size:`small`})]}))})),b,x,S,C,w=e((()=>{m(),f(),u(),b=t(r()),y(),x=t(n()),S=o(({css:e,cssVar:t})=>({bordered:e`
+      overflow: hidden;
+      border: 1px solid ${t.colorBorderSecondary};
+      border-radius: ${t.borderRadiusLG};
+      ${c.sm} {
+        background: ${t.colorBgContainer};
+      }
+    `,cell:e`
+      overflow: hidden;
+      box-shadow: 0 0 0 0.5px ${t.colorBorderSecondary};
+    `,label:e`
+      overflow: hidden;
+      border-inline-end: 1px solid ${t.colorBorderSecondary};
+      background: ${t.colorFillQuaternary};
+    `})),C=(0,b.memo)(({labelWidth:e=150,title:t,bordered:n,className:r,items:o,classNames:c,styles:u,wrap:f,...p})=>(0,x.jsxs)(x.Fragment,{children:[t&&(0,x.jsx)(`h3`,{style:{marginTop:12},children:t}),(0,x.jsx)(h,{className:l(n&&S.bordered,r),gap:0,maxItemWidth:450,...p,children:o.map(t=>(0,x.jsxs)(a,{horizontal:!0,align:f?`flex-start`:`center`,className:l(n&&S.cell,t.className,c?.item),flex:1,style:{overflow:f?void 0:`hidden`,position:`relative`,...u?.item,...t.style},children:[(0,x.jsxs)(a,{horizontal:!0,align:`center`,className:l(n&&S.label),flex:`none`,gap:6,paddingBlock:n?12:4,paddingInline:n?16:0,style:{height:`100%`,position:`relative`},width:e,children:[t.icon&&(0,x.jsx)(i,{color:s.colorTextSecondary,icon:t.icon}),(0,x.jsx)(d,{ellipsis:!0,className:l(c?.label,t.classNames?.label),style:{color:s.colorTextSecondary,...u?.label,...t.styles?.label},children:t.label})]}),(0,x.jsx)(a,{horizontal:!0,align:f?`flex-start`:`center`,flex:1,justify:`flex-start`,paddingBlock:n?12:4,paddingInline:16,style:{height:`100%`,overflow:f?void 0:`hidden`,position:`relative`},children:t.copyable?(0,x.jsx)(v,{className:l(c?.value,t.classNames?.value),style:{...u?.value,...t.styles?.value},value:t.value?String(t.value):`--`,wrap:f}):(0,x.jsx)(d,{className:l(c?.value,t.classNames?.value),ellipsis:!f,style:{...f&&{overflowWrap:`anywhere`,whiteSpace:`pre-wrap`,wordBreak:`break-word`},...u?.value,...t.styles?.value},children:t.value})})]},t.key))})]}))}));export{w as n,C as t};

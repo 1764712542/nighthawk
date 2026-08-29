@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-CMxvf4Kt.js";import{Kt as t,Yt as n}from"./tool-BJJaXV35.js";var r,i=e((()=>{t(),r=e=>{let[t]=n(e=>[e.useFetchThreads]);t(!0,e)}}));export{r as n,i as t};

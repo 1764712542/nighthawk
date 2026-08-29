@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-CMxvf4Kt.js";var t,n=e((()=>{t=[`embedding`,`embed`,`bge`,`m3e`]}));export{n,t};

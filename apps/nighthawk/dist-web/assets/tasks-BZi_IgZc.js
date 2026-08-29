@@ -1,0 +1,1 @@
+import{n as e,o as t}from"./rolldown-runtime-CMxvf4Kt.js";import{cs as n}from"./app-const-Bl9rlHwj.js";import{a as r,y as i}from"../vendor/vendor-react-CBcx1o7d.js";import{s as a}from"./router-C_YfN3X9.js";import{t as o}from"./AgentTasksPage-Bi_5ndlC.js";var s,c;e((()=>{r(),a(),s=t(n()),c=()=>{let{aid:e}=i();return e?(0,s.jsx)(o,{agentId:e}):null}}))();export{c as default};

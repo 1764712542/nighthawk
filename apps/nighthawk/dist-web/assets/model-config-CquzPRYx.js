@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-CMxvf4Kt.js";import{Jt as t,gt as n,rt as r}from"./model-runtime-client-tog6-eyE.js";var i,a,o,s,c=e((()=>{r(),i=()=>({models:[],planCardModels:[],version:1}),a=async()=>i(),o=async e=>n({providerLoaders:{[t.LobeHub]:s}}),s=async()=>(await a()).models}));c();export{o as loadModels,c as t};

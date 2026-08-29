@@ -1,0 +1,1 @@
+import{n as e,o as t}from"./rolldown-runtime-CMxvf4Kt.js";import{cs as n,ls as r}from"./app-const-Bl9rlHwj.js";var i,a,o,s=e((()=>{i=t(r()),a=t(n()),o=e=>t=>(0,a.jsx)(i.Suspense,{children:(0,a.jsx)(e,{...t})})}));export{o as n,s as t};

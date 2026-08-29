@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-CMxvf4Kt.js";import{loadModels as t,t as n}from"./model-config-CquzPRYx.js";var r;e((()=>{n(),r=async()=>[]}))();export{r as loadDefaultHiddenBuiltinModels,t as loadModels};

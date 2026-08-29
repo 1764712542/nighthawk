@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-CMxvf4Kt.js";function t(e,t){if(!e){if(n)throw Error(r);var i=typeof t==`function`?t():t,a=i?`${r}: ${i}`:r;throw Error(a)}}var n,r,i=e((()=>{n=!0,r=`Invariant failed`}));export{t as n,i as t};

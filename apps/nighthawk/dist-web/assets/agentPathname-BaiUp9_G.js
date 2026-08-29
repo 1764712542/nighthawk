@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-CMxvf4Kt.js";var t,n,r=e((()=>{t=e=>{let[t]=e.split(/[?#]/),n=t.split(`/`).filter(Boolean),r=n.indexOf(`agent`);if(r<0)return;let i=n[r+1];if(i)return{agentId:i,prefix:r>0?`/${n.slice(0,r).join(`/`)}`:``,segmentsAfterAgent:n.slice(r+2)}},n=(e,t,n)=>!t?.prefix||n?e:`${t.prefix}${e}`}));export{r as n,t as r,n as t};

@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-CMxvf4Kt.js";var t,n=e((()=>{t=e=>t=>{let n=new FileReader;n.readAsDataURL(t),n.addEventListener(`load`,()=>{e(String(n.result))})}}));export{n,t};

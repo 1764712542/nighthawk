@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-CMxvf4Kt.js";var t,n,r,i,a,o,s,c=e((()=>{t={},n={},r={},i=({actions:e,portals:i,titles:a})=>{i&&Object.assign(t,i),a&&Object.assign(n,a),e&&Object.assign(r,e)},a=e=>{if(e)return t[e]},o=e=>{if(e)return n[e]},s=e=>{if(e)return r[e]}}));export{i as a,c as i,s as n,o as r,a as t};

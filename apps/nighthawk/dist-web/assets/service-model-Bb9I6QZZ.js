@@ -1,0 +1,1 @@
+import{n as e,o as t}from"./rolldown-runtime-CMxvf4Kt.js";import{cs as n}from"./app-const-Bl9rlHwj.js";import r,{t as i}from"./service-model-AX13O_rn.js";import{n as a,t as o}from"./AdminOnly-BPMQFdDp.js";var s,c;e((()=>{i(),a(),s=t(n()),c=()=>(0,s.jsx)(o,{children:(0,s.jsx)(r,{showSettingHeader:!1})}),c.displayName=`WorkspaceServiceModelSetting`}))();export{c as default};

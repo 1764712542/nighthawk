@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-CMxvf4Kt.js";var t,n,r=e((()=>{t=e=>{let t=Math.floor(e/1e3),n=Math.floor(t/3600),r=Math.floor(t%3600/60),i=t%60;return n>0?`${n}h ${r}m ${i}s`:r>0?`${r}m ${i}s`:`${i}s`},n=e=>`${Math.round(e/6e4)}`}));export{n,r,t};

@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-CMxvf4Kt.js";import{Jt as t,Yt as n}from"./serverConfig-CmLVLry1.js";import{i as r,n as i,r as a,t as o}from"./workspaceAwarePath-DIBsOTQc.js";var s,c=e((()=>{r(),n(),i(),s=(e,n)=>{let r=t();if(!r)return;let i=o(e,a(),n),{escape:s,...c}=n??{};Object.keys(c).length>0?r(i,c):r(i)}}));export{s as n,c as t};

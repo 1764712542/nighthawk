@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-CMxvf4Kt.js";var t;e((()=>{t=e=>e.includes(`execInSandbox`)?`sandbox`:e.includes(`CloudMcp`)||e.includes(`callCloudMcpEndpoint`)?`mcp`:e.startsWith(`market.connect`)?`connector`:`default`}))();export{t as pathToMarketAuthScene};

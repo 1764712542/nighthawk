@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-CMxvf4Kt.js";import{ls as t}from"./app-const-Bl9rlHwj.js";var n,r=e((()=>{t(),n=(e,t)=>t?`/agent/${t}/task/${e}`:`/task/${e}`}));export{n,r as t};

@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-CMxvf4Kt.js";var t,n=e((()=>{t={root:{id:`root`,type:`root`,format:``,indent:0,version:1,children:[{id:`42`,type:`paragraph`,format:``,indent:0,version:1,children:[],direction:null,textStyle:``,textFormat:0}],direction:null}}}));export{n,t};

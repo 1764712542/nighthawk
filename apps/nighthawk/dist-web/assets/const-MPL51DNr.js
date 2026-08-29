@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-CMxvf4Kt.js";var t,n,r,i=e((()=>{t=`npm install -g @lobehub/cli`,n=`https://hub-apac-1.lobeobjects.space/images`,r={cli:`${n}/cli/hero.webp`,desktopDark:`${n}/home/overview-cao-dark.webp`,desktopLight:`${n}/home/overview-cao-light.webp`,mobile:`https://lobehub.com/images/mobile/chat.png`}}));export{t as n,i as r,r as t};

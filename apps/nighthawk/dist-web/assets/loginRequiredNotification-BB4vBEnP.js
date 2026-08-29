@@ -1,0 +1,1 @@
+import{n as e,r as t}from"./rolldown-runtime-CMxvf4Kt.js";import{v as n,y as r}from"./serverConfig-CmLVLry1.js";var i=t({loginRequired:()=>a}),a,o=e((()=>{r(),a={redirect:({reason:e}={})=>{n().openLogin(e)}}}));export{a as n,i as r,o as t};

@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-CMxvf4Kt.js";import{Dt as t,Et as n}from"./selectors-BsEaCsu0.js";var r,i=e((()=>{t(),r=e=>e===n.Acceptance||e===n.AcceptanceCheck}));export{r as n,i as t};

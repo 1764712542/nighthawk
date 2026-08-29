@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-CMxvf4Kt.js";import{O as t}from"./app-const-Bl9rlHwj.js";import{mn as n,p as r,pn as i,u as a}from"./serverConfig-CmLVLry1.js";var o,s=e((()=>{t(),a(),i(),o=()=>(r(n.remoteServerUrl),window.location.origin)}));export{o as n,s as t};

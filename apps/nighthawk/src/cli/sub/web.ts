@@ -24,7 +24,7 @@ import type { Command } from 'commander';
 import { createNighthawkHostIdentity, getVersion } from '#/cli/version';
 import { openUrl } from '#/utils/open-url';
 
-const DIST_WEB_DIR = resolve(import.meta.dirname, '../../dist-web');
+const DIST_WEB_DIR = resolve(import.meta.dirname, '../dist-web');
 
 interface WritableLike {
   write(chunk: string): boolean;

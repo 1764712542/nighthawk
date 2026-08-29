@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-CMxvf4Kt.js";var t,n,r=e((()=>{t=(e,t)=>t?.modelIdMapping?.[e]??e,n=(e,n)=>{let r=t(e.model,n);return r===e.model?e:{...e,model:r}}}));export{t as n,n as r,r as t};

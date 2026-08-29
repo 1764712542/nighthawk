@@ -1,0 +1,1 @@
+import{n as e,o as t}from"./rolldown-runtime-CMxvf4Kt.js";import{cs as n}from"./app-const-Bl9rlHwj.js";import{c as r,o as i,t as a}from"./Acceptance-C-ghAVw4.js";import{n as o,t as s}from"./TopicPanel-AijBJYH7.js";function c(){return(0,l.jsx)(r,{TopicPanel:s,children:(0,l.jsx)(i,{})})}var l;e((()=>{a(),o(),l=t(n())}))();export{c as default};

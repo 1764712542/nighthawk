@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-CMxvf4Kt.js";var t,n=e((()=>{t={"chat.avatar":`avatar`,"chat.placeholder":`...`,"tokenTag.overload":`Overload`,"tokenTag.remained":`Remained`,"tokenTag.used":`Used`}})),r,i=e((()=>{r={"messageModal.cancel":`Cancel`,"messageModal.confirm":`Confirm`,"messageModal.edit":`Edit`}}));export{n as i,r as n,t as r,i as t};

@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime-CMxvf4Kt.js";import{w as t}from"./chunk-FOHPRMQF-DtWIqiWH.js";import{C as n,w as r}from"./mermaid-parser.core-NabYps_f.js";e((()=>{r(),t()}))();export{n as createRailroadServices};

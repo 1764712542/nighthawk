@@ -1,0 +1,1 @@
+import{n as e,r as t}from"./rolldown-runtime-CMxvf4Kt.js";var n=t({isChunkingUnsupported:()=>r}),r,i=e((()=>{r=e=>!!(e.startsWith(`image`)||e.startsWith(`video`)||e.startsWith(`audio`))}));export{r as n,n as r,i as t};

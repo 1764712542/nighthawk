@@ -1,0 +1,1 @@
+import{n as e,o as t}from"./rolldown-runtime-CMxvf4Kt.js";import{cs as n}from"./app-const-Bl9rlHwj.js";import r,{t as i}from"./apikey-Dr2PtCyC.js";function a({children:e}){return e}var o=e((()=>{})),s,c;e((()=>{o(),i(),s=t(n()),c=()=>(0,s.jsx)(a,{children:(0,s.jsx)(r,{showSettingHeader:!1})}),c.displayName=`WorkspaceApiKeySetting`}))();export{c as default};
