@@ -53,12 +53,77 @@ function renderedRowsAfterChild(
     .reduce((sum, component) => sum + component.render(width).length, 0);
 }
 
+export interface SwarmProgressSummary {
+  readonly toolCallId: string;
+  readonly description: string;
+  readonly total: number;
+  readonly active: number;
+  readonly completed: number;
+  readonly failed: number;
+  readonly cancelled: number;
+  readonly isFinished: boolean;
+}
+
+export interface SwarmProgressSnapshot {
+  readonly toolCallId: string;
+  readonly description: string;
+  readonly memberCount: number;
+  readonly isStreaming: boolean;
+  readonly isToolCallActive: boolean;
+}
+
 export class SubAgentEventHandler {
   readonly subagentInfo: Map<string, SubagentInfo> = new Map();
-  private readonly agentSwarmProgress: Map<string, AgentSwarmProgressComponent> = new Map();
+  readonly agentSwarmProgress: Map<string, AgentSwarmProgressComponent> = new Map();
   backgroundAgentMetadata: Map<string, BackgroundAgentMetadata> = new Map();
   /** Bounded per-agent activity fold feeding the background-agent detail view. */
   readonly activityStore = new SubagentActivityStore();
+
+  /** Collect a read-only summary of every active swarm progress. */
+  getSwarmProgressSummaries(): SwarmProgressSummary[] {
+    const summaries: SwarmProgressSummary[] = [];
+    for (const [toolCallId, progress] of this.agentSwarmProgress) {
+      const members = progress.getMembers();
+      let active = 0;
+      let completed = 0;
+      let failed = 0;
+      let cancelled = 0;
+      for (const m of members) {
+        switch (m.phase) {
+          case 'running':
+          case 'pending':
+          case 'queued':
+          case 'suspended':
+            active++;
+            break;
+          case 'completed':
+            completed++;
+            break;
+          case 'failed':
+            failed++;
+            break;
+          case 'cancelled':
+            cancelled++;
+            break;
+        }
+      }
+      const isFinished =
+        !progress.isToolCallActive() &&
+        members.length > 0 &&
+        members.every((m) => m.phase === 'completed' || m.phase === 'failed' || m.phase === 'cancelled');
+      summaries.push({
+        toolCallId,
+        description: progress.getDescription(),
+        total: members.length,
+        active,
+        completed,
+        failed,
+        cancelled,
+        isFinished,
+      });
+    }
+    return summaries;
+  }
 
   constructor(
     private readonly host: SessionEventHost,
@@ -184,6 +249,16 @@ export class SubAgentEventHandler {
 
   hasAgentSwarmProgress(toolCallId: string): boolean {
     return this.agentSwarmProgress.has(toolCallId);
+  }
+
+  getSwarmProgressSnapshot(): SwarmProgressSnapshot[] {
+    return Array.from(this.agentSwarmProgress.entries()).map(([toolCallId, progress]) => ({
+      toolCallId,
+      description: progress.getDescription(),
+      memberCount: progress.getMembers().length,
+      isStreaming: progress.isRequestStreaming(),
+      isToolCallActive: progress.isToolCallActive(),
+    }));
   }
 
   hasActiveAgentSwarmToolCall(): boolean {

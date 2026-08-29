@@ -192,6 +192,14 @@ export const BUILTIN_SLASH_COMMANDS = [
     normalOnly: true,
   },
   {
+    name: 'swarm-status',
+    aliases: [],
+    description: 'Show swarm sub-task status · 查看集群子任务状态',
+    priority: 80,
+    availability: 'always',
+    normalOnly: true,
+  },
+  {
     name: 'tower',
     aliases: [],
     description: 'Report tower status, toggle tower mode, or set the tower objective · Tower：查看状态、切换模式或设定目标',
@@ -431,6 +439,14 @@ export const BUILTIN_SLASH_COMMANDS = [
     description: 'Show current session and runtime status · 查看会话与运行时状态',
     priority: 60,
     availability: 'always',
+  },
+  {
+    name: 'personas',
+    aliases: [],
+    description: 'List available persona cards · 列出可用角色卡片',
+    priority: 60,
+    availability: 'always',
+    normalOnly: true,
   },
   {
     name: 'feedback',

@@ -16,15 +16,19 @@ import {
   isRainbowDancing,
   rainbowText,
 } from '#/tui/easter-eggs/dance';
+import { NightHawkLogoComponent } from '#/tui/components/chrome/nighthawk-logo';
 import type { AppState } from '#/tui/types';
 import { currentTheme } from '#/tui/theme';
 import { gradientText } from '#/tui/theme/gradient-text';
 
 export class WelcomeComponent implements Component {
   private state: AppState;
+  private readonly logo: NightHawkLogoComponent;
+  private logoStarted = false;
 
-  constructor(state: AppState) {
+  constructor(state: AppState, requestRender?: () => void) {
     this.state = state;
+    this.logo = new NightHawkLogoComponent(requestRender ?? (() => {}));
   }
 
   invalidate(): void {}
@@ -53,16 +57,17 @@ export class WelcomeComponent implements Component {
     const pad = '  ';
     const dim = chalk.hex(currentTheme.palette.textDim);
 
-    const brand = isRainbowDancing()
-      ? rainbowText('NightHawk', getDanceRainbowPalette(), getRainbowDanceView()?.phase ?? 0)
-      : gradientText(
-          'NightHawk',
-          currentTheme.palette.primary,
-          currentTheme.palette.accent,
-        );
+    const brandLines = isRainbowDancing()
+      ? [rainbowText('NightHawk', getDanceRainbowPalette(), getRainbowDanceView()?.phase ?? 0)]
+      : this.logo.render(currentTheme.palette);
+
+    if (!this.logoStarted && !isRainbowDancing()) {
+      this.logoStarted = true;
+      this.logo.start();
+    }
 
     const tips = this.buildTips(isLoggedOut, primary, dim);
-    const headerLines: string[] = [brand, '', ...tips];
+    const headerLines: string[] = [...brandLines, '', ...tips];
 
     const modelValue = isLoggedOut
       ? chalk.hex(currentTheme.palette.warning)('not set, run /connect or /provider')

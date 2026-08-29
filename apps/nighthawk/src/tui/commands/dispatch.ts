@@ -7,6 +7,7 @@ import { LLM_NOT_SET_MESSAGE } from '../constant/nighthawk-tui';
 import type { AuthFlowController } from '../controllers/auth-flow';
 import type { BtwPanelController } from '../controllers/btw-panel';
 import type { StreamingUIController } from '../controllers/streaming-ui';
+import type { SessionEventHandler } from '../controllers/session-event-handler';
 import type { TasksBrowserController } from '../controllers/tasks-browser';
 import { tryHandleDanceCommand } from '../easter-eggs/dance';
 import type { ResolvedTheme } from '../theme/colors';
@@ -26,6 +27,7 @@ import {
 import { handleLoginCommand, handleLogoutCommand } from './auth';
 import { handleBtwCommand } from './btw';
 import { handleCopyCommand } from './copy';
+import { handlePersonasCommand } from './personas';
 import {
   handleAutoCommand,
   handleCompactCommand,
@@ -70,6 +72,7 @@ import {
   handleTitleCommand,
 } from './session';
 import { handleSwarmCommand } from './swarm';
+import { handleSwarmStatusCommand } from './swarm-status';
 import { handleTowerCommand } from './tower';
 import { handleTraceCommand } from './trace';
 import { handleUndoCommand } from './undo';
@@ -98,6 +101,7 @@ export {
   showSettingsSelector,
 } from './config';
 export { handleSwarmCommand } from './swarm';
+export { handleSwarmStatusCommand } from './swarm-status';
 export { handleTowerCommand } from './tower';
 export { handleFeedbackCommand, showMcpServers, showStatusReport, showUsage } from './info';
 export { handlePluginsCommand } from './plugins';
@@ -218,6 +222,7 @@ export interface SlashCommandHost {
   readonly streamingUI: StreamingUIController;
   readonly btwPanelController: BtwPanelController;
   readonly tasksBrowserController: TasksBrowserController;
+  readonly sessionEventHandler: SessionEventHandler;
   readonly authFlow: AuthFlowController;
 }
 
@@ -563,6 +568,9 @@ async function handleBuiltInSlashCommand(
     case 'status':
       void showStatusReport(host);
       return;
+    case 'personas':
+      void handlePersonasCommand(host);
+      return;
     case 'feedback':
       await handleFeedbackCommand(host);
       return;
@@ -601,6 +609,9 @@ async function handleBuiltInSlashCommand(
       return;
     case 'swarm':
       await handleSwarmCommand(host, args);
+      return;
+    case 'swarm-status':
+      await handleSwarmStatusCommand(host);
       return;
     case 'tower':
       await handleTowerCommand(host, args);

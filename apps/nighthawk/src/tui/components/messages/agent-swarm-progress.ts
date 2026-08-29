@@ -106,7 +106,7 @@ const CANCELLED_CLEAR_KEYS = [
   'suspendedReason',
 ] as const satisfies readonly ClearableMemberKey[];
 
-interface AgentSwarmMember {
+export interface AgentSwarmMember {
   readonly id: string;
   agentId?: string;
   phase: AgentSwarmPhase;
@@ -220,6 +220,16 @@ export class AgentSwarmProgressComponent implements Component {
   }
 
   invalidate(): void {}
+
+  /** Read-only snapshot of the member list for external consumers. */
+  getMembers(): readonly AgentSwarmMember[] {
+    return this.members;
+  }
+
+  /** The swarm's descriptive label. */
+  getDescription(): string {
+    return this.description;
+  }
 
   setActivitySpinnerText(provider: (() => string) | undefined): void {
     if (!this.toolCallActive) return;
