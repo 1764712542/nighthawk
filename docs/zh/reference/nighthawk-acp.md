@@ -25,14 +25,18 @@ nighthawk acp
 | `mcpCapabilities.sse` | `true` | 转发 IDE 配置的旧式 SSE MCP 服务 |
 | `loadSession` | `true` | 支持 `session/load` 续接已有会话，加载时会同步回放历史 |
 | `sessionCapabilities.list` | `{}` | 支持 `session/list` 枚举当前用户的会话 |
+| `sessionCapabilities.close` | `{}` | 支持 `session/close` 关闭活跃会话 |
+| `sessionCapabilities.delete` | `{}` | 支持 `session/delete` 从磁盘删除已持久化的会话 |
+| `sessionCapabilities.fork` | `{}` | 支持 `session/fork` 从已有会话创建新会话 |
+| `auth.logout` | `{}` | 支持 `logout` 清除已存储的凭证 |
 
 ## ACP 方法覆盖
 
 规范把方法分为**稳定**面和仍在演化的**不稳定**面（`@agentclientprotocol/sdk@0.23.0` 中以 `unstable_*` 前缀挂载的 handler）。两部分稳定性保证完全不同——稳定面是任何生产 ACP 客户端都会用到的方法，不稳定面覆盖实验性扩展（inline-edit 预测、document 缓冲区同步、provider 管理、elicitation 等），因此分开追踪。
 
-**概览：稳定面 agent-side 实现 10/12（83%）+ client reverse-RPC 实现 4/9（44%）；不稳定面只接入了 `session/set_model`（1/19）。** 任何正常 agent 流程所需的方法（initialize → auth → new/load/resume → prompt → cancel + 文件 I/O + 工具审批）都已实现。
+**概览：稳定面 agent-side 实现 12/12（100%）+ client reverse-RPC 实现 5/9（56%）；不稳定面接入了 `session/set_model` + `elicitation/create`（2/19）。** 任何正常 agent 流程所需的方法（initialize → auth → new/load/resume → prompt → cancel + 文件 I/O + 工具审批 + 终端执行 + 问题 elicitation）都已实现。
 
-### 稳定面 agent-side — IDE → agent（10 / 12）
+### 稳定面 agent-side — IDE → agent（12 / 12）
 
 | 方法 | 状态 | 说明 |
 | --- | --- | --- |
@@ -46,25 +50,30 @@ nighthawk acp
 | `session/list` | 是 | 枚举磁盘会话（通过 `sessionCapabilities.list = {}` 公告） |
 | `session/set_mode` | 是 | 兼容路径，与 `set_config_option({configId:'mode'})` 走同一 dispatcher |
 | `session/set_config_option` | 是 | 统一的 model / thinking / mode picker 分发 |
-| `session/close` | 否 | |
-| `logout` | 否 | |
+| `session/close` | 是 | 关闭活跃会话；尽力操作（未知或已关闭的会话不报错） |
+| `logout` | 是 | 通过 `oauthService.logout` 清除已存储的凭证 |
 
-### 稳定面 client-side reverse-RPC — agent → IDE（4 / 9）
+### 稳定面 client-side reverse-RPC — agent → IDE（5 / 9）
 
 | 方法 | 状态 | 说明 |
 | --- | --- | --- |
 | `session/update` | 是 | 流式推送 `agent_message_chunk` / `tool_call*` / `plan` / `config_option_update` / `available_commands_update` |
-| `session/request_permission` | 是 | 工具审批和问题 elicitation 共用此通道 |
+| `session/request_permission` | 是 | 工具审批和问题 elicitation 共用此通道；当 `elicitation/form` 不可用时，作为 `AskUserQuestion` 的降级通道 |
 | `fs/read_text_file` | 是 | kaos 层文件读取路由到客户端（通过 `fsCapabilities` 公告） |
 | `fs/write_text_file` | 是 | kaos 层文件写入路由到客户端 |
-| `terminal/create` · `output` · `release` · `kill` · `wait_for_exit` | 否 | 终端 reverse-RPC 未接，shell 命令走本地执行 |
+| `terminal/create` · `output` · `release` · `kill` · `wait_for_exit` | 是 | 终端 reverse-RPC，用于 Bash 执行；客户端在 `initialize` 中公告 `clientCapabilities.terminal` 时启用；未公告时降级为本地执行 |
 
-### 不稳定面（1 / 19）
+### 不稳定面（2 / 19）
 
 | 方法 | 状态 | 说明 |
 | --- | --- | --- |
 | `session/set_model` | 是 | 兼容路径，等价于 `set_config_option({configId:'model'})` |
-| 其余 18 个方法 | 否 | 包括 session 生命周期扩展、缓冲区同步、inline-edit 预测、provider 管理等 |
+| `elicitation/create` | 是 | 表单模式的问题 elicitation；客户端在 `initialize` 中公告 `clientCapabilities.elicitation.form` 时启用原生多题 + 多选；失败时降级到 `session/request_permission` |
+| 其余 17 个方法 | 否 | 包括 session 生命周期扩展、缓冲区同步、inline-edit 预测、provider 管理等 |
+
+::: warning 已知边界
+当客户端未公告 `elicitation/form` 时，`AskUserQuestion` 会降级到 `session/request_permission` 通道；该通道仅发送第一个问题，`multiSelect` 被折叠为单选，合成的 `Other` 自由文本选项也不受支持。
+:::
 
 上述未列出的方法一律返回 `methodNotFound`。
 

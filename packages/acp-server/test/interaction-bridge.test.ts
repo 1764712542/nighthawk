@@ -365,4 +365,82 @@ describe('AcpInteractionBridge', () => {
     expect(session.responses).toEqual([{ id: 'question-el-1', response: { 'Pick one': 'B' } }]);
     bridge.dispose();
   });
+
+  it('rejects a question with 0 questions and responds null', async () => {
+    const session = makeFakeSession();
+    const { conn, calls: permissionCalls } = makeFakeConn(() => ({
+      outcome: { outcome: 'selected', optionId: 'q0_opt_0' },
+    }));
+    const emptyInteraction: Interaction = {
+      id: 'question-empty-1',
+      kind: 'question',
+      payload: {
+        toolCallId: 'tc_empty',
+        turnId: 1,
+        questions: [],
+      },
+      origin: { turnId: 1 },
+      createdAt: 0,
+    };
+    session.setPending([emptyInteraction]);
+    const bridge = new AcpInteractionBridge(conn, session.handle, SESSION_ID);
+    await flush();
+
+    expect(permissionCalls).toHaveLength(0);
+    expect(session.responses).toEqual([{ id: 'question-empty-1', response: null }]);
+    bridge.dispose();
+  });
+
+  it('rejects a question with duplicate text and responds null', async () => {
+    const session = makeFakeSession();
+    const { conn, calls: permissionCalls } = makeFakeConn(() => ({
+      outcome: { outcome: 'selected', optionId: 'q0_opt_0' },
+    }));
+    const dupInteraction: Interaction = {
+      id: 'question-dup-1',
+      kind: 'question',
+      payload: {
+        toolCallId: 'tc_dup',
+        turnId: 2,
+        questions: [
+          { question: 'Same?', options: [{ label: 'a' }, { label: 'b' }] },
+          { question: 'Same?', options: [{ label: 'c' }, { label: 'd' }] },
+        ],
+      },
+      origin: { turnId: 2 },
+      createdAt: 0,
+    };
+    session.setPending([dupInteraction]);
+    const bridge = new AcpInteractionBridge(conn, session.handle, SESSION_ID);
+    await flush();
+
+    expect(permissionCalls).toHaveLength(0);
+    expect(session.responses).toEqual([{ id: 'question-dup-1', response: null }]);
+    bridge.dispose();
+  });
+
+  it('rejects a question with only 1 option and responds null', async () => {
+    const session = makeFakeSession();
+    const { conn, calls: permissionCalls } = makeFakeConn(() => ({
+      outcome: { outcome: 'selected', optionId: 'q0_opt_0' },
+    }));
+    const oneOptInteraction: Interaction = {
+      id: 'question-oneopt-1',
+      kind: 'question',
+      payload: {
+        toolCallId: 'tc_one',
+        turnId: 3,
+        questions: [{ question: 'Only one?', options: [{ label: 'a' }] }],
+      },
+      origin: { turnId: 3 },
+      createdAt: 0,
+    };
+    session.setPending([oneOptInteraction]);
+    const bridge = new AcpInteractionBridge(conn, session.handle, SESSION_ID);
+    await flush();
+
+    expect(permissionCalls).toHaveLength(0);
+    expect(session.responses).toEqual([{ id: 'question-oneopt-1', response: null }]);
+    bridge.dispose();
+  });
 });

@@ -38,6 +38,7 @@ import {
   outcomeToQuestionAnswer,
   questionItemToPermissionOptions,
   questionRequestToElicitationParams,
+  questionRequestValidationError,
 } from './question';
 
 export class AcpInteractionBridge {
@@ -175,12 +176,22 @@ export class AcpInteractionBridge {
    * for the same request. Any failure of the final attempt resolves with
    * `null` so the tool takes its canonical "user dismissed" branch —
    * strictly safer than fabricating an answer.
+   *
+   * Known degradation boundary:
+   *  - `questions.length > 1` without form mode → only the first question is
+   *    asked (logged). The remaining questions are dropped.
+   *  - `multiSelect === true` without form mode → the question is still asked
+   *    as single-select. The engine tolerates a single-key answer for a
+   *    multi-select prompt.
+   *  - `Other` free-text option is not supported on either surface.
    */
   private async handleQuestion(req: QuestionRequest): Promise<QuestionAnswers | null> {
     const questions = req.questions;
-    if (questions.length === 0) {
-      log.warn('acp: handleQuestion received empty questions array', {
+    const validationError = questionRequestValidationError(questions);
+    if (validationError !== null) {
+      log.warn('acp: handleQuestion rejected invalid request', {
         sessionId: this.sessionId,
+        error: validationError,
       });
       return null;
     }

@@ -5,7 +5,11 @@ import type {
 import type { QuestionItem } from '@nighthawk/nighthawk-sdk';
 import { describe, expect, it } from 'vitest';
 
-import { outcomeToQuestionAnswer, questionItemToPermissionOptions } from '../src/question';
+import {
+  outcomeToQuestionAnswer,
+  questionItemToPermissionOptions,
+  questionRequestValidationError,
+} from '../src/question';
 
 const sampleQuestion: QuestionItem = {
   question: 'Pick a flavour',
@@ -97,5 +101,92 @@ describe('outcomeToQuestionAnswer', () => {
 
   it('defensively maps an out-of-bounds index to null', () => {
     expect(outcomeToQuestionAnswer(sampleQuestion, selected('q0_opt_99'))).toBeNull();
+  });
+});
+
+describe('questionRequestValidationError', () => {
+  const validSingle: QuestionItem[] = [sampleQuestion];
+
+  it('returns null for a valid single question', () => {
+    expect(questionRequestValidationError(validSingle)).toBeNull();
+  });
+
+  it('returns null for 4 questions (upper bound)', () => {
+    const four: QuestionItem[] = [
+      { question: 'Q1?', options: [{ label: 'a' }, { label: 'b' }] },
+      { question: 'Q2?', options: [{ label: 'a' }, { label: 'b' }] },
+      { question: 'Q3?', options: [{ label: 'a' }, { label: 'b' }] },
+      { question: 'Q4?', options: [{ label: 'a' }, { label: 'b' }] },
+    ];
+    expect(questionRequestValidationError(four)).toBeNull();
+  });
+
+  it('rejects 0 questions', () => {
+    expect(questionRequestValidationError([])).toBe('AskUserQuestion requires 1-4 questions.');
+  });
+
+  it('rejects 5 questions (exceeds upper bound)', () => {
+    const five: QuestionItem[] = Array.from({ length: 5 }, (_, i) => ({
+      question: `Q${i + 1}?`,
+      options: [{ label: 'a' }, { label: 'b' }],
+    }));
+    expect(questionRequestValidationError(five)).toBe('AskUserQuestion requires 1-4 questions.');
+  });
+
+  it('rejects a question with empty text', () => {
+    const bad: QuestionItem[] = [
+      { question: '', options: [{ label: 'a' }, { label: 'b' }] },
+    ];
+    expect(questionRequestValidationError(bad)).toBe(
+      'AskUserQuestion questions must be non-empty.',
+    );
+  });
+
+  it('rejects duplicate question text', () => {
+    const dup: QuestionItem[] = [
+      { question: 'Same?', options: [{ label: 'a' }, { label: 'b' }] },
+      { question: 'Same?', options: [{ label: 'c' }, { label: 'd' }] },
+    ];
+    expect(questionRequestValidationError(dup)).toContain('duplicated');
+  });
+
+  it('rejects a question with only 1 option', () => {
+    const one: QuestionItem[] = [
+      { question: 'Only one?', options: [{ label: 'a' }] },
+    ];
+    expect(questionRequestValidationError(one)).toBe(
+      'Each AskUserQuestion question requires 2-4 options.',
+    );
+  });
+
+  it('rejects a question with 5 options', () => {
+    const five: QuestionItem[] = [
+      {
+        question: 'Too many?',
+        options: [{ label: 'a' }, { label: 'b' }, { label: 'c' }, { label: 'd' }, { label: 'e' }],
+      },
+    ];
+    expect(questionRequestValidationError(five)).toBe(
+      'Each AskUserQuestion question requires 2-4 options.',
+    );
+  });
+
+  it('rejects an option with empty label', () => {
+    const badLabel: QuestionItem[] = [
+      { question: 'Q?', options: [{ label: '' }, { label: 'b' }] },
+    ];
+    expect(questionRequestValidationError(badLabel)).toBe(
+      'AskUserQuestion option labels must be non-empty.',
+    );
+  });
+
+  it('rejects duplicate option labels within a question', () => {
+    const dupLabel: QuestionItem[] = [
+      {
+        question: 'Q?',
+        options: [{ label: 'Same' }, { label: 'Same' }],
+      },
+    ];
+    expect(questionRequestValidationError(dupLabel)).toContain('duplicated');
   });
 });

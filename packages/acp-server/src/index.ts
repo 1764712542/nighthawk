@@ -84,6 +84,7 @@ export {
   outcomeToQuestionAnswer,
   questionItemToPermissionOptions,
   questionRequestToElicitationParams,
+  questionRequestValidationError,
 } from './question';
 export { projectHistoryToSessionUpdates } from './replay';
 export { AcpRuntimeProviderFactory } from './acp-terminal';

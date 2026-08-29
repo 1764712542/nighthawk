@@ -196,8 +196,8 @@ describe('AcpSession.handleQuestion', () => {
     raw.reply = { outcome: { outcome: 'selected', optionId: 'q0_opt_1' } };
     new AcpSession(conn, handle.session, undefined, track);
 
-    const extra1: QuestionItem = { question: 'Q2', options: [{ label: 'a' }] };
-    const extra2: QuestionItem = { question: 'Q3', options: [{ label: 'b' }] };
+    const extra1: QuestionItem = { question: 'Q2', options: [{ label: 'a' }, { label: 'a2' }, { label: 'a3' }] };
+    const extra2: QuestionItem = { question: 'Q3', options: [{ label: 'b' }, { label: 'b2' }, { label: 'b3' }] };
     const answer = await handle.invokeHandler(
       makeReq({ questions: [sampleQuestion, extra1, extra2] }),
     );
@@ -269,5 +269,69 @@ describe('AcpSession.handleQuestion', () => {
 
     expect(answer).toEqual({ '哪个口味？': '香草' });
     expect(trackCalls).toEqual([]);
+  });
+
+  it('invalid request (0 questions) is rejected with null and a warn log', async () => {
+    const { conn, raw } = makeConn();
+    const handle = makeQuestionSession('s-q-invalid-zero');
+    raw.reply = { outcome: { outcome: 'selected', optionId: 'q0_opt_0' } };
+    new AcpSession(conn, handle.session, undefined, track);
+
+    const answer = await handle.invokeHandler({
+      toolCallId: 'tc-invalid',
+      questions: [],
+    });
+
+    expect(answer).toBeNull();
+    expect(raw.permissionRequests).toHaveLength(0);
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('handleQuestion rejected invalid request'),
+      expect.objectContaining({ error: expect.stringContaining('1-4 questions') }),
+    );
+  });
+
+  it('invalid request (duplicate question text) is rejected with null', async () => {
+    const { conn, raw } = makeConn();
+    const handle = makeQuestionSession('s-q-invalid-dup');
+    raw.reply = { outcome: { outcome: 'selected', optionId: 'q0_opt_0' } };
+    new AcpSession(conn, handle.session, undefined, track);
+
+    const dup: QuestionItem[] = [
+      { question: 'Same?', options: [{ label: 'a' }, { label: 'b' }] },
+      { question: 'Same?', options: [{ label: 'c' }, { label: 'd' }] },
+    ];
+    const answer = await handle.invokeHandler({
+      toolCallId: 'tc-dup',
+      questions: dup,
+    });
+
+    expect(answer).toBeNull();
+    expect(raw.permissionRequests).toHaveLength(0);
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('handleQuestion rejected invalid request'),
+      expect.objectContaining({ error: expect.stringContaining('duplicated') }),
+    );
+  });
+
+  it('invalid request (too few options) is rejected with null', async () => {
+    const { conn, raw } = makeConn();
+    const handle = makeQuestionSession('s-q-invalid-opts');
+    raw.reply = { outcome: { outcome: 'selected', optionId: 'q0_opt_0' } };
+    new AcpSession(conn, handle.session, undefined, track);
+
+    const badOpts: QuestionItem[] = [
+      { question: 'One option?', options: [{ label: 'a' }] },
+    ];
+    const answer = await handle.invokeHandler({
+      toolCallId: 'tc-opts',
+      questions: badOpts,
+    });
+
+    expect(answer).toBeNull();
+    expect(raw.permissionRequests).toHaveLength(0);
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('handleQuestion rejected invalid request'),
+      expect.objectContaining({ error: expect.stringContaining('2-4 options') }),
+    );
   });
 });

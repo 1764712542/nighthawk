@@ -97,3 +97,31 @@ export function outcomeToQuestionAnswer(
   if (!selected) return null;
   return { [question.question]: selected.label };
 }
+
+export function questionRequestValidationError(
+  questions: readonly QuestionItem[],
+): string | null {
+  if (questions.length < 1 || questions.length > 4) {
+    return 'AskUserQuestion requires 1-4 questions.';
+  }
+  const questionTexts = new Set<string>();
+  for (const question of questions) {
+    if (question.question.length === 0) return 'AskUserQuestion questions must be non-empty.';
+    if (questionTexts.has(question.question)) {
+      return `AskUserQuestion question text is duplicated: ${JSON.stringify(question.question)}.`;
+    }
+    questionTexts.add(question.question);
+    if (question.options.length < 2 || question.options.length > 4) {
+      return 'Each AskUserQuestion question requires 2-4 options.';
+    }
+    const labels = new Set<string>();
+    for (const option of question.options) {
+      if (option.label.length === 0) return 'AskUserQuestion option labels must be non-empty.';
+      if (labels.has(option.label)) {
+        return `AskUserQuestion option label is duplicated: ${JSON.stringify(option.label)}.`;
+      }
+      labels.add(option.label);
+    }
+  }
+  return null;
+}

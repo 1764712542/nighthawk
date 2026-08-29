@@ -57,7 +57,11 @@ import {
   turnEndReasonToStopReason,
 } from './events-map';
 import { acpModeToToggles, DEFAULT_MODE_ID, isAcpModeId, type AcpModeId } from './modes';
-import { outcomeToQuestionAnswer, questionItemToPermissionOptions } from './question';
+import {
+  outcomeToQuestionAnswer,
+  questionItemToPermissionOptions,
+  questionRequestValidationError,
+} from './question';
 import { detectSlashIntent } from './slash';
 
 /**
@@ -1392,11 +1396,11 @@ export class AcpSession {
    */
   private async handleQuestion(req: QuestionRequest): Promise<QuestionAnswers | null> {
     const questions = req.questions;
-    if (questions.length === 0) {
-      // Pathological input — log and dismiss. No telemetry: the SDK
-      // would never emit an empty `questions` payload in practice.
-      log.warn('acp: handleQuestion received empty questions array', {
+    const validationError = questionRequestValidationError(questions);
+    if (validationError !== null) {
+      log.warn('acp: handleQuestion rejected invalid request', {
         sessionId: this.id,
+        error: validationError,
       });
       return null;
     }

@@ -1,11 +1,23 @@
 /**
- * ACP `session/request_permission` ↔ agent-core-v2 ask-user mappers.
+ * ACP `session/request_permission` / `elicitation/create` ↔ agent-core-v2 ask-user mappers.
  *
  * ACP has no dedicated `session/request_question` method, so the AskUserQuestion
- * tool's question request is bridged through the same `requestPermission`
- * surface approvals use, with option ids tagged in a `q{n}_*` namespace so the
- * round-trip is unambiguous. Pure mappers — no IO — so the mappings stay
- * unit-testable without a live connection.
+ * tool's question request is bridged through two complementary surfaces:
+ *  1. `request_permission` (legacy fallback): single-question, single-select
+ *     only; multiple questions degrade to the first question and multi-select
+ *     is collapsed to single-select.
+ *  2. `elicitation/create` (form-capable): native multi-question and
+ *     multi-select support. Selected when the client advertises
+ *     `clientCapabilities.elicitation.form` at `initialize`. Falls back to
+ *     `request_permission` when the RPC fails.
+ *
+ * The `Other` synthetic free-text option is NOT supported on either surface.
+ * The permission bridge has no text-input option kind; elicitation form
+ * schemas would need an additional `type: 'string'` field with no `oneOf`
+ * constraint, which is not implemented yet.
+ *
+ * Pure mappers — no IO — so the mappings stay unit-testable without a live
+ * connection.
  */
 
 import type {
@@ -92,6 +104,34 @@ export function outcomeToQuestionAnswer(
   return { [question.question]: selected.label };
 }
 
+export function questionRequestValidationError(
+  questions: readonly QuestionItem[],
+): string | null {
+  if (questions.length < 1 || questions.length > 4) {
+    return 'AskUserQuestion requires 1-4 questions.';
+  }
+  const questionTexts = new Set<string>();
+  for (const question of questions) {
+    if (question.question.length === 0) return 'AskUserQuestion questions must be non-empty.';
+    if (questionTexts.has(question.question)) {
+      return `AskUserQuestion question text is duplicated: ${JSON.stringify(question.question)}.`;
+    }
+    questionTexts.add(question.question);
+    if (question.options.length < 2 || question.options.length > 4) {
+      return 'Each AskUserQuestion question requires 2-4 options.';
+    }
+    const labels = new Set<string>();
+    for (const option of question.options) {
+      if (option.label.length === 0) return 'AskUserQuestion option labels must be non-empty.';
+      if (labels.has(option.label)) {
+        return `AskUserQuestion option label is duplicated: ${JSON.stringify(option.label)}.`;
+      }
+      labels.add(option.label);
+    }
+  }
+  return null;
+}
+
 // ---------------------------------------------------------------------------
 // Elicitation bridge (`elicitation/create`, form mode)
 // ---------------------------------------------------------------------------
@@ -124,6 +164,10 @@ function titledEnumOptions(question: QuestionItem): EnumOption[] {
  * The synthetic "Other" free-text option (`otherLabel`) has no elicitation
  * equivalent without an extra text field; it stays unsupported for now,
  * matching the `request_permission` bridge.
+ *
+ * Known boundary: `multiSelect` questions are fully supported in form mode,
+ * but the permission bridge degrades them to single-select (the engine's
+ * ask-user tool tolerates a single-key answer for a multi-select prompt).
  */
 export function questionRequestToElicitationParams(
   questions: readonly QuestionItem[],

@@ -30,9 +30,9 @@ The table below lists the capabilities declared by the current ACP adapter layer
 
 The spec divides methods into a **stable** surface and an evolving **unstable** surface (handlers mounted with the `unstable_*` prefix in `@agentclientprotocol/sdk@0.23.0`). The two have entirely different stability guarantees — the stable surface covers methods every production ACP client uses, while the unstable surface covers experimental extensions (inline-edit prediction, document buffer sync, provider management, elicitation, etc.) — so they are tracked separately.
 
-**Summary: stable agent-side 10/12 (83%) + client reverse-RPC 4/9 (44%); unstable surface has only `session/set_model` (1/19).** All methods needed for a normal agent flow (initialize → auth → new/load/resume → prompt → cancel + file I/O + tool approval) are implemented.
+**Summary: stable agent-side 12/12 (100%) + client reverse-RPC 5/9 (56%); unstable surface has `session/set_model` + `elicitation/create` (2/19).** All methods needed for a normal agent flow (initialize → auth → new/load/resume → prompt → cancel + file I/O + tool approval + terminal execution + question elicitation) are implemented.
 
-### Stable agent-side — IDE → agent (10 / 12)
+### Stable agent-side — IDE → agent (12 / 12)
 
 | Method | Implemented | Description |
 | --- | --- | --- |
@@ -46,25 +46,30 @@ The spec divides methods into a **stable** surface and an evolving **unstable** 
 | `session/list` | Yes | Enumerates sessions on disk (advertised via `sessionCapabilities.list = {}`) |
 | `session/set_mode` | Yes | Compatibility path; dispatches to the same handler as `set_config_option({configId:'mode'})` |
 | `session/set_config_option` | Yes | Unified model / thinking / mode picker dispatcher |
-| `session/close` | No | |
-| `logout` | No | |
+| `session/close` | Yes | Closes a live session; best-effort (unknown or already-closed session is not an error) |
+| `logout` | Yes | Clears stored credentials via `oauthService.logout` |
 
-### Stable client-side reverse-RPC — agent → IDE (4 / 9)
+### Stable client-side reverse-RPC — agent → IDE (5 / 9)
 
 | Method | Implemented | Description |
 | --- | --- | --- |
 | `session/update` | Yes | Streams `agent_message_chunk` / `tool_call*` / `plan` / `config_option_update` / `available_commands_update` |
-| `session/request_permission` | Yes | Shared channel for tool approval and question elicitation |
+| `session/request_permission` | Yes | Shared channel for tool approval and question elicitation; used as the fallback for `AskUserQuestion` when `elicitation/form` is unavailable |
 | `fs/read_text_file` | Yes | File reads at the kaos layer are routed to the client (advertised via `fsCapabilities`) |
 | `fs/write_text_file` | Yes | File writes at the kaos layer are routed to the client |
-| `terminal/create` · `output` · `release` · `kill` · `wait_for_exit` | No | Terminal reverse-RPC not connected; shell commands use local execution |
+| `terminal/create` · `output` · `release` · `kill` · `wait_for_exit` | Yes | Terminal reverse-RPC for Bash execution; enabled when the client advertises `clientCapabilities.terminal` at `initialize`; falls back to local execution when not advertised |
 
-### Unstable surface (1 / 19)
+### Unstable surface (2 / 19)
 
 | Method | Implemented | Description |
 | --- | --- | --- |
 | `session/set_model` | Yes | Compatibility path; equivalent to `set_config_option({configId:'model'})` |
-| Remaining 18 methods | No | Includes session lifecycle extensions, buffer sync, inline-edit prediction, provider management, etc. |
+| `elicitation/create` | Yes | Form-mode question elicitation; enables native multi-question + multi-select when the client advertises `clientCapabilities.elicitation.form` at `initialize`; falls back to `session/request_permission` on failure |
+| Remaining 17 methods | No | Includes session lifecycle extensions, buffer sync, inline-edit prediction, provider management, etc. |
+
+::: warning Known boundary
+When the client does not advertise `elicitation/form`, `AskUserQuestion` falls back to the `session/request_permission` bridge. In that fallback mode only the first question is sent, `multiSelect` is collapsed to single-select, and the synthetic `Other` free-text option is unsupported.
+:::
 
 All methods not listed above return `methodNotFound`.
 
