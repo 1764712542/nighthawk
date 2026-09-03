@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NightHawk CLI — 面试技术准备</title>
+<style>
+:root{--bg:#000013;--text:#f3f3f3;--dim:#9999bb;--border:#1a1a3a;--accent:#6c6cff;--green:#4aff8a;--font:'JetBrains Mono','Courier New',monospace}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--font);padding:40px 20px;line-height:1.8;font-size:14px}
+.wrap{max-width:960px;margin:0 auto}
+h1{font-size:28px;margin-bottom:8px;color:var(--accent)}
+h2{font-size:20px;margin:40px 0 16px;color:var(--green);border-bottom:1px solid var(--border);padding-bottom:8px}
+h3{font-size:16px;margin:24px 0 12px;color:var(--text)}
+p{margin:8px 0;color:var(--dim)}
+.code{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;padding:12px 16px;margin:12px 0;overflow-x:auto;font-size:13px;color:var(--text);line-height:1.6}
+.tag{display:inline-block;background:rgba(108,108,255,0.15);color:var(--accent);padding:2px 8px;border-radius:4px;font-size:12px;margin:2px}
+.tag.green{background:rgba(74,255,138,0.15);color:var(--green)}
+ul{margin:8px 0 8px 20px;color:var(--dim)}
+li{margin:4px 0}
+a{color:var(--accent)}
+.flow{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0;align-items:center}
+.flow span{background:var(--border);padding:4px 10px;border-radius:4px;font-size:12px;color:var(--text)}
+.flow .arrow{color:var(--dim);background:none;padding:0 4px}
+</style>
+</head>
+<body><div class="wrap">
+
+<h1>NightHawk CLI</h1>
+<p>安全优先的终端 AI Agent — 渗透测试、代码审计、全栈编码</p>
+
+<h2>一、技术栈总览</h2>
+
+<h3>1.1 核心语言与运行时</h3>
+<div class="code">
+<span class="tag">TypeScript 6.0.2</span>
+<span class="tag">ES2024</span>
+<span class="tag">Node.js ≥24.15.0</span>
+<span class="tag">pnpm 10.33.0</span>
+</div>
+<ul>
+<li>TypeScript strict mode + <code>noUncheckedIndexedAccess</code> + <code>noImplicitOverride</code></li>
+<li>Bundler module resolution — 路径别名 <code>#/</code> 映射到 <code>./src/*.ts</code></li>
+<li>Monorepo 工作区 — pnpm workspace 管理 40+ 包</li>
+</ul>
+
+<h3>1.2 构建工具</h3>
+<div class="code">
+<span class="tag">tsdown 0.22.0</span>
+<span class="tag">rolldown 1.0.1</span>
+<span class="tag">Node.js SEA</span>
+</div>
+<ul>
+<li><strong>tsdown</strong>：基于 rolldown（Rust 打包器）的零配置构建工具</li>
+<li><strong>SEA</strong>（Single Executable Application）：Node.js 官方单文件可执行程序，将 JS bundle + Node.js 运行时合并为单一 Mach-O 二进制</li>
+<li>构建产物：<code>dist/main.mjs</code>（JS bundle）+ <code>dist-native/bin/</code>（原生二进制）</li>
+</ul>
+
+<h3>1.3 测试</h3>
+<div class="code">
+<span class="tag">Vitest 4.1.4</span>
+<span class="tag">node:test</span>
+</div>
+<ul>
+<li>Vitest：单元测试 + 集成测试，CI 5 分片并行</li>
+<li>node:test：pi-tui 组件测试</li>
+<li>安全引擎 smoke test：<code>scripts/smoke-security.ts</code></li>
+</ul>
+
+<h3>1.4 代码质量</h3>
+<div class="code">
+<span class="tag">oxlint 1.59.0</span>
+<span class="tag">TypeScript 6.0.2</span>
+</div>
+<ul>
+<li>oxlint — Rust 编写的 linter，TypeScript-aware 规则，替代 ESLint</li>
+<li>lint-staged + git hooks — 提交前自动格式化</li>
+<li>Comment-free zones：<code>agent-core-v2</code>、<code>kap-server</code>、<code>transcript</code> 禁止注释（仅 JSDoc 例外）</li>
+</ul>
+
+<h3>1.5 CI/CD</h3>
+<div class="code">
+<span class="tag">GitHub Actions</span>
+<span class="tag">Changesets</span>
+</div>
+<ul>
+<li>5 分片并行测试、lint、typecheck、安全 smoke test</li>
+<li>Changesets 管理版本和 changelog</li>
+<li>自动构建 6 平台原生二进制（darwin/linux/win32 × arm64/x64）</li>
+<li>自动部署文档站到 GitHub Pages</li>
+<li>自动更新 Homebrew formula</li>
+</ul>
+
+<h3>1.6 文档</h3>
+<div class="code">
+<span class="tag">VitePress</span>
+<span class="tag">Vue 3</span>
+</div>
+<ul>
+<li>中英双语文档站：<code>https://AliceGoto.github.io/nighthawk/</code></li>
+<li>宇宙汤（Cosmic Broth）深空科幻主题</li>
+<li>每个 push 到 main 自动部署</li>
+</ul>
+
+<h2>二、核心架构</h2>
+
+<h3>2.1 总体架构</h3>
+<div class="code">
+┌─────────────────────────────────────────────┐
+│                 TUI (pi-tui)                  │
+│      apps/nighthawk/src/tui/                 │
+├─────────────────────────────────────────────┤
+│              CLI / 命令层                     │
+│      apps/nighthawk/src/cli/                 │
+├─────────────────────────────────────────────┤
+│           Agent Core (v1 / v2)               │
+│   packages/agent-core/  packages/agent-core-v2/│
+├─────────────────────────────────────────────┤
+│   LLM 抽象    │  执行环境  │  安全引擎       │
+│   kosong      │  kaos      │  security      │
+├─────────────────────────────────────────────┤
+│     SDK (node-sdk)  │  客户端 (klient)       │
+│     ACP 协议 (acp-adapter/server)            │
+├─────────────────────────────────────────────┤
+│      KAP Server (kap-server)                 │
+│      REST + WebSocket API                    │
+└─────────────────────────────────────────────┘
+</div>
+
+<h3>2.2 引擎架构 — DI × Scope</h3>
+<p>agent-core-v2 的核心理念：<strong>依赖注入 × 生命周期作用域</strong>。</p>
+<div class="code">
+<span class="tag">App</span> → <span class="tag">Workspace</span> → <span class="tag">Session</span> → <span class="tag">Agent</span>
+</div>
+<ul>
+<li><strong>App</strong>：进程级单例，全局配置、插件、MCP 管理</li>
+<li><strong>Workspace</strong>：工作区级，文件系统、Git、MCP 连接池</li>
+<li><strong>Session</strong>：会话级，消息历史、Token 计数</li>
+<li><strong>Agent</strong>：Agent 级，工具注册、状态、Goal</li>
+</ul>
+<p>规则：父作用域不能依赖子作用域，子作用域可以注入父作用域服务。</p>
+
+<h3>2.3 Agent 循环</h3>
+<div class="flow">
+<span>User Input</span><span class="arrow">→</span>
+<span>Plan</span><span class="arrow">→</span>
+<span>Act (Tool Call)</span><span class="arrow">→</span>
+<span>Observe</span><span class="arrow">→</span>
+<span>Reflect</span><span class="arrow">→</span>
+<span>Next Turn</span>
+</div>
+<ul>
+<li><strong>Plan</strong>：Agent 输出思考链，决定下一步工具调用</li>
+<li><strong>Act</strong>：执行工具（Read、Edit、Bash、Grep 等）</li>
+<li><strong>Observe</strong>：观察工具返回结果</li>
+<li><strong>Reflect</strong>：根据结果调整计划，决定是否需要更多工具调用或生成最终回复</li>
+</ul>
+
+<h2>三、数据流</h2>
+
+<h3>3.1 会话生命周期</h3>
+<div class="code">
+创建 → Prompt → Turn 循环 → Close → 持久化
+</div>
+<ul>
+<li><strong>创建</strong>：<code>harness.createSession()</code> → 初始化 Session 对象</li>
+<li><strong>Prompt</strong>：用户输入 → <code>session.prompt()</code> → 创建 Turn</li>
+<li><strong>Turn 循环</strong>：LLM 调用 → 工具调用 → 结果观察 → 下一轮</li>
+<li><strong>Close</strong>：<code>session.close()</code> → flushMetadata → triggerSessionEnd</li>
+<li>空会话（无 turn）不保存</li>
+</ul>
+
+<h3>3.2 工具调用流程</h3>
+<div class="code">
+Agent → ToolSelection → resolveExecution → execute → observe → result
+</div>
+<ul>
+<li><strong>ToolSelection</strong>：LLM 选择工具和参数</li>
+<li><strong>resolveExecution</strong>：权限检查 + 审批（Permission Chain）</li>
+<li><strong>execute</strong>：实际执行工具操作</li>
+<li>权限模式：<code>manual</code>（需审批）、<code>auto</code>（自动批准）、<code>yolo</code>（跳过所有审批）</li>
+</ul>
+
+<h3>3.3 MCP 协议</h3>
+<div class="code">
+MCP Server → Stdio/HTTP/SSE → McpConnectionManager → Agent Tool
+</div>
+<ul>
+<li>支持 3 种传输方式：<code>stdio</code>、<code>http</code>、<code>sse</code></li>
+<li>MCP Server 配置文件：<code>mcp.json</code>（用户级 + 项目级 + 插件级）</li>
+<li>OAuth 认证流程：<code>needs-auth</code> 状态机</li>
+</ul>
+
+<h3>3.4 ACP 协议</h3>
+<div class="code">
+IDE → ACP Client → nighthawk acp → JSON-RPC → Engine
+</div>
+<ul>
+<li>IDE 通过 <code>nighthawk acp</code> 子进程接入</li>
+<li>JSON-RPC over stdio</li>
+<li>支持：Zed、JetBrains（PyCharm/IntelliJ）、Paseo</li>
+</ul>
+
+<h2>四、安全引擎</h2>
+
+<h3>4.1 SecurityScan</h3>
+<ul>
+<li>116+ 漏洞规则，覆盖 OWASP Top 10 + CWE</li>
+<li>SQLi、XSS、命令注入、路径遍历、SSRF、反序列化、弱加密、认证缺陷、XXE</li>
+<li>多语言支持：JavaScript/TypeScript、Python、Go、Rust、Java、C/C++</li>
+</ul>
+
+<h3>4.2 SecretScan</h3>
+<ul>
+<li>正则模式匹配 + Shannon 熵评分</li>
+<li>检测硬编码密码、API Key、Token、私钥</li>
+</ul>
+
+<h3>4.3 TaintTrace</h3>
+<ul>
+<li>变量级污点追踪</li>
+<li>追踪用户输入到危险 sink 的完整数据流</li>
+</ul>
+
+<h3>4.4 DepAudit</h3>
+<ul>
+<li>依赖安全审计</li>
+<li>离线 / OSV / 包管理器三种模式</li>
+</ul>
+
+<h2>五、关键实现细节</h2>
+
+<h3>5.1 权限系统</h3>
+<div class="code">
+PermissionChain: 8 个策略
+├── auto-mode-approve
+├── yolo-mode-approve
+├── goal-start-review-ask
+├── exit-plan-mode-review-ask
+├── session-approval-history
+├── user-configured-rules
+├── auto-mode-ask-user-question-deny
+└── path-access-policy
+</div>
+
+<h3>5.2 上下文压缩</h3>
+<ul>
+<li><strong>微压缩</strong>（micro compaction）：丢弃冗余中间步骤</li>
+<li><strong>全量压缩</strong>（full compaction）：结构化摘要，保留关键上下文</li>
+<li><strong>Handoff 压缩</strong>：subagent 返回结果压缩</li>
+<li><code>/compact</code> 命令手动触发</li>
+</ul>
+
+<h3>5.3 持久化</h3>
+<ul>
+<li><strong>AppendLog</strong>：WAL 式追加日志，用于事件溯源</li>
+<li><strong>MiniDb</strong>：嵌入式 JSON 文档存储，快照 + WAL</li>
+<li><strong>Session Index</strong>：目录扫描 + MiniDb 查询模型</li>
+</ul>
+
+<h3>5.4 渗透测试模式</h3>
+<ul>
+<li>9 阶段强制编排：侦察 → 扫描 → 枚举 → 漏洞分析 → 利用 → 提权 → 横向 → 报告 → 清理</li>
+<li>专用工具：PortScanner、DirBrute、PasswordBrute、ThreatModel、SubdomainEnum</li>
+<li>Hacker 终端主题（Matrix 绿）</li>
+<li>普通模式与渗透模式命令隔离</li>
+</ul>
+
+<h3>5.5 AgentSwarm 集群</h3>
+<ul>
+<li>最多 128 个并行子 Agent</li>
+<li>模板分发：<code>prompt_template + items</code></li>
+<li>角色卡片自动匹配</li>
+<li><code>/swarm-status</code> 查看实时状态</li>
+</ul>
+
+<h2>六、系统设计决策</h2>
+
+<h3>6.1 为什么选择 DI × Scope 而非传统 DI？</h3>
+<ul>
+<li>传统 DI 容器只有一个全局作用域，无法处理多会话、多 Agent 的场景</li>
+<li>4 层 Scope 映射自然生命周期：App（进程）→ Workspace（工作区）→ Session（会话）→ Agent（Agent）</li>
+<li>子 Scope 自动继承父 Scope 的服务，无需手动注册</li>
+<li>Scope 关闭时自动清理所有子 Scope 的资源</li>
+</ul>
+
+<h3>6.2 为什么 v1 和 v2 两套引擎？</h3>
+<ul>
+<li>v1（agent-core）：传统 DI 服务层，较早的设计，适合单会话场景</li>
+<li>v2（agent-core-v2）：DI × Scope 架构，支持多会话、多工作区、多 Agent</li>
+<li>v2 是当前主力引擎，v1 保留用于兼容旧版 ACP 和 TUI</li>
+<li>SDK 层透明切换：<code>SDKRpcClientV2</code> 封装 v2 差异</li>
+</ul>
+
+<h3>6.3 为什么用 Node.js SEA 而非 pkg/nexe？</h3>
+<ul>
+<li>Node.js SEA 是官方方案，无第三方依赖</li>
+<li>原生支持 ESM、Worker threads、所有 Node.js API</li>
+<li>构建简单：<code>node --experimental-sea-config</code> + postject 注入</li>
+<li>跨平台支持：macOS、Linux、Windows</li>
+</ul>
+
+<h3>6.4 为什么自定义 TUI 框架而非 Ink/React-Terminal？</h3>
+<ul>
+<li>pi-tui 是全自研的终端 UI 框架</li>
+<li>零依赖：不依赖 React、JSX、虚拟 DOM</li>
+<li>直接操作终端缓冲区，极致性能</li>
+<li>完整的 Canvas、动画、事件系统</li>
+<li>支持真彩色、Unicode、鼠标事件</li>
+</ul>
+
+<h2>七、项目结构</h2>
+
+<div class="code">
+nighthawk/
+├── apps/                    # 应用层
+│   ├── nighthawk/           # CLI/TUI 主应用
+│   ├── vscode/              # VS Code 扩展
+│   └── nighthawk-inspect/   # 引擎检查器
+├── packages/                # 核心包
+│   ├── agent-core/          # 引擎 v1
+│   ├── agent-core-v2/       # 引擎 v2（DI×Scope）
+│   ├── kosong/              # LLM 抽象层
+│   ├── kaos/                # 执行环境抽象
+│   ├── kap-server/          # REST + WS 服务器
+│   ├── klient/              # 客户端 SDK
+│   ├── node-sdk/            # 公开 TypeScript SDK
+│   ├── pi-tui/              # 终端 UI 框架
+│   ├── minidb/              # 嵌入式文档存储
+│   ├── protocol/            # 协议 schemas
+│   ├── transcript/          # 转录数据层
+│   ├── telemetry/           # 遥测
+│   ├── oauth/               # OAuth 工具
+│   ├── migration-legacy/    # 旧版迁移
+│   ├── acp-adapter/         # ACP 适配器 v1
+│   ├── acp-server/          # ACP 服务器 v2
+│   └── plugin-sdk/          # 插件 SDK
+├── docs/                    # VitePress 文档站
+├── plugins/                 # 插件市场配置
+├── scripts/                 # 构建/CI 脚本
+└── .github/                 # GitHub Actions 工作流
+</div>
+
+<h2>八、核心数据流图</h2>
+
+<h3>8.1 Agent 循环</h3>
+<div class="code">
+┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
+│  User    │───→│  Agent   │───→│   LLM    │───→│  Tool    │
+│  Input   │    │  Engine  │    │          │    │  Call    │
+└──────────┘    └──────────┘    └──────────┘    └──────────┘
+                     ↑                                │
+                     │                                ↓
+                 ┌──────────┐                   ┌──────────┐
+                 │  Result  │←──────────────────│  Observe │
+                 │  Output  │                   │          │
+                 └──────────┘                   └──────────┘
+</div>
+
+<h3>8.2 会话创建</h3>
+<div class="code">
+CLI → harness.createSession()
+  → SessionManager.create()
+    → AgentScope.create()
+      → WorkspaceScope.attach()
+        → Load skills, MCP, profiles
+        → Create main agent
+          → Ready for prompts
+</div>
+
+<h3>8.3 工具执行</h3>
+<div class="code">
+LLM → ToolSelection
+  → ToolRegistry.resolve(toolName)
+    → PermissionChain.check()
+      → resolveExecution()
+        → execute()
+          → Result
+</div>
+
+</div></body></html>
